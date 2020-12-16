@@ -7,8 +7,6 @@ type RunOpts struct {
 
 type NodeCreateOpts struct {
 	// DataDir sets the path of dir used to store node data
-	DataDir string
-	// ListenAddress sets the HOST:PORT on which the node will listen
-	ListenAddress    string
+	DataDir          string
 	ContainerRuntime string
 }
