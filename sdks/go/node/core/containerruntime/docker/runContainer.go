@@ -152,6 +152,8 @@ func (cr _runContainer) RunContainer(
 			*req.Image.Ref,
 			portBindings,
 			req.WorkDir,
+			rootCallID,
+			req.ContainerID,
 		),
 		hostConfig,
 		networkingConfig,
