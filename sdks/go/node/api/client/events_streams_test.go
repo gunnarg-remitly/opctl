@@ -1,68 +1,68 @@
 package client
 
-import (
-	"context"
-	"errors"
-	"github.com/golang-interfaces/github.com-gorilla-websocket"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api"
-	"net/url"
-	"strings"
-	"time"
-)
+// import (
+// 	"context"
+// 	"errors"
+// 	"net/url"
+// 	"strings"
+// 	"time"
 
-var _ = Context("GetEventStream", func() {
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
+// 	"github.com/opctl/opctl/sdks/go/model"
+// 	"github.com/opctl/opctl/sdks/go/node/api"
+// )
 
-	XIt("should call wsDialer.DialContext() w/ expected args", func() {
+// var _ = Context("GetEventStream", func() {
 
-		/* arrange */
-		providedCtx := context.Background()
-		providedSince := time.Now().UTC()
-		providedReq := &model.GetEventStreamReq{
-			Filter: model.EventFilter{
-				Since: &providedSince,
-				Roots: []string{
-					"dummyRoot",
-				},
-			},
-		}
+// 	XIt("should call wsDialer.DialContext() w/ expected args", func() {
 
-		// construct expected URL
-		expectedReqURL := url.URL{}
-		expectedReqURL.Scheme = "ws"
-		expectedReqURL.Path = api.URLEvents_Stream
+// 		/* arrange */
+// 		providedCtx := context.Background()
+// 		providedSince := time.Now().UTC()
+// 		providedReq := &model.GetEventStreamReq{
+// 			Filter: model.EventFilter{
+// 				Since: &providedSince,
+// 				Roots: []string{
+// 					"dummyRoot",
+// 				},
+// 			},
+// 		}
 
-		queryValues := expectedReqURL.Query()
-		if nil != providedReq.Filter.Since {
-			queryValues.Add("since", providedReq.Filter.Since.Format(time.RFC3339))
-		}
-		if nil != providedReq.Filter.Roots {
-			queryValues.Add("roots", strings.Join(providedReq.Filter.Roots, ","))
-		}
-		expectedReqURL.RawQuery = queryValues.Encode()
+// 		// construct expected URL
+// 		expectedReqURL := url.URL{}
+// 		expectedReqURL.Scheme = "ws"
+// 		expectedReqURL.Path = api.URLEvents_Stream
 
-		fakeWSDialer := new(iwebsocket.FakeDialer)
-		//error to trigger immediate retur
-		fakeWSDialer.DialReturns(nil, nil, errors.New("dummyError"))
+// 		queryValues := expectedReqURL.Query()
+// 		if nil != providedReq.Filter.Since {
+// 			queryValues.Add("since", providedReq.Filter.Since.Format(time.RFC3339))
+// 		}
+// 		if nil != providedReq.Filter.Roots {
+// 			queryValues.Add("roots", strings.Join(providedReq.Filter.Roots, ","))
+// 		}
+// 		expectedReqURL.RawQuery = queryValues.Encode()
 
-		objectUnderTest := client{
-			wsDialer: fakeWSDialer,
-		}
+// 		fakeWSDialer := new(iwebsocket.FakeDialer)
+// 		//error to trigger immediate retur
+// 		fakeWSDialer.DialReturns(nil, nil, errors.New("dummyError"))
 
-		/* act */
-		objectUnderTest.GetEventStream(
-			providedCtx,
-			providedReq,
-		)
+// 		objectUnderTest := client{
+// 			wsDialer: fakeWSDialer,
+// 		}
 
-		/* assert */
-		actualCtx,
-			actualReqURL, _ := fakeWSDialer.DialContextArgsForCall(0)
+// 		/* act */
+// 		objectUnderTest.GetEventStream(
+// 			providedCtx,
+// 			providedReq,
+// 		)
 
-		Expect(actualCtx).To(Equal(providedCtx))
-		Expect(actualReqURL).To(Equal(expectedReqURL.String()))
+// 		/* assert */
+// 		actualCtx,
+// 			actualReqURL, _ := fakeWSDialer.DialContextArgsForCall(0)
 
-	})
-})
+// 		Expect(actualCtx).To(Equal(providedCtx))
+// 		Expect(actualReqURL).To(Equal(expectedReqURL.String()))
+
+// 	})
+// })

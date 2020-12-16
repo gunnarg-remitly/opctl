@@ -1,215 +1,215 @@
 package client
 
-import (
-	"context"
-	"errors"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-	"strings"
+// import (
+// 	"context"
+// 	"errors"
+// 	"io/ioutil"
+// 	"net/http"
+// 	"net/url"
+// 	"strings"
 
-	"github.com/golang-interfaces/ihttp"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api"
-)
+// 	"github.com/golang-interfaces/ihttp"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
+// 	"github.com/opctl/opctl/sdks/go/model"
+// 	"github.com/opctl/opctl/sdks/go/node/api"
+// )
 
-var _ = Context("ListDescendants", func() {
+// var _ = Context("ListDescendants", func() {
 
-	It("should call httpClient.Do() w/ expected args & return result", func() {
+// 	It("should call httpClient.Do() w/ expected args & return result", func() {
 
-		/* arrange */
-		providedCtx := context.TODO()
-		providedReq := model.ListDescendantsReq{
-			PkgRef: "dummyOpRef",
-			PullCreds: &model.Creds{
-				Username: "dummyUsername",
-				Password: "dummyPassword",
-			},
-		}
+// 		/* arrange */
+// 		providedCtx := context.TODO()
+// 		providedReq := model.ListDescendantsReq{
+// 			PkgRef: "dummyOpRef",
+// 			PullCreds: &model.Creds{
+// 				Username: "dummyUsername",
+// 				Password: "dummyPassword",
+// 			},
+// 		}
 
-		expectedReqURL := url.URL{}
-		path := strings.Replace(api.URLPkgs_Ref_Contents, "{ref}", url.PathEscape(providedReq.PkgRef), 1)
-		expectedReqURL.Path = path
+// 		expectedReqURL := url.URL{}
+// 		path := strings.Replace(api.URLPkgs_Ref_Contents, "{ref}", url.PathEscape(providedReq.PkgRef), 1)
+// 		expectedReqURL.Path = path
 
-		expectedHTTPReq, _ := http.NewRequest(
-			"GET",
-			expectedReqURL.String(),
-			nil,
-		)
+// 		expectedHTTPReq, _ := http.NewRequest(
+// 			"GET",
+// 			expectedReqURL.String(),
+// 			nil,
+// 		)
 
-		expectedHTTPReq.SetBasicAuth(
-			providedReq.PullCreds.Username,
-			providedReq.PullCreds.Password,
-		)
+// 		expectedHTTPReq.SetBasicAuth(
+// 			providedReq.PullCreds.Username,
+// 			providedReq.PullCreds.Password,
+// 		)
 
-		fakeHttpClient := new(ihttp.FakeClient)
-		fakeHttpClient.DoReturns(
-			&http.Response{
-				Body:       ioutil.NopCloser(strings.NewReader("[]")),
-				StatusCode: http.StatusOK,
-			},
-			nil,
-		)
+// 		fakeHttpClient := new(ihttp.FakeClient)
+// 		fakeHttpClient.DoReturns(
+// 			&http.Response{
+// 				Body:       ioutil.NopCloser(strings.NewReader("[]")),
+// 				StatusCode: http.StatusOK,
+// 			},
+// 			nil,
+// 		)
 
-		objectUnderTest := client{
-			httpClient: fakeHttpClient,
-		}
+// 		objectUnderTest := client{
+// 			httpClient: fakeHttpClient,
+// 		}
 
-		/* act */
-		objectUnderTest.ListDescendants(providedCtx, providedReq)
+// 		/* act */
+// 		objectUnderTest.ListDescendants(providedCtx, providedReq)
 
-		/* assert */
-		actualHTTPReq := fakeHttpClient.DoArgsForCall(0)
+// 		/* assert */
+// 		actualHTTPReq := fakeHttpClient.DoArgsForCall(0)
 
-		Expect(actualHTTPReq.URL).To(Equal(expectedHTTPReq.URL))
-		Expect(actualHTTPReq.Body).To(BeNil())
-		Expect(actualHTTPReq.Header).To(Equal(expectedHTTPReq.Header))
-		Expect(actualHTTPReq.Context()).To(Equal(providedCtx))
+// 		Expect(actualHTTPReq.URL).To(Equal(expectedHTTPReq.URL))
+// 		Expect(actualHTTPReq.Body).To(BeNil())
+// 		Expect(actualHTTPReq.Header).To(Equal(expectedHTTPReq.Header))
+// 		Expect(actualHTTPReq.Context()).To(Equal(providedCtx))
 
-	})
-	Context("StatusCode < 400", func() {
+// 	})
+// 	Context("StatusCode < 400", func() {
 
-		It("should return expected result", func() {
+// 		It("should return expected result", func() {
 
-			/* arrange */
-			httpResp := &http.Response{
-				Body:       ioutil.NopCloser(strings.NewReader("[]")),
-				StatusCode: http.StatusOK,
-			}
+// 			/* arrange */
+// 			httpResp := &http.Response{
+// 				Body:       ioutil.NopCloser(strings.NewReader("[]")),
+// 				StatusCode: http.StatusOK,
+// 			}
 
-			fakeHttpClient := new(ihttp.FakeClient)
-			fakeHttpClient.DoReturns(httpResp, nil)
+// 			fakeHttpClient := new(ihttp.FakeClient)
+// 			fakeHttpClient.DoReturns(httpResp, nil)
 
-			objectUnderTest := client{
-				httpClient: fakeHttpClient,
-			}
+// 			objectUnderTest := client{
+// 				httpClient: fakeHttpClient,
+// 			}
 
-			/* act */
-			actualContentsList, actualErr := objectUnderTest.ListDescendants(
-				context.TODO(),
-				model.ListDescendantsReq{},
-			)
+// 			/* act */
+// 			actualContentsList, actualErr := objectUnderTest.ListDescendants(
+// 				context.TODO(),
+// 				model.ListDescendantsReq{},
+// 			)
 
-			/* assert */
-			Expect(actualContentsList).To(Equal([]*model.DirEntry{}))
-			Expect(actualErr).To(BeNil())
+// 			/* assert */
+// 			Expect(actualContentsList).To(Equal([]*model.DirEntry{}))
+// 			Expect(actualErr).To(BeNil())
 
-		})
-	})
-	Context("StatusCode >= 400", func() {
-		Context("401", func() {
-			It("should return expected result", func() {
+// 		})
+// 	})
+// 	Context("StatusCode >= 400", func() {
+// 		Context("401", func() {
+// 			It("should return expected result", func() {
 
-				/* arrange */
-				httpResp := &http.Response{
-					Body:       ioutil.NopCloser(nil),
-					StatusCode: http.StatusUnauthorized,
-				}
+// 				/* arrange */
+// 				httpResp := &http.Response{
+// 					Body:       ioutil.NopCloser(nil),
+// 					StatusCode: http.StatusUnauthorized,
+// 				}
 
-				fakeHttpClient := new(ihttp.FakeClient)
-				fakeHttpClient.DoReturns(httpResp, nil)
+// 				fakeHttpClient := new(ihttp.FakeClient)
+// 				fakeHttpClient.DoReturns(httpResp, nil)
 
-				objectUnderTest := client{
-					httpClient: fakeHttpClient,
-				}
+// 				objectUnderTest := client{
+// 					httpClient: fakeHttpClient,
+// 				}
 
-				/* act */
-				_, actualErr := objectUnderTest.ListDescendants(
-					context.TODO(),
-					model.ListDescendantsReq{},
-				)
+// 				/* act */
+// 				_, actualErr := objectUnderTest.ListDescendants(
+// 					context.TODO(),
+// 					model.ListDescendantsReq{},
+// 				)
 
-				/* assert */
-				Expect(actualErr).To(Equal(model.ErrDataProviderAuthentication{}))
+// 				/* assert */
+// 				Expect(actualErr).To(Equal(model.ErrDataProviderAuthentication{}))
 
-			})
-		})
-		Context("403", func() {
-			It("should return expected result", func() {
+// 			})
+// 		})
+// 		Context("403", func() {
+// 			It("should return expected result", func() {
 
-				/* arrange */
-				httpResp := &http.Response{
-					Body:       ioutil.NopCloser(nil),
-					StatusCode: http.StatusForbidden,
-				}
+// 				/* arrange */
+// 				httpResp := &http.Response{
+// 					Body:       ioutil.NopCloser(nil),
+// 					StatusCode: http.StatusForbidden,
+// 				}
 
-				fakeHttpClient := new(ihttp.FakeClient)
-				fakeHttpClient.DoReturns(httpResp, nil)
+// 				fakeHttpClient := new(ihttp.FakeClient)
+// 				fakeHttpClient.DoReturns(httpResp, nil)
 
-				objectUnderTest := client{
-					httpClient: fakeHttpClient,
-				}
+// 				objectUnderTest := client{
+// 					httpClient: fakeHttpClient,
+// 				}
 
-				/* act */
-				_, actualErr := objectUnderTest.ListDescendants(
-					context.TODO(),
-					model.ListDescendantsReq{},
-				)
+// 				/* act */
+// 				_, actualErr := objectUnderTest.ListDescendants(
+// 					context.TODO(),
+// 					model.ListDescendantsReq{},
+// 				)
 
-				/* assert */
-				Expect(actualErr).To(Equal(model.ErrDataProviderAuthorization{}))
+// 				/* assert */
+// 				Expect(actualErr).To(Equal(model.ErrDataProviderAuthorization{}))
 
-			})
+// 			})
 
-		})
-		Context("404", func() {
-			It("should return expected result", func() {
+// 		})
+// 		Context("404", func() {
+// 			It("should return expected result", func() {
 
-				/* arrange */
-				httpResp := &http.Response{
-					Body:       ioutil.NopCloser(nil),
-					StatusCode: http.StatusNotFound,
-				}
+// 				/* arrange */
+// 				httpResp := &http.Response{
+// 					Body:       ioutil.NopCloser(nil),
+// 					StatusCode: http.StatusNotFound,
+// 				}
 
-				fakeHttpClient := new(ihttp.FakeClient)
-				fakeHttpClient.DoReturns(httpResp, nil)
+// 				fakeHttpClient := new(ihttp.FakeClient)
+// 				fakeHttpClient.DoReturns(httpResp, nil)
 
-				objectUnderTest := client{
-					httpClient: fakeHttpClient,
-				}
+// 				objectUnderTest := client{
+// 					httpClient: fakeHttpClient,
+// 				}
 
-				/* act */
-				_, actualErr := objectUnderTest.ListDescendants(
-					context.TODO(),
-					model.ListDescendantsReq{},
-				)
+// 				/* act */
+// 				_, actualErr := objectUnderTest.ListDescendants(
+// 					context.TODO(),
+// 					model.ListDescendantsReq{},
+// 				)
 
-				/* assert */
-				Expect(actualErr).To(Equal(model.ErrDataRefResolution{}))
+// 				/* assert */
+// 				Expect(actualErr).To(Equal(model.ErrDataRefResolution{}))
 
-			})
+// 			})
 
-		})
-		Context("500", func() {
-			It("should return expected result", func() {
+// 		})
+// 		Context("500", func() {
+// 			It("should return expected result", func() {
 
-				/* arrange */
-				expectedErr := errors.New("dummyMsg")
-				httpResp := &http.Response{
-					Body:       ioutil.NopCloser(strings.NewReader(expectedErr.Error())),
-					StatusCode: http.StatusInternalServerError,
-				}
+// 				/* arrange */
+// 				expectedErr := errors.New("dummyMsg")
+// 				httpResp := &http.Response{
+// 					Body:       ioutil.NopCloser(strings.NewReader(expectedErr.Error())),
+// 					StatusCode: http.StatusInternalServerError,
+// 				}
 
-				fakeHttpClient := new(ihttp.FakeClient)
-				fakeHttpClient.DoReturns(httpResp, nil)
+// 				fakeHttpClient := new(ihttp.FakeClient)
+// 				fakeHttpClient.DoReturns(httpResp, nil)
 
-				objectUnderTest := client{
-					httpClient: fakeHttpClient,
-				}
+// 				objectUnderTest := client{
+// 					httpClient: fakeHttpClient,
+// 				}
 
-				/* act */
-				_, actualErr := objectUnderTest.ListDescendants(
-					context.TODO(),
-					model.ListDescendantsReq{},
-				)
+// 				/* act */
+// 				_, actualErr := objectUnderTest.ListDescendants(
+// 					context.TODO(),
+// 					model.ListDescendantsReq{},
+// 				)
 
-				/* assert */
-				Expect(actualErr).To(Equal(expectedErr))
+// 				/* assert */
+// 				Expect(actualErr).To(Equal(expectedErr))
 
-			})
+// 			})
 
-		})
-	})
-})
+// 		})
+// 	})
+// })

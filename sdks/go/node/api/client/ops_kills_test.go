@@ -1,57 +1,58 @@
 package client
 
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"github.com/golang-interfaces/ihttp"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api"
-	"io/ioutil"
-	"net/http"
-	"net/url"
-)
+// import (
+// 	"bytes"
+// 	"context"
+// 	"encoding/json"
+// 	"io/ioutil"
+// 	"net/http"
+// 	"net/url"
 
-var _ = Context("KillOp", func() {
+// 	"github.com/golang-interfaces/ihttp"
+// 	. "github.com/onsi/ginkgo"
+// 	. "github.com/onsi/gomega"
+// 	"github.com/opctl/opctl/sdks/go/model"
+// 	"github.com/opctl/opctl/sdks/go/node/api"
+// )
 
-	It("should call httpClient.Do() with expected args", func() {
+// var _ = Context("KillOp", func() {
 
-		/* arrange */
-		providedCtx := context.TODO()
-		providedReq := model.KillOpReq{
-			OpID: "dummyRootCallID",
-		}
+// 	It("should call httpClient.Do() with expected args", func() {
 
-		expectedReqURL := url.URL{}
-		expectedReqURL.Path = api.URLOps_Kills
+// 		/* arrange */
+// 		providedCtx := context.TODO()
+// 		providedReq := model.KillOpReq{
+// 			OpID: "dummyRootCallID",
+// 		}
 
-		expectedBytes, _ := json.Marshal(providedReq)
+// 		expectedReqURL := url.URL{}
+// 		expectedReqURL.Path = api.URLOps_Kills
 
-		expectedHTTPReq, _ := http.NewRequest(
-			"POST",
-			expectedReqURL.String(),
-			bytes.NewBuffer(expectedBytes),
-		)
+// 		expectedBytes, _ := json.Marshal(providedReq)
 
-		fakeHttpClient := new(ihttp.FakeClient)
-		fakeHttpClient.DoReturns(&http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte{}))}, nil)
+// 		expectedHTTPReq, _ := http.NewRequest(
+// 			"POST",
+// 			expectedReqURL.String(),
+// 			bytes.NewBuffer(expectedBytes),
+// 		)
 
-		objectUnderTest := client{
-			httpClient: fakeHttpClient,
-		}
+// 		fakeHttpClient := new(ihttp.FakeClient)
+// 		fakeHttpClient.DoReturns(&http.Response{Body: ioutil.NopCloser(bytes.NewReader([]byte{}))}, nil)
 
-		/* act */
-		objectUnderTest.KillOp(providedCtx, providedReq)
+// 		objectUnderTest := client{
+// 			httpClient: fakeHttpClient,
+// 		}
 
-		/* assert */
-		actualHTTPReq := fakeHttpClient.DoArgsForCall(0)
+// 		/* act */
+// 		objectUnderTest.KillOp(providedCtx, providedReq)
 
-		Expect(actualHTTPReq.URL).To(Equal(expectedHTTPReq.URL))
-		Expect(actualHTTPReq.Body).To(Equal(expectedHTTPReq.Body))
-		Expect(actualHTTPReq.Header).To(Equal(expectedHTTPReq.Header))
-		Expect(actualHTTPReq.Context()).To(Equal(providedCtx))
+// 		/* assert */
+// 		actualHTTPReq := fakeHttpClient.DoArgsForCall(0)
 
-	})
-})
+// 		Expect(actualHTTPReq.URL).To(Equal(expectedHTTPReq.URL))
+// 		Expect(actualHTTPReq.Body).To(Equal(expectedHTTPReq.Body))
+// 		Expect(actualHTTPReq.Header).To(Equal(expectedHTTPReq.Header))
+// 		Expect(actualHTTPReq.Context()).To(Equal(providedCtx))
+
+// 	})
+// })
