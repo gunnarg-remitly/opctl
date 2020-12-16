@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/opctl/opctl/sdks/go/data/git"
-	"github.com/opctl/opctl/sdks/go/data/fs"
-	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 	"github.com/opctl/opctl/sdks/go/data"
+	"github.com/opctl/opctl/sdks/go/data/fs"
+	"github.com/opctl/opctl/sdks/go/data/git"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 )
 
 func (this _core) StartOp(
@@ -64,7 +64,7 @@ func (this _core) StartOp(
 		opCallSpec.Outputs[name] = ""
 	}
 
-	opCtx, cancelOp := context.WithCancel(context.Background())
+	opCtx, cancelOp := context.WithCancel(ctx)
 	go func() {
 		defer func() {
 			if panicArg := recover(); panicArg != nil {

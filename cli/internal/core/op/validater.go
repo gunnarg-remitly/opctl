@@ -38,6 +38,7 @@ func (ivkr _validater) Validate(
 	opRef string,
 ) {
 	opDirHandle := ivkr.dataResolver.Resolve(
+		ctx,
 		opRef,
 		nil,
 	)

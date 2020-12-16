@@ -21,6 +21,7 @@ import (
 //counterfeiter:generate -o fakes/dataResolver.go . DataResolver
 type DataResolver interface {
 	Resolve(
+		ctx context.Context,
 		dataRef string,
 		pullCreds *model.Creds,
 	) model.DataHandle
@@ -47,6 +48,7 @@ type _dataResolver struct {
 }
 
 func (dtr _dataResolver) Resolve(
+	ctx context.Context,
 	dataRef string,
 	pullCreds *model.Creds,
 ) model.DataHandle {
@@ -63,7 +65,7 @@ func (dtr _dataResolver) Resolve(
 
 	for {
 		opDirHandle, err := data.Resolve(
-			context.TODO(),
+			ctx,
 			dataRef,
 			fsProvider,
 			node.New(dtr.api, pullCreds),

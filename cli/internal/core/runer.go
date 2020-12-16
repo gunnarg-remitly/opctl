@@ -65,6 +65,7 @@ func (ivkr _runer) Run(
 	startTime := time.Now().UTC()
 
 	opHandle := ivkr.dataResolver.Resolve(
+		ctx,
 		opRef,
 		nil,
 	)

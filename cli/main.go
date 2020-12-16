@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -9,9 +10,12 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	cliColorer := clicolorer.New()
 	defer func() {
 		if panicArg := recover(); panicArg != nil {
+			cancel()
 			fmt.Println(
 				cliColorer.Error(
 					fmt.Sprint(panicArg),
@@ -22,6 +26,7 @@ func main() {
 	}()
 
 	newCli(
+		ctx,
 		cliColorer,
 		corePkg.New,
 	).

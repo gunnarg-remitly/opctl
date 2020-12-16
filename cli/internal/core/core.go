@@ -3,6 +3,7 @@ package core
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
 
 import (
+	"context"
 	"os"
 
 	"github.com/golang-interfaces/ios"
@@ -27,7 +28,7 @@ type Core interface {
 }
 
 // New returns initialized cli core
-func New(cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
+func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
 	_os := ios.New()
 	cliOutput := clioutput.New(cliColorer, os.Stderr, os.Stdout)
 	cliExiter := cliexiter.New(cliOutput, _os)
@@ -42,7 +43,7 @@ func New(cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string)
 		panic(err)
 	}
 
-	api := client.New(&client.Opts{
+	api := client.New(ctx, &client.Opts{
 		ContainerRuntime: containerRuntime,
 		DataDirPath:      dataDir.Path(),
 	})

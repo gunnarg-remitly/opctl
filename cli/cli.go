@@ -22,16 +22,17 @@ type cli interface {
 
 // newCorer allows swapping out corePkg.New for unit tests
 type newCorer func(
+	ctx context.Context,
 	cliColorer clicolorer.CliColorer,
 	containerRuntime,
 	datadirPath string,
 ) corePkg.Core
 
 func newCli(
+	ctx context.Context,
 	cliColorer clicolorer.CliColorer,
 	newCorer newCorer,
 ) cli {
-
 	cli := mow.App(
 		"opctl",
 		"Opctl is a free and open source distributed operation control system.",
@@ -61,7 +62,7 @@ func newCli(
 		},
 	)
 
-	core := newCorer(cliColorer, *containerRuntime, *dataDir)
+	core := newCorer(ctx, cliColorer, *containerRuntime, *dataDir)
 
 	noColor := cli.BoolOpt("nc no-color", false, "Disable output coloring")
 
@@ -82,14 +83,14 @@ func newCli(
 				password := addCmd.StringOpt("p password", "", "Password")
 
 				addCmd.Action = func() {
-					core.Auth().Add(context.TODO(), *resources, *username, *password)
+					core.Auth().Add(ctx, *resources, *username, *password)
 				}
 			})
 	})
 
 	cli.Command("events", "Stream events", func(eventsCmd *mow.Cmd) {
 		eventsCmd.Action = func() {
-			core.Events(context.TODO())
+			core.Events(ctx)
 		}
 	})
 
@@ -98,7 +99,7 @@ func newCli(
 		lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
 		dirRef := lsCmd.StringArg(dirRefArgName, op.DotOpspecDirName, "Reference to dir ops will be listed from")
 		lsCmd.Action = func() {
-			core.Ls(context.TODO(), *dirRef)
+			core.Ls(ctx, *dirRef)
 		}
 	})
 
@@ -120,7 +121,7 @@ func newCli(
 			password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
 
 			installCmd.Action = func() {
-				core.Op().Install(context.TODO(), *path, *opRef, *username, *password)
+				core.Op().Install(ctx, *path, *opRef, *username, *password)
 			}
 		})
 
@@ -128,7 +129,7 @@ func newCli(
 			opID := killCmd.StringArg("OP_ID", "", "Id of the op to kill")
 
 			killCmd.Action = func() {
-				core.Op().Kill(context.TODO(), *opID)
+				core.Op().Kill(ctx, *opID)
 			}
 		})
 
@@ -136,7 +137,7 @@ func newCli(
 			opRef := validateCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 			validateCmd.Action = func() {
-				core.Op().Validate(context.TODO(), *opRef)
+				core.Op().Validate(ctx, *opRef)
 			}
 		})
 	})
@@ -147,7 +148,7 @@ func newCli(
 		opRef := runCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 		runCmd.Action = func() {
-			core.Run(context.TODO(), *opRef, &model.RunOpts{Args: *args, ArgFile: *argFile})
+			core.Run(ctx, *opRef, &model.RunOpts{Args: *args, ArgFile: *argFile})
 		}
 	})
 

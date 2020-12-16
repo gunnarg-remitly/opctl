@@ -32,6 +32,7 @@ type stateStore interface {
 }
 
 func newStateStore(
+	ctx context.Context,
 	db *badger.DB,
 	pubSub pubsub.PubSub,
 ) stateStore {
@@ -54,7 +55,7 @@ func newStateStore(
 		since := lastAppliedEventTimestamp.Add(-time.Second)
 
 		eventChannel, _ := pubSub.Subscribe(
-			context.Background(),
+			ctx,
 			model.EventFilter{
 				Since: &since,
 			},

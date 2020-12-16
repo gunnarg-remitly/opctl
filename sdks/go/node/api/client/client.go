@@ -90,6 +90,7 @@ type Opts struct {
 // New returns a new client
 // nil opts will be ignored
 func New(
+	ctx context.Context,
 	opts *Opts,
 ) Client {
 	var containerRuntime containerruntime.ContainerRuntime
@@ -100,12 +101,12 @@ func New(
 			panic(err)
 		}
 	} else {
-		containerRuntime, err = docker.New()
+		containerRuntime, err = docker.New(ctx)
 		if nil != err {
 			panic(err)
 		}
 	}
-	c := core.New(containerRuntime, opts.DataDirPath)
+	c := core.New(ctx, containerRuntime, opts.DataDirPath)
 
 	return &client{
 		core:     c,

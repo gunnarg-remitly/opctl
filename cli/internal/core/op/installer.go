@@ -58,6 +58,7 @@ func (ivkr _installer) Install(
 	}
 
 	opDirHandle := ivkr.dataResolver.Resolve(
+		ctx,
 		pkgRef,
 		&model.Creds{
 			Username: username,

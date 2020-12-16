@@ -55,6 +55,7 @@ func (ivkr _lsInvoker) Ls(
 	fmt.Fprintln(_tabWriter, "REF\tDESCRIPTION")
 
 	dirHandle := ivkr.dataResolver.Resolve(
+		ctx,
 		dirRef,
 		nil,
 	)
