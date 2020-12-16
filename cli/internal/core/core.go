@@ -10,8 +10,9 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
+	"github.com/opctl/opctl/cli/internal/datadir"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // Core exposes all cli commands
@@ -20,53 +21,58 @@ type Core interface {
 	Auther
 	Eventser
 	Lser
-	Noder
 	Oper
 	Runer
 	SelfUpdater
-	UIer
 }
 
 // New returns initialized cli core
-func New(
-	cliColorer clicolorer.CliColorer,
-	nodeProvider nodeprovider.NodeProvider,
-) Core {
+func New(cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
 	_os := ios.New()
 	cliOutput := clioutput.New(cliColorer, os.Stderr, os.Stdout)
 	cliExiter := cliexiter.New(cliOutput, _os)
 	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
 
+	dataDir, err := datadir.New(datadirPath)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := dataDir.InitAndLock(); nil != err {
+		panic(err)
+	}
+
+	api := client.New(&client.Opts{
+		ContainerRuntime: containerRuntime,
+		DataDirPath:      dataDir.Path(),
+	})
+
 	dataResolver := dataresolver.New(
 		cliExiter,
 		cliParamSatisfier,
-		nodeProvider,
+		api,
 	)
 
 	return _core{
 		Auther: newAuther(
 			cliExiter,
 			dataResolver,
-			nodeProvider,
+			api,
 		),
 		Eventser: newEventser(
 			cliExiter,
 			cliOutput,
-			nodeProvider,
+			api,
 		),
 		Lser: newLser(
 			cliExiter,
 			cliOutput,
 			dataResolver,
 		),
-		Noder: newNoder(
-			cliExiter,
-			nodeProvider,
-		),
 		Oper: newOper(
 			cliExiter,
 			dataResolver,
-			nodeProvider,
+			api,
 		),
 		Runer: newRuner(
 			cliColorer,
@@ -74,16 +80,11 @@ func New(
 			cliOutput,
 			cliParamSatisfier,
 			dataResolver,
-			nodeProvider,
+			api,
 		),
 		SelfUpdater: newSelfUpdater(
 			cliExiter,
-			nodeProvider,
-		),
-		UIer: newUIer(
-			cliExiter,
-			dataResolver,
-			nodeProvider,
+			api,
 		),
 	}
 }
@@ -92,9 +93,7 @@ type _core struct {
 	Auther
 	Eventser
 	Lser
-	Noder
 	Oper
 	Runer
 	SelfUpdater
-	UIer
 }

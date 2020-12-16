@@ -15,8 +15,8 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	cliModel "github.com/opctl/opctl/cli/internal/model"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 )
 
@@ -36,7 +36,7 @@ func newRuner(
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
-	nodeProvider nodeprovider.NodeProvider,
+	api client.Client,
 ) Runer {
 	return _runer{
 		cliColorer:        cliColorer,
@@ -44,7 +44,7 @@ func newRuner(
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
-		nodeProvider:      nodeProvider,
+		api:               api,
 	}
 }
 
@@ -54,7 +54,7 @@ type _runer struct {
 	cliExiter         cliexiter.CliExiter
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
-	nodeProvider      nodeprovider.NodeProvider
+	api               client.Client
 }
 
 func (ivkr _runer) Run(
@@ -126,14 +126,8 @@ func (ivkr _runer) Run(
 		syscall.SIGTERM,
 	)
 
-	nodeHandle, createNodeIfNotExistsErr := ivkr.nodeProvider.CreateNodeIfNotExists()
-	if nil != createNodeIfNotExistsErr {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: createNodeIfNotExistsErr.Error(), Code: 1})
-		return // support fake exiter
-	}
-
 	// start op
-	rootCallID, err := nodeHandle.APIClient().StartOp(
+	rootCallID, err := ivkr.api.StartOp(
 		ctx,
 		model.StartOpReq{
 			Args: argsMap,
@@ -148,7 +142,7 @@ func (ivkr _runer) Run(
 	}
 
 	// start event loop
-	eventChannel, err := nodeHandle.APIClient().GetEventStream(
+	eventChannel, err := ivkr.api.GetEventStream(
 		ctx,
 		&model.GetEventStreamReq{
 			Filter: model.EventFilter{
@@ -170,7 +164,7 @@ func (ivkr _runer) Run(
 				fmt.Println(ivkr.cliColorer.Error("Gracefully stopping... (signal Control-C again to force)"))
 				aSigIntWasReceivedAlready = true
 
-				nodeHandle.APIClient().KillOp(
+				ivkr.api.KillOp(
 					ctx,
 					model.KillOpReq{
 						OpID:       rootCallID,
@@ -185,7 +179,7 @@ func (ivkr _runer) Run(
 		case <-sigTermChannel:
 			fmt.Println(ivkr.cliColorer.Error("Gracefully stopping..."))
 
-			nodeHandle.APIClient().KillOp(
+			ivkr.api.KillOp(
 				ctx,
 				model.KillOpReq{
 					OpID:       rootCallID,

@@ -10,11 +10,11 @@ import (
 	"github.com/golang-interfaces/ios"
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/sdks/go/data"
 	"github.com/opctl/opctl/sdks/go/data/fs"
 	"github.com/opctl/opctl/sdks/go/data/node"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // DataResolver resolves packages
@@ -29,12 +29,12 @@ type DataResolver interface {
 func New(
 	cliExiter cliexiter.CliExiter,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
-	nodeProvider nodeprovider.NodeProvider,
+	api client.Client,
 ) DataResolver {
 	return _dataResolver{
 		cliExiter:         cliExiter,
 		cliParamSatisfier: cliParamSatisfier,
-		nodeProvider:      nodeProvider,
+		api:               api,
 		os:                ios.New(),
 	}
 }
@@ -42,7 +42,7 @@ func New(
 type _dataResolver struct {
 	cliExiter         cliexiter.CliExiter
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
-	nodeProvider      nodeprovider.NodeProvider
+	api               client.Client
 	os                ios.IOS
 }
 
@@ -61,21 +61,12 @@ func (dtr _dataResolver) Resolve(
 		cwd,
 	)
 
-	nodeHandle, createNodeIfNotExistsErr := dtr.nodeProvider.CreateNodeIfNotExists()
-	if nil != createNodeIfNotExistsErr {
-		dtr.cliExiter.Exit(cliexiter.ExitReq{Message: createNodeIfNotExistsErr.Error(), Code: 1})
-		return nil // support fake exiter
-	}
-
 	for {
 		opDirHandle, err := data.Resolve(
 			context.TODO(),
 			dataRef,
 			fsProvider,
-			node.New(
-				nodeHandle.APIClient(),
-				pullCreds,
-			),
+			node.New(dtr.api, pullCreds),
 		)
 
 		var isAuthError bool

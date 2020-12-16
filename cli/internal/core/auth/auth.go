@@ -5,7 +5,7 @@ package auth
 import (
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // Auth exposes the "auth" sub command
@@ -18,12 +18,12 @@ type Auth interface {
 func New(
 	cliExiter cliexiter.CliExiter,
 	dataResolver dataresolver.DataResolver,
-	nodeProvider nodeprovider.NodeProvider,
+	api client.Client,
 ) Auth {
 	return _auth{
 		Adder: newAdder(
 			cliExiter,
-			nodeProvider,
+			api,
 		),
 	}
 }

@@ -5,13 +5,14 @@ package client
 
 import (
 	"context"
-	"net/url"
 
 	iwebsocket "github.com/golang-interfaces/github.com-gorilla-websocket"
-	"github.com/golang-interfaces/ihttp"
 	"github.com/gorilla/websocket"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/sethgrid/pester"
+	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/k8s"
 )
 
 //counterfeiter:generate -o fakes/client.go . Client
@@ -26,7 +27,7 @@ type Client interface {
 		ctx context.Context,
 		req *model.GetEventStreamReq,
 	) (
-		stream chan model.Event,
+		stream <-chan model.Event,
 		err error,
 	)
 
@@ -81,36 +82,38 @@ type Client interface {
 
 type Opts struct {
 	// RetryLogHook will be executed anytime a request is retried
-	RetryLogHook func(err error)
+	RetryLogHook     func(err error)
+	ContainerRuntime string
+	DataDirPath      string
 }
 
 // New returns a new client
 // nil opts will be ignored
 func New(
-	baseUrl url.URL,
 	opts *Opts,
 ) Client {
-
-	httpClient := pester.New()
-	httpClient.Backoff = pester.ExponentialBackoff
-
-	if nil != opts {
-		// handle options
-		httpClient.LogHook = func(errEntry pester.ErrEntry) {
-			// wire up retry log hook
-			opts.RetryLogHook(errEntry.Err)
+	var containerRuntime containerruntime.ContainerRuntime
+	var err error
+	if "k8s" == opts.ContainerRuntime {
+		containerRuntime, err = k8s.New()
+		if nil != err {
+			panic(err)
+		}
+	} else {
+		containerRuntime, err = docker.New()
+		if nil != err {
+			panic(err)
 		}
 	}
+	c := core.New(containerRuntime, opts.DataDirPath)
 
 	return &client{
-		baseUrl:    baseUrl,
-		httpClient: httpClient,
-		wsDialer:   websocket.DefaultDialer,
+		core:     c,
+		wsDialer: websocket.DefaultDialer,
 	}
 }
 
 type client struct {
-	baseUrl    url.URL
-	httpClient ihttp.Client
-	wsDialer   iwebsocket.Dialer
+	core     core.Core
+	wsDialer iwebsocket.Dialer
 }

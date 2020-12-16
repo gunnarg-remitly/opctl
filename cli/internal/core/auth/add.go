@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/opctl/opctl/cli/internal/cliexiter"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // Adder exposes the "auth add" sub command
@@ -21,17 +21,17 @@ type Adder interface {
 // newAdder returns an initialized "auth add" sub command
 func newAdder(
 	cliExiter cliexiter.CliExiter,
-	nodeProvider nodeprovider.NodeProvider,
+	api client.Client,
 ) Adder {
 	return _adder{
-		cliExiter:    cliExiter,
-		nodeProvider: nodeProvider,
+		cliExiter: cliExiter,
+		api:       api,
 	}
 }
 
 type _adder struct {
-	cliExiter    cliexiter.CliExiter
-	nodeProvider nodeprovider.NodeProvider
+	cliExiter cliexiter.CliExiter
+	api       client.Client
 }
 
 func (ivkr _adder) Add(
@@ -40,13 +40,7 @@ func (ivkr _adder) Add(
 	username string,
 	password string,
 ) {
-	nodeHandle, createNodeIfNotExistsErr := ivkr.nodeProvider.CreateNodeIfNotExists()
-	if nil != createNodeIfNotExistsErr {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: createNodeIfNotExistsErr.Error(), Code: 1})
-		return // support fake exiter
-	}
-
-	err := nodeHandle.APIClient().AddAuth(
+	err := ivkr.api.AddAuth(
 		ctx,
 		model.AddAuthReq{
 			Resources: resources,

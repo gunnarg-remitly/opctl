@@ -12,8 +12,6 @@ import (
 	"github.com/opctl/opctl/cli/internal/clicolorer"
 	corePkg "github.com/opctl/opctl/cli/internal/core"
 	"github.com/opctl/opctl/cli/internal/model"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
-	localNodeProvider "github.com/opctl/opctl/cli/internal/nodeprovider/local"
 	op "github.com/opctl/opctl/sdks/go/opspec"
 )
 
@@ -25,7 +23,8 @@ type cli interface {
 // newCorer allows swapping out corePkg.New for unit tests
 type newCorer func(
 	cliColorer clicolorer.CliColorer,
-	nodeProvider nodeprovider.NodeProvider,
+	containerRuntime,
+	datadirPath string,
 ) corePkg.Core
 
 func newCli(
@@ -58,28 +57,11 @@ func newCli(
 			Desc:   "Path of dir used to store opctl data",
 			EnvVar: "OPCTL_DATA_DIR",
 			Name:   "data-dir",
-			Value:  filepath.Join(perUserAppDataPath, "opctl"),
+			Value:  filepath.Join(perUserAppDataPath, "miniopctl"),
 		},
 	)
 
-	listenAddress := cli.String(
-		mow.StringOpt{
-			Desc:   "HOST:PORT on which the node will listen",
-			EnvVar: "OPCTL_LISTEN_ADDRESS",
-			Name:   "listen-address",
-			Value:  "127.0.0.1:42224",
-		},
-	)
-	nodeCreateOpts := model.NodeCreateOpts{
-		ContainerRuntime: *containerRuntime,
-		DataDir:          *dataDir,
-		ListenAddress:    *listenAddress,
-	}
-
-	core := newCorer(
-		cliColorer,
-		localNodeProvider.New(nodeCreateOpts),
-	)
+	core := newCorer(cliColorer, *containerRuntime, *dataDir)
 
 	noColor := cli.BoolOpt("nc no-color", false, "Disable output coloring")
 
@@ -90,7 +72,6 @@ func newCli(
 	}
 
 	cli.Command("auth", "Manage auth for OCI image registries", func(authCmd *mow.Cmd) {
-
 		authCmd.Command(
 			"add", "Add auth for an OCI image registry",
 			func(addCmd *mow.Cmd) {
@@ -104,9 +85,7 @@ func newCli(
 					core.Auth().Add(context.TODO(), *resources, *username, *password)
 				}
 			})
-
-	},
-	)
+	})
 
 	cli.Command("events", "Stream events", func(eventsCmd *mow.Cmd) {
 		eventsCmd.Action = func() {
@@ -114,57 +93,36 @@ func newCli(
 		}
 	})
 
-	cli.Command(
-		"ls", "List operations (only valid ops will be listed)", func(lsCmd *mow.Cmd) {
-			const dirRefArgName = "DIR_REF"
-			lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
-			dirRef := lsCmd.StringArg(dirRefArgName, op.DotOpspecDirName, "Reference to dir ops will be listed from")
-			lsCmd.Action = func() {
-				core.Ls(context.TODO(), *dirRef)
-			}
-		})
-
-	cli.Command("node", "Manage nodes", func(nodeCmd *mow.Cmd) {
-
-		nodeCmd.Command("create", "Creates a node", func(createCmd *mow.Cmd) {
-			createCmd.Action = func() {
-				core.Node().Create(nodeCreateOpts)
-			}
-		})
-
-		nodeCmd.Command("kill", "Kills a node", func(killCmd *mow.Cmd) {
-			killCmd.Action = func() {
-				core.Node().Kill()
-			}
-		})
+	cli.Command("ls", "List operations (only valid ops will be listed)", func(lsCmd *mow.Cmd) {
+		const dirRefArgName = "DIR_REF"
+		lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
+		dirRef := lsCmd.StringArg(dirRefArgName, op.DotOpspecDirName, "Reference to dir ops will be listed from")
+		lsCmd.Action = func() {
+			core.Ls(context.TODO(), *dirRef)
+		}
 	})
 
 	cli.Command("op", "Manage ops", func(opCmd *mow.Cmd) {
+		opCmd.Command("create", "Create an op", func(createCmd *mow.Cmd) {
+			path := createCmd.StringOpt("path", op.DotOpspecDirName, "Path the op will be created at")
+			description := createCmd.StringOpt("d description", "", "Op description")
+			name := createCmd.StringArg("NAME", "", "Op name")
 
-		opCmd.Command(
-			"create", "Create an op",
-			func(createCmd *mow.Cmd) {
-				path := createCmd.StringOpt("path", op.DotOpspecDirName, "Path the op will be created at")
-				description := createCmd.StringOpt("d description", "", "Op description")
-				name := createCmd.StringArg("NAME", "", "Op name")
+			createCmd.Action = func() {
+				core.Op().Create(*path, *description, *name)
+			}
+		})
 
-				createCmd.Action = func() {
-					core.Op().Create(*path, *description, *name)
-				}
-			})
+		opCmd.Command("install", "Install an op", func(installCmd *mow.Cmd) {
+			path := installCmd.StringOpt("path", op.DotOpspecDirName, "Path the op will be installed at")
+			opRef := installCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
+			username := installCmd.StringOpt("u username", "", "Username used to auth w/ the pkg source")
+			password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
 
-		opCmd.Command(
-			"install", "Install an op",
-			func(installCmd *mow.Cmd) {
-				path := installCmd.StringOpt("path", op.DotOpspecDirName, "Path the op will be installed at")
-				opRef := installCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
-				username := installCmd.StringOpt("u username", "", "Username used to auth w/ the pkg source")
-				password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
-
-				installCmd.Action = func() {
-					core.Op().Install(context.TODO(), *path, *opRef, *username, *password)
-				}
-			})
+			installCmd.Action = func() {
+				core.Op().Install(context.TODO(), *path, *opRef, *username, *password)
+			}
+		})
 
 		opCmd.Command("kill", "Kill an op", func(killCmd *mow.Cmd) {
 			opID := killCmd.StringArg("OP_ID", "", "Id of the op to kill")
@@ -174,16 +132,13 @@ func newCli(
 			}
 		})
 
-		opCmd.Command(
-			"validate", "Validate an op",
-			func(validateCmd *mow.Cmd) {
-				opRef := validateCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
+		opCmd.Command("validate", "Validate an op", func(validateCmd *mow.Cmd) {
+			opRef := validateCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
-				validateCmd.Action = func() {
-					core.Op().Validate(context.TODO(), *opRef)
-				}
-			})
-
+			validateCmd.Action = func() {
+				core.Op().Validate(context.TODO(), *opRef)
+			}
+		})
 	})
 
 	cli.Command("run", "Start and wait on an op", func(runCmd *mow.Cmd) {
@@ -203,16 +158,5 @@ func newCli(
 		}
 	})
 
-	cli.Command("ui", "Open the opctl web UI and mount a reference.", func(uiCmd *mow.Cmd) {
-		const mountRefArgName = "MOUNT_REF"
-		uiCmd.Spec = fmt.Sprintf("[%v]", mountRefArgName)
-		mountRefArg := uiCmd.StringArg(mountRefArgName, ".", "Reference to mount (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
-
-		uiCmd.Action = func() {
-			core.UI(*mountRefArg)
-		}
-	})
-
 	return cli
-
 }

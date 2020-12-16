@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/opctl/opctl/cli/internal/cliexiter"
-	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/cli/internal/updater"
+	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // SelfUpdater exposes the "self-update" command
@@ -18,19 +18,19 @@ type SelfUpdater interface {
 // newSelfUpdater returns an initialized "self-update" command
 func newSelfUpdater(
 	cliExiter cliexiter.CliExiter,
-	nodeProvider nodeprovider.NodeProvider,
+	api client.Client,
 ) SelfUpdater {
 	return _selfUpdateInvoker{
-		cliExiter:    cliExiter,
-		nodeProvider: nodeProvider,
-		updater:      updater.New(),
+		cliExiter: cliExiter,
+		api:       api,
+		updater:   updater.New(),
 	}
 }
 
 type _selfUpdateInvoker struct {
-	cliExiter    cliexiter.CliExiter
-	nodeProvider nodeprovider.NodeProvider
-	updater      updater.Updater
+	cliExiter cliexiter.CliExiter
+	api       client.Client
+	updater   updater.Updater
 }
 
 func (ivkr _selfUpdateInvoker) SelfUpdate(
@@ -67,16 +67,6 @@ func (ivkr _selfUpdateInvoker) SelfUpdate(
 	err = ivkr.updater.ApplyUpdate(update)
 	if nil != err {
 		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
-	}
-
-	// kill local node to ensure outdated version not left running
-	err = ivkr.nodeProvider.KillNodeIfExists("")
-	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{
-			Message: fmt.Sprintf("Unable to kill running node; run `node kill` to complete the update. Error was: %v", err.Error()),
-			Code:    1,
-		})
 		return // support fake exiter
 	}
 
