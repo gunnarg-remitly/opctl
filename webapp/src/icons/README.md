@@ -1,1 +1,0 @@
-icons primarily vendored from material-ui
