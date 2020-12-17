@@ -3,19 +3,20 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	dockerClientPkg "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/pubsub"
-	"io"
 )
 
 //counterfeiter:generate -o internal/fakes/imagePuller.go . imagePuller
 type imagePuller interface {
 	Pull(
 		ctx context.Context,
-		containerID string,
+		containerCall *model.ContainerCall,
 		imagePullCreds *model.Creds,
 		imageRef string,
 		rootCallID string,
@@ -37,7 +38,7 @@ type _imagePuller struct {
 
 func (ip _imagePuller) Pull(
 	ctx context.Context,
-	containerID string,
+	containerCall *model.ContainerCall,
 	imagePullCreds *model.Creds,
 	imageRef string,
 	rootCallID string,
@@ -68,7 +69,7 @@ func (ip _imagePuller) Pull(
 	}
 	defer imagePullResp.Close()
 
-	stdOutWriter := NewStdOutWriteCloser(eventPublisher, containerID, rootCallID)
+	stdOutWriter := NewStdOutWriteCloser(eventPublisher, containerCall, rootCallID)
 	defer stdOutWriter.Close()
 
 	dec := json.NewDecoder(imagePullResp)

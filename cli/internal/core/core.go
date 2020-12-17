@@ -29,19 +29,18 @@ type Core interface {
 
 // New returns initialized cli core
 func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
-	_os := ios.New()
-	cliOutput := clioutput.New(cliColorer, os.Stderr, os.Stdout)
-	cliExiter := cliexiter.New(cliOutput, _os)
-	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
-
 	dataDir, err := datadir.New(datadirPath)
 	if err != nil {
 		panic(err)
 	}
-
 	if err := dataDir.InitAndLock(); nil != err {
 		panic(err)
 	}
+
+	_os := ios.New()
+	cliOutput := clioutput.New(cliColorer, dataDir.Path(), os.Stderr, os.Stdout)
+	cliExiter := cliexiter.New(cliOutput, _os)
+	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
 
 	api := client.New(ctx, &client.Opts{
 		ContainerRuntime: containerRuntime,

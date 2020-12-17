@@ -108,7 +108,7 @@ func (cr _runContainer) RunContainer(
 		// note: this trades local reproducibility for distributed reproducibility
 		imageErr = cr.imagePuller.Pull(
 			ctx,
-			req.ContainerID,
+			req,
 			req.Image.PullCreds,
 			*req.Image.Ref,
 			rootCallID,

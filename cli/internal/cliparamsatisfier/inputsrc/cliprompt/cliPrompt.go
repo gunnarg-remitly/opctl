@@ -15,8 +15,9 @@ func New(
 	inputs map[string]*model.Param,
 ) inputsrc.InputSrc {
 	return cliPromptInputSrc{
-		inputs:    inputs,
-		cliOutput: clioutput.New(clicolorer.New(), os.Stderr, os.Stdout),
+		inputs: inputs,
+		// TODO
+		cliOutput: clioutput.New(clicolorer.New(), "", os.Stderr, os.Stdout),
 	}
 }
 

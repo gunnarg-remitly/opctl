@@ -5,7 +5,9 @@ package clioutput
 import (
 	"fmt"
 	"io"
-	"time"
+	"os"
+	"path"
+	"strings"
 
 	"github.com/opctl/opctl/cli/internal/clicolorer"
 	"github.com/opctl/opctl/sdks/go/model"
@@ -25,7 +27,7 @@ type CliOutput interface {
 	Event(event *model.Event)
 
 	// outputs an info msg
-	Info(s string)
+	info(s string)
 
 	// outputs a success msg
 	Success(s string)
@@ -33,11 +35,13 @@ type CliOutput interface {
 
 func New(
 	cliColorer clicolorer.CliColorer,
+	dataDir string,
 	errWriter io.Writer,
 	stdWriter io.Writer,
 ) CliOutput {
 	return _cliOutput{
 		cliColorer: cliColorer,
+		dataDir:    dataDir,
 		errWriter:  errWriter,
 		stdWriter:  stdWriter,
 	}
@@ -45,6 +49,7 @@ func New(
 
 type _cliOutput struct {
 	cliColorer clicolorer.CliColorer
+	dataDir    string
 	errWriter  io.Writer
 	stdWriter  io.Writer
 }
@@ -95,111 +100,166 @@ func (this _cliOutput) Event(event *model.Event) {
 
 	case nil != event.CallStarted &&
 		nil != event.CallStarted.Call.Op:
-		this.opStarted(event)
+		this.opStarted(event.CallStarted)
 	}
 }
 
 func (this _cliOutput) error(event *model.Event) {
-	this.Error(
+	io.WriteString(
+		this.stdWriter,
 		fmt.Sprintf(
-			"Error='%v' Id='%v' OpRef='%v' Timestamp='%v'",
-			event.CallEnded.Error.Message,
-			event.CallEnded.Call.ID,
-			event.CallEnded.Ref,
-			event.Timestamp.Format(time.RFC3339),
+			"%s%s\n",
+			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Ref),
+			this.cliColorer.Error(event.CallEnded.Error.Message),
 		),
 	)
 }
 
 func (this _cliOutput) containerExited(event *model.Event) {
-	err := ""
-	if nil != event.CallEnded.Error {
-		err = fmt.Sprintf(" Error='%v'", event.CallEnded.Error.Message)
-	}
-
-	imageRef := ""
-	if nil != event.CallEnded.Call.Container.Image.Ref {
-		imageRef = fmt.Sprintf(" ImageRef='%v'", *event.CallEnded.Call.Container.Image.Ref)
-	}
-
-	message := fmt.Sprintf(
-		"ContainerExited Id='%v'%v Outcome='%v'%v Timestamp='%v'",
-		event.CallEnded.Call.ID,
-		imageRef,
-		event.CallEnded.Outcome,
-		err,
-		event.Timestamp.Format(time.RFC3339),
-	)
+	var color func(s string) string
 	switch event.CallEnded.Outcome {
 	case model.OpOutcomeSucceeded:
-		this.Success(message)
+		color = this.cliColorer.Success
 	case model.OpOutcomeKilled:
-		this.Info(message)
+		color = this.cliColorer.Info
 	default:
-		this.Error(message)
+		color = this.cliColorer.Error
 	}
+
+	message := "exited"
+	if nil != event.CallEnded.Error {
+		message += fmt.Sprintf(" with error")
+	}
+	message = color(message)
+	if nil != event.CallEnded.Call.Container.Image.Ref {
+		message += fmt.Sprintf(" %s", *event.CallEnded.Call.Container.Image.Ref)
+	}
+	if nil != event.CallEnded.Error {
+		message += fmt.Sprintf("\n%v", event.CallEnded.Error.Message)
+	}
+
+	io.WriteString(
+		this.stdWriter,
+		fmt.Sprintf(
+			"%s%s\n",
+			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Ref),
+			message,
+		),
+	)
 }
 
 func (this _cliOutput) containerStarted(event *model.Event) {
-	imageRef := ""
+	message := this.cliColorer.Info("started container")
 	if nil != event.CallStarted.Call.Container.Image.Ref {
-		imageRef = fmt.Sprintf(" ImageRef='%v'", *event.CallStarted.Call.Container.Image.Ref)
+		message += fmt.Sprintf(" %s", *event.CallStarted.Call.Container.Image.Ref)
 	}
 
-	this.Info(
+	io.WriteString(
+		this.stdWriter,
 		fmt.Sprintf(
-			"ContainerStarted Id='%v' OpRef='%v'%v Timestamp='%v'",
-			event.CallStarted.Call.ID,
-			event.CallStarted.Ref,
-			imageRef,
-			event.Timestamp.Format(time.RFC3339),
+			"%s%s\n",
+			this.outputPrefix(event.CallStarted.Call.ID, event.CallStarted.Ref),
+			message,
 		),
 	)
+}
+
+func (this _cliOutput) formatOpRef(opRef string) string {
+	if path.IsAbs(opRef) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return opRef
+		}
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return opRef
+		}
+		if strings.HasPrefix(opRef, this.dataDir) {
+			return opRef[len(this.dataDir+string(os.PathListSeparator)+"ops"+string(os.PathListSeparator)):]
+		}
+		if strings.HasPrefix(opRef, cwd) {
+			return "." + opRef[len(cwd):]
+		}
+		if strings.HasPrefix(opRef, home) {
+			return "~" + opRef[len(home):]
+		}
+	}
+	return opRef
+}
+
+func (this _cliOutput) outputPrefix(id, opRef string) string {
+	parts := []string{id[:8]}
+	opRef = this.formatOpRef(opRef)
+	if opRef != "" {
+		parts = append(parts, opRef)
+	}
+	return this.cliColorer.Muted(strings.Join(parts, " ")) + ": "
 }
 
 func (this _cliOutput) containerStdErrWrittenTo(event *model.ContainerStdErrWrittenTo) {
-	io.WriteString(this.errWriter, fmt.Sprintf("%s (%s): %s", this.cliColorer.Info(event.ContainerID), event.OpRef, event.Data))
-}
-
-func (this _cliOutput) containerStdOutWrittenTo(event *model.ContainerStdOutWrittenTo) {
-	io.WriteString(this.stdWriter, fmt.Sprintf("%s (%s): %s", this.cliColorer.Info(event.ContainerID), event.OpRef, event.Data))
-}
-
-func (this _cliOutput) opEnded(event *model.Event) {
-	err := ""
-	if nil != event.CallEnded.Error {
-		err = fmt.Sprintf(" Error='%v'", event.CallEnded.Error.Message)
-	}
-	message := fmt.Sprintf(
-		"OpEnded Id='%v' OpRef='%v' Outcome='%v'%v Timestamp='%v'",
-		event.CallEnded.Call.ID,
-		event.CallEnded.Call.Op.OpPath,
-		event.CallEnded.Outcome,
-		err,
-		event.Timestamp.Format(time.RFC3339),
-	)
-	switch event.CallEnded.Outcome {
-	case model.OpOutcomeSucceeded:
-		this.Success(message)
-	case model.OpOutcomeKilled:
-		this.Info(message)
-	default:
-		this.Error(message)
-	}
-}
-
-func (this _cliOutput) opStarted(event *model.Event) {
-	this.Info(
+	io.WriteString(
+		this.errWriter,
 		fmt.Sprintf(
-			"OpStarted Id='%v' OpRef='%v' Timestamp='%v'",
-			event.CallStarted.Call.ID,
-			event.CallStarted.Call.Op.OpPath,
-			event.Timestamp.Format(time.RFC3339),
+			"%s%s",
+			this.outputPrefix(event.ContainerID, event.OpRef),
+			event.Data,
 		),
 	)
 }
 
-func (this _cliOutput) Info(s string) {
+func (this _cliOutput) containerStdOutWrittenTo(event *model.ContainerStdOutWrittenTo) {
+	io.WriteString(
+		this.stdWriter,
+		fmt.Sprintf(
+			"%s%s",
+			this.outputPrefix(event.ContainerID, event.OpRef),
+			event.Data,
+		),
+	)
+}
+
+func (this _cliOutput) opEnded(event *model.Event) {
+	var color func(s string) string
+	switch event.CallEnded.Outcome {
+	case model.OpOutcomeSucceeded:
+		color = this.cliColorer.Success
+	case model.OpOutcomeKilled:
+		color = this.cliColorer.Info
+	default:
+		color = this.cliColorer.Error
+	}
+
+	message := "ended"
+	if nil != event.CallEnded.Error {
+		message += fmt.Sprintf(" with error")
+	}
+	message = color(message)
+	if nil != event.CallEnded.Error {
+		message += fmt.Sprintf("\n%v", event.CallEnded.Error.Message)
+	}
+
+	io.WriteString(
+		this.stdWriter,
+		fmt.Sprintf(
+			"%s%s\n",
+			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Call.Op.OpPath),
+			message,
+		),
+	)
+}
+
+func (this _cliOutput) opStarted(event *model.CallStarted) {
+	io.WriteString(
+		this.stdWriter,
+		fmt.Sprintf(
+			"%s%s\n",
+			this.outputPrefix(event.Call.ID, event.Call.Op.OpPath),
+			this.cliColorer.Info("started op"),
+		),
+	)
+}
+
+func (this _cliOutput) info(s string) {
 	io.WriteString(
 		this.stdWriter,
 		fmt.Sprintln(

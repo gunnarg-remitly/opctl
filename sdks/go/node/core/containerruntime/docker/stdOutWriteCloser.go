@@ -2,15 +2,16 @@ package docker
 
 import (
 	"bufio"
-	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 	"io"
 	"time"
+
+	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 func NewStdOutWriteCloser(
 	eventPublisher pubsub.EventPublisher,
-	containerID string,
+	containerCall *model.ContainerCall,
 	rootCallID string,
 ) io.WriteCloser {
 	pr, pw := io.Pipe()
@@ -29,7 +30,8 @@ func NewStdOutWriteCloser(
 						Timestamp: time.Now().UTC(),
 						ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
 							Data:        b,
-							ContainerID: containerID,
+							OpRef:       containerCall.OpPath,
+							ContainerID: containerCall.ContainerID,
 							RootCallID:  rootCallID,
 						},
 					},
