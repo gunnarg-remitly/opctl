@@ -84,10 +84,10 @@ func (this _cliOutput) Event(event *model.Event) {
 		this.containerStarted(event)
 
 	case nil != event.ContainerStdErrWrittenTo:
-		this.containerStdErrWrittenTo(event)
+		this.containerStdErrWrittenTo(event.ContainerStdErrWrittenTo)
 
 	case nil != event.ContainerStdOutWrittenTo:
-		this.containerStdOutWrittenTo(event)
+		this.containerStdOutWrittenTo(event.ContainerStdOutWrittenTo)
 
 	case nil != event.CallEnded &&
 		nil != event.CallEnded.Call.Op:
@@ -102,7 +102,7 @@ func (this _cliOutput) Event(event *model.Event) {
 func (this _cliOutput) error(event *model.Event) {
 	this.Error(
 		fmt.Sprintf(
-			"Error='%v' Id='%v' OpRef='%v' Timestamp='%v'\n",
+			"Error='%v' Id='%v' OpRef='%v' Timestamp='%v'",
 			event.CallEnded.Error.Message,
 			event.CallEnded.Call.ID,
 			event.CallEnded.Ref,
@@ -123,7 +123,7 @@ func (this _cliOutput) containerExited(event *model.Event) {
 	}
 
 	message := fmt.Sprintf(
-		"ContainerExited Id='%v'%v Outcome='%v'%v Timestamp='%v'\n",
+		"ContainerExited Id='%v'%v Outcome='%v'%v Timestamp='%v'",
 		event.CallEnded.Call.ID,
 		imageRef,
 		event.CallEnded.Outcome,
@@ -148,7 +148,7 @@ func (this _cliOutput) containerStarted(event *model.Event) {
 
 	this.Info(
 		fmt.Sprintf(
-			"ContainerStarted Id='%v' OpRef='%v'%v Timestamp='%v'\n",
+			"ContainerStarted Id='%v' OpRef='%v'%v Timestamp='%v'",
 			event.CallStarted.Call.ID,
 			event.CallStarted.Ref,
 			imageRef,
@@ -157,12 +157,12 @@ func (this _cliOutput) containerStarted(event *model.Event) {
 	)
 }
 
-func (this _cliOutput) containerStdErrWrittenTo(event *model.Event) {
-	io.WriteString(this.errWriter, string(event.ContainerStdErrWrittenTo.Data))
+func (this _cliOutput) containerStdErrWrittenTo(event *model.ContainerStdErrWrittenTo) {
+	io.WriteString(this.errWriter, fmt.Sprintf("%s (%s): %s", this.cliColorer.Info(event.ContainerID), event.OpRef, event.Data))
 }
 
-func (this _cliOutput) containerStdOutWrittenTo(event *model.Event) {
-	io.WriteString(this.stdWriter, string(event.ContainerStdOutWrittenTo.Data))
+func (this _cliOutput) containerStdOutWrittenTo(event *model.ContainerStdOutWrittenTo) {
+	io.WriteString(this.stdWriter, fmt.Sprintf("%s (%s): %s", this.cliColorer.Info(event.ContainerID), event.OpRef, event.Data))
 }
 
 func (this _cliOutput) opEnded(event *model.Event) {
@@ -171,7 +171,7 @@ func (this _cliOutput) opEnded(event *model.Event) {
 		err = fmt.Sprintf(" Error='%v'", event.CallEnded.Error.Message)
 	}
 	message := fmt.Sprintf(
-		"OpEnded Id='%v' OpRef='%v' Outcome='%v'%v Timestamp='%v'\n",
+		"OpEnded Id='%v' OpRef='%v' Outcome='%v'%v Timestamp='%v'",
 		event.CallEnded.Call.ID,
 		event.CallEnded.Call.Op.OpPath,
 		event.CallEnded.Outcome,
@@ -191,7 +191,7 @@ func (this _cliOutput) opEnded(event *model.Event) {
 func (this _cliOutput) opStarted(event *model.Event) {
 	this.Info(
 		fmt.Sprintf(
-			"OpStarted Id='%v' OpRef='%v' Timestamp='%v'\n",
+			"OpStarted Id='%v' OpRef='%v' Timestamp='%v'",
 			event.CallStarted.Call.ID,
 			event.CallStarted.Call.Op.OpPath,
 			event.Timestamp.Format(time.RFC3339),

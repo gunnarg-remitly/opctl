@@ -6,9 +6,10 @@ package containerruntime
 
 import (
 	"context"
+	"io"
+
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/pubsub"
-	"io"
 )
 
 // ContainerRuntime defines the interface container runtimes must implement to be supported by
