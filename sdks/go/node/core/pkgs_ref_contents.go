@@ -1,4 +1,4 @@
-package client
+package core
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
-func (c client) ListDescendants(
+func (c _core) ListDescendants(
 	ctx context.Context,
 	req model.ListDescendantsReq,
 ) (
@@ -17,7 +17,7 @@ func (c client) ListDescendants(
 		return []*model.DirEntry{}, nil
 	}
 
-	dataHandle, err := c.core.ResolveData(ctx, req.PkgRef, req.PullCreds)
+	dataHandle, err := c.ResolveData(ctx, req.PkgRef, req.PullCreds)
 	if err != nil {
 		return nil, err
 	}

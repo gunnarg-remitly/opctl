@@ -13,7 +13,10 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/datadir"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	"github.com/opctl/opctl/sdks/go/node/api/client"
+	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/k8s"
 )
 
 // Core exposes all cli commands
@@ -42,27 +45,36 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 	cliExiter := cliexiter.New(cliOutput, _os)
 	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
 
-	api := client.New(ctx, &client.Opts{
-		ContainerRuntime: containerRuntime,
-		DataDirPath:      dataDir.Path(),
-	})
+	var cr containerruntime.ContainerRuntime
+	if "k8s" == containerRuntime {
+		cr, err = k8s.New()
+		if nil != err {
+			panic(err)
+		}
+	} else {
+		cr, err = docker.New(ctx)
+		if nil != err {
+			panic(err)
+		}
+	}
+	c := core.New(ctx, cr, datadirPath)
 
 	dataResolver := dataresolver.New(
 		cliExiter,
 		cliParamSatisfier,
-		api,
+		c,
 	)
 
 	return _core{
 		Auther: newAuther(
 			cliExiter,
 			dataResolver,
-			api,
+			c,
 		),
 		Eventser: newEventser(
 			cliExiter,
 			cliOutput,
-			api,
+			c,
 		),
 		Lser: newLser(
 			cliExiter,
@@ -72,7 +84,6 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 		Oper: newOper(
 			cliExiter,
 			dataResolver,
-			api,
 		),
 		Runer: newRuner(
 			cliColorer,
@@ -80,12 +91,9 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 			cliOutput,
 			cliParamSatisfier,
 			dataResolver,
-			api,
+			c,
 		),
-		SelfUpdater: newSelfUpdater(
-			cliExiter,
-			api,
-		),
+		SelfUpdater: newSelfUpdater(cliExiter),
 	}
 }
 

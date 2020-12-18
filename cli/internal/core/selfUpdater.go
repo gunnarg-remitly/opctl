@@ -5,7 +5,6 @@ import (
 
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/updater"
-	"github.com/opctl/opctl/sdks/go/node/api/client"
 )
 
 // SelfUpdater exposes the "self-update" command
@@ -16,20 +15,15 @@ type SelfUpdater interface {
 }
 
 // newSelfUpdater returns an initialized "self-update" command
-func newSelfUpdater(
-	cliExiter cliexiter.CliExiter,
-	api client.Client,
-) SelfUpdater {
+func newSelfUpdater(cliExiter cliexiter.CliExiter) SelfUpdater {
 	return _selfUpdateInvoker{
 		cliExiter: cliExiter,
-		api:       api,
 		updater:   updater.New(),
 	}
 }
 
 type _selfUpdateInvoker struct {
 	cliExiter cliexiter.CliExiter
-	api       client.Client
 	updater   updater.Updater
 }
 

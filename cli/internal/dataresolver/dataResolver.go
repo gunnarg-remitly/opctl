@@ -14,7 +14,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/data/fs"
 	"github.com/opctl/opctl/sdks/go/data/node"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api/client"
+	"github.com/opctl/opctl/sdks/go/node/core"
 )
 
 // DataResolver resolves packages
@@ -30,12 +30,12 @@ type DataResolver interface {
 func New(
 	cliExiter cliexiter.CliExiter,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
-	api client.Client,
+	core core.Core,
 ) DataResolver {
 	return _dataResolver{
 		cliExiter:         cliExiter,
 		cliParamSatisfier: cliParamSatisfier,
-		api:               api,
+		core:              core,
 		os:                ios.New(),
 	}
 }
@@ -43,7 +43,7 @@ func New(
 type _dataResolver struct {
 	cliExiter         cliexiter.CliExiter
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
-	api               client.Client
+	core              core.Core
 	os                ios.IOS
 }
 
@@ -68,7 +68,7 @@ func (dtr _dataResolver) Resolve(
 			ctx,
 			dataRef,
 			fsProvider,
-			node.New(dtr.api, pullCreds),
+			node.New(dtr.core, pullCreds),
 		)
 
 		var isAuthError bool

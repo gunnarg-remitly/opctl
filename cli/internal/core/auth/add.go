@@ -5,7 +5,7 @@ import (
 
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api/client"
+	"github.com/opctl/opctl/sdks/go/node/core"
 )
 
 // Adder exposes the "auth add" sub command
@@ -21,17 +21,17 @@ type Adder interface {
 // newAdder returns an initialized "auth add" sub command
 func newAdder(
 	cliExiter cliexiter.CliExiter,
-	api client.Client,
+	core core.Core,
 ) Adder {
 	return _adder{
 		cliExiter: cliExiter,
-		api:       api,
+		core:      core,
 	}
 }
 
 type _adder struct {
 	cliExiter cliexiter.CliExiter
-	api       client.Client
+	core      core.Core
 }
 
 func (ivkr _adder) Add(
@@ -40,8 +40,7 @@ func (ivkr _adder) Add(
 	username string,
 	password string,
 ) {
-	err := ivkr.api.AddAuth(
-		ctx,
+	err := ivkr.core.AddAuth(
 		model.AddAuthReq{
 			Resources: resources,
 			Creds: model.Creds{

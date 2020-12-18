@@ -1,4 +1,4 @@
-package client
+package core
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
-func (c client) GetData(
+func (c _core) GetData(
 	ctx context.Context,
 	req model.GetDataReq,
 ) (
@@ -18,7 +18,7 @@ func (c client) GetData(
 		return nil, fmt.Errorf("not found: %s%s", req.PkgRef, req.ContentPath)
 	}
 
-	dataHandle, err := c.core.ResolveData(ctx, req.PkgRef, req.PullCreds)
+	dataHandle, err := c.ResolveData(ctx, req.PkgRef, req.PullCreds)
 	if err != nil {
 		return nil, err
 	}

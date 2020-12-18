@@ -16,7 +16,7 @@ import (
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	cliModel "github.com/opctl/opctl/cli/internal/model"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/api/client"
+	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 )
 
@@ -36,7 +36,7 @@ func newRuner(
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
-	api client.Client,
+	core core.Core,
 ) Runer {
 	return _runer{
 		cliColorer:        cliColorer,
@@ -44,7 +44,7 @@ func newRuner(
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
-		api:               api,
+		core:              core,
 	}
 }
 
@@ -54,7 +54,7 @@ type _runer struct {
 	cliExiter         cliexiter.CliExiter
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
-	api               client.Client
+	core              core.Core
 }
 
 func (ivkr _runer) Run(
@@ -128,7 +128,7 @@ func (ivkr _runer) Run(
 	)
 
 	// start op
-	rootCallID, err := ivkr.api.StartOp(
+	rootCallID, err := ivkr.core.StartOp(
 		ctx,
 		model.StartOpReq{
 			Args: argsMap,
@@ -143,7 +143,7 @@ func (ivkr _runer) Run(
 	}
 
 	// start event loop
-	eventChannel, err := ivkr.api.GetEventStream(
+	eventChannel, errChan := ivkr.core.GetEventStream(
 		ctx,
 		&model.GetEventStreamReq{
 			Filter: model.EventFilter{
@@ -152,10 +152,14 @@ func (ivkr _runer) Run(
 			},
 		},
 	)
-	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
-	}
+	go func() {
+		for {
+			err := <-errChan
+			if err != nil {
+				fmt.Printf("error received: %v\n", err)
+			}
+		}
+	}()
 
 	for {
 		select {
@@ -165,8 +169,8 @@ func (ivkr _runer) Run(
 				fmt.Println(ivkr.cliColorer.Error("Gracefully stopping... (signal Control-C again to force)"))
 				aSigIntWasReceivedAlready = true
 
-				ivkr.api.KillOp(
-					ctx,
+				ivkr.core.KillOp(
+					// ctx,
 					model.KillOpReq{
 						OpID:       rootCallID,
 						RootCallID: rootCallID,
@@ -180,8 +184,8 @@ func (ivkr _runer) Run(
 		case <-sigTermChannel:
 			fmt.Println(ivkr.cliColorer.Error("Gracefully stopping..."))
 
-			ivkr.api.KillOp(
-				ctx,
+			ivkr.core.KillOp(
+				// ctx,
 				model.KillOpReq{
 					OpID:       rootCallID,
 					RootCallID: rootCallID,

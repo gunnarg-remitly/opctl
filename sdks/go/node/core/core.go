@@ -58,6 +58,34 @@ type Core interface {
 		model.DataHandle,
 		error,
 	)
+
+	// ListDescendants lists file system entries
+	//
+	// expected errs:
+	//  - ErrDataProviderAuthentication on authentication failure
+	//  - ErrDataProviderAuthorization on authorization failure
+	//  - ErrDataRefResolution on resolution failure
+	ListDescendants(
+		ctx context.Context,
+		req model.ListDescendantsReq,
+	) (
+		[]*model.DirEntry,
+		error,
+	)
+
+	// GetData gets data
+	//
+	// expected errs:
+	//  - ErrDataProviderAuthentication on authentication failure
+	//  - ErrDataProviderAuthorization on authorization failure
+	//  - ErrDataRefResolution on resolution failure
+	GetData(
+		ctx context.Context,
+		req model.GetDataReq,
+	) (
+		model.ReadSeekCloser,
+		error,
+	)
 }
 
 func New(
