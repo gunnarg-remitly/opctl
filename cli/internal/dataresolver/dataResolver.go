@@ -79,10 +79,13 @@ func (dtr _dataResolver) Resolve(
 			return opDirHandle, err
 		case isAuthError:
 			// auth errors can be fixed by supplying correct creds so don't give up; prompt
+			cliPromptInputSrc, err := dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs)
+			if nil != err {
+				return nil, err
+			}
+
 			argMap, err := dtr.cliParamSatisfier.Satisfy(
-				cliparamsatisfier.NewInputSourcer(
-					dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs),
-				),
+				cliparamsatisfier.NewInputSourcer(cliPromptInputSrc),
 				credsPromptInputs,
 			)
 			if nil != err {

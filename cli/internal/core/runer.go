@@ -94,13 +94,17 @@ func (ivkr _runer) Run(
 		return fmt.Errorf("unable to load arg file at '%v'; error was: %v", opts.ArgFile, err.Error())
 	}
 
+	cliPromptInputSrc, err := ivkr.cliParamSatisfier.NewCliPromptInputSrc(opFile.Inputs)
+	if nil != err {
+		return err
+	}
 	argsMap, err := ivkr.cliParamSatisfier.Satisfy(
 		cliparamsatisfier.NewInputSourcer(
 			ivkr.cliParamSatisfier.NewSliceInputSrc(opts.Args, "="),
 			ymlFileInputSrc,
 			ivkr.cliParamSatisfier.NewEnvVarInputSrc(),
 			ivkr.cliParamSatisfier.NewParamDefaultInputSrc(opFile.Inputs),
-			ivkr.cliParamSatisfier.NewCliPromptInputSrc(opFile.Inputs),
+			cliPromptInputSrc,
 		),
 		opFile.Inputs,
 	)

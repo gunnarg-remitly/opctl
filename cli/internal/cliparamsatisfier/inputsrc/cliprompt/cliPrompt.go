@@ -13,12 +13,13 @@ import (
 
 func New(
 	inputs map[string]*model.Param,
-) inputsrc.InputSrc {
+) (inputsrc.InputSrc, error) {
+	cliOutput, err := clioutput.New(clicolorer.New(), "", os.Stderr, os.Stdout)
 	return cliPromptInputSrc{
 		inputs: inputs,
 		// TODO
-		cliOutput: clioutput.New(clicolorer.New(), "", os.Stderr, os.Stdout),
-	}
+		cliOutput: cliOutput,
+	}, err
 }
 
 // cliPromptInputSrc implements InputSrc interface by sourcing inputs from std in

@@ -45,10 +45,10 @@ func New(
 	datadirPath string,
 	errWriter io.Writer,
 	stdWriter io.Writer,
-) CliOutput {
+) (CliOutput, error) {
 	dataDir, err := datadir.New(datadirPath)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return _cliOutput{
@@ -56,7 +56,7 @@ func New(
 		dataDir:    dataDir,
 		errWriter:  errWriter,
 		stdWriter:  stdWriter,
-	}
+	}, nil
 }
 
 type _cliOutput struct {

@@ -28,12 +28,12 @@ type newCorer func(
 	cliOutput clioutput.CliOutput,
 	containerRuntime,
 	datadirPath string,
-) corePkg.Core
+) (corePkg.Core, error)
 
 func newCli(
 	ctx context.Context,
 	newCorer newCorer,
-) cli {
+) (cli, error) {
 	cli := mow.App(
 		"opctl",
 		"Opctl is a free and open source distributed operation control system.",
@@ -42,7 +42,21 @@ func newCli(
 
 	perUserAppDataPath, err := appdatapath.New().PerUser()
 	if nil != err {
-		panic(err)
+		return nil, err
+	}
+
+	dataDir := cli.String(
+		mow.StringOpt{
+			Desc:   "Path of dir used to store opctl data",
+			EnvVar: "OPCTL_DATA_DIR",
+			Name:   "data-dir",
+			Value:  filepath.Join(perUserAppDataPath, "miniopctl"),
+		},
+	)
+
+	cliOutput, err := clioutput.New(clicolorer.New(), *dataDir, os.Stderr, os.Stdout)
+	if err != nil {
+		return nil, err
 	}
 
 	containerRuntime := cli.String(
@@ -54,18 +68,10 @@ func newCli(
 		},
 	)
 
-	dataDir := cli.String(
-		mow.StringOpt{
-			Desc:   "Path of dir used to store opctl data",
-			EnvVar: "OPCTL_DATA_DIR",
-			Name:   "data-dir",
-			Value:  filepath.Join(perUserAppDataPath, "miniopctl"),
-		},
-	)
-
-	cliOutput := clioutput.New(clicolorer.New(), *dataDir, os.Stderr, os.Stdout)
-
-	core := newCorer(ctx, cliOutput, *containerRuntime, *dataDir)
+	core, err := newCorer(ctx, cliOutput, *containerRuntime, *dataDir)
+	if err != nil {
+		return nil, err
+	}
 
 	exitWith := func(successMessage string, err error) {
 		if err == nil {
@@ -165,5 +171,5 @@ func newCli(
 		}
 	})
 
-	return cli
+	return cli, nil
 }

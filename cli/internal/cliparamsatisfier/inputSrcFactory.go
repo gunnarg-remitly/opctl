@@ -13,7 +13,7 @@ import (
 type InputSrcFactory interface {
 	NewCliPromptInputSrc(
 		inputs map[string]*model.Param,
-	) inputsrc.InputSrc
+	) (inputsrc.InputSrc, error)
 
 	NewEnvVarInputSrc() inputsrc.InputSrc
 
@@ -39,7 +39,7 @@ type _inputSrcFactory struct{}
 
 func (is _inputSrcFactory) NewCliPromptInputSrc(
 	inputs map[string]*model.Param,
-) inputsrc.InputSrc {
+) (inputsrc.InputSrc, error) {
 	return cliprompt.New(inputs)
 }
 

@@ -31,28 +31,25 @@ func New(
 	cliOutput clioutput.CliOutput,
 	containerRuntime string,
 	datadirPath string,
-) Core {
+) (Core, error) {
 	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
 
 	var cr containerruntime.ContainerRuntime
 	var err error
 	if "k8s" == containerRuntime {
 		cr, err = k8s.New()
-		if nil != err {
-			panic(err)
-		}
 	} else {
 		cr, err = docker.New(ctx)
-		if nil != err {
-			panic(err)
-		}
+	}
+	if nil != err {
+		return nil, err
 	}
 
 	eventChannel := make(chan model.Event)
 
 	c, err := core.New(ctx, cr, datadirPath, eventChannel)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	dataResolver := dataresolver.New(
@@ -80,7 +77,7 @@ func New(
 			c,
 		),
 		SelfUpdater: newSelfUpdater(),
-	}
+	}, nil
 }
 
 type _core struct {
