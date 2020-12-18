@@ -6,8 +6,6 @@ package client
 import (
 	"context"
 
-	iwebsocket "github.com/golang-interfaces/github.com-gorilla-websocket"
-	"github.com/gorilla/websocket"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
@@ -109,12 +107,10 @@ func New(
 	c := core.New(ctx, containerRuntime, opts.DataDirPath)
 
 	return &client{
-		core:     c,
-		wsDialer: websocket.DefaultDialer,
+		core: c,
 	}
 }
 
 type client struct {
-	core     core.Core
-	wsDialer iwebsocket.Dialer
+	core core.Core
 }
