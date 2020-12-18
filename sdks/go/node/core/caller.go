@@ -45,10 +45,7 @@ func newCaller(
 		dataDirPath,
 	)
 
-	instance.parallelCaller = newParallelCaller(
-		instance,
-		pubSub,
-	)
+	instance.parallelCaller = newParallelCaller(instance)
 
 	instance.parallelLoopCaller = newParallelLoopCaller(
 		instance,

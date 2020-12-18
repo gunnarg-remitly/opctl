@@ -2,15 +2,10 @@ package core
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"runtime/debug"
 	"strings"
-	"time"
 
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 //counterfeiter:generate -o internal/fakes/parallelCaller.go . parallelCaller
@@ -29,17 +24,11 @@ type parallelCaller interface {
 	)
 }
 
-func newParallelCaller(
-	caller caller,
-	pubSub pubsub.PubSub,
-) parallelCaller {
-
+func newParallelCaller(caller caller) parallelCaller {
 	return _parallelCaller{
 		caller:              caller,
-		pubSub:              pubSub,
 		uniqueStringFactory: uniquestring.NewUniqueStringFactory(),
 	}
-
 }
 
 func refToName(ref string) string {
@@ -48,7 +37,6 @@ func refToName(ref string) string {
 
 type _parallelCaller struct {
 	caller              caller
-	pubSub              pubsub.PubSub
 	uniqueStringFactory uniquestring.UniqueStringFactory
 }
 
@@ -75,15 +63,19 @@ func (pc _parallelCaller) Call(
 		}
 	}
 
-	startTime := time.Now().UTC()
 	childCallIndexByID := map[string]int{}
 	childCallCancellationByName := map[string]context.CancelFunc{}
 	childCallOutputsByIndex := map[int]map[string]*model.Value{}
 
+	type childResult struct {
+		CallID  string
+		Err     error
+		Outputs map[string]*model.Value
+	}
+	childResults := make(chan childResult, len(callSpecParallelCall))
+
 	// perform calls in parallel w/ cancellation
 	for childCallIndex, childCall := range callSpecParallelCall {
-		childCtx := parallelCtx
-
 		childCallID, err := pc.uniqueStringFactory.Construct()
 		if nil != err {
 			// end run immediately on any error
@@ -92,25 +84,15 @@ func (pc _parallelCaller) Call(
 
 		childCallIndexByID[childCallID] = childCallIndex
 
+		var childCtx context.Context
 		if nil != childCall.Name {
-			newCtx, cancel := context.WithCancel(childCtx)
-			childCtx = newCtx
-
-			childCallCancellationByName[*childCall.Name] = cancel
+			childCtx, childCallCancellationByName[*childCall.Name] = context.WithCancel(parallelCtx)
+		} else {
+			childCtx = parallelCtx
 		}
 
 		go func(childCall *model.CallSpec) {
-			defer func() {
-				if panicArg := recover(); panicArg != nil {
-					// recover from panics; treat as errors
-					fmt.Printf("%v\n%v", panicArg, debug.Stack())
-
-					// cancel all children on any error
-					cancelParallel()
-				}
-			}()
-
-			pc.caller.Call(
+			outputs, err := pc.caller.Call(
 				childCtx,
 				childCallID,
 				inboundScope,
@@ -119,35 +101,30 @@ func (pc _parallelCaller) Call(
 				&callID,
 				rootCallID,
 			)
-
+			childResults <- childResult{
+				CallID:  childCallID,
+				Err:     err,
+				Outputs: outputs,
+			}
 		}(childCall)
 	}
 
-	// subscribe to events
-	// @TODO: handle err channel
-	eventChannel, _ := pc.pubSub.Subscribe(
-		// don't cancel w/ children; we need to read err msgs
-		parentCtx,
-		model.EventFilter{
-			Roots: []string{rootCallID},
-			Since: &startTime,
-		},
-	)
+	outboundScope := inboundScope
 
-	var isChildErred = false
-	outputs := map[string]*model.Value{}
+	for {
+		select {
+		case <-parallelCtx.Done():
+			return nil, parallelCtx.Err()
 
-eventLoop:
-	for event := range eventChannel {
-		if nil != event.CallEnded {
-			if childCallIndex, isChildCallEnded := childCallIndexByID[event.CallEnded.Call.ID]; isChildCallEnded {
-				childCallOutputsByIndex[childCallIndex] = event.CallEnded.Outputs
-				if nil != event.CallEnded.Error {
-					isChildErred = true
+		case result := <-childResults:
+			if result.Err != nil {
+				// cancel all children on any error
+				cancelParallel()
+				return nil, result.Err
+			}
 
-					// cancel all children on any error
-					cancelParallel()
-				}
+			if childCallIndex, isChildCallEnded := childCallIndexByID[result.CallID]; isChildCallEnded {
+				childCallOutputsByIndex[childCallIndex] = result.Outputs
 
 				// decrement needed by counts for any needs
 				for _, neededCallRef := range callSpecParallelCall[childCallIndex].Needs {
@@ -170,19 +147,12 @@ eventLoop:
 				for i := 0; i < len(callSpecParallelCall); i++ {
 					callOutputs := childCallOutputsByIndex[i]
 					for varName, varData := range callOutputs {
-						outputs[varName] = varData
+						outboundScope[varName] = varData
 					}
 				}
 
-				if isChildErred {
-					return nil, errors.New("child call failed")
-				}
-
-				break eventLoop
+				return outboundScope, nil
 			}
-
 		}
 	}
-
-	return outputs, nil
 }
