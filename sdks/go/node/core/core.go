@@ -14,7 +14,6 @@ import (
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 //counterfeiter:generate -o fakes/core.go . Core
@@ -99,14 +98,11 @@ func New(
 		return nil, err
 	}
 
-	pubSub := pubsub.New(db)
-
 	uniqueStringFactory := uniquestring.NewUniqueStringFactory()
 
 	stateStore := newStateStore(
 		ctx,
 		db,
-		pubSub,
 	)
 
 	caller := newCaller(
@@ -129,7 +125,6 @@ func New(
 			caller,
 			dataDirPath,
 		),
-		pubSub:              pubSub,
 		stateStore:          stateStore,
 		uniqueStringFactory: uniqueStringFactory,
 	}, nil
@@ -140,7 +135,6 @@ type _core struct {
 	containerRuntime    containerruntime.ContainerRuntime
 	dataCachePath       string
 	opCaller            opCaller
-	pubSub              pubsub.PubSub
 	stateStore          stateStore
 	uniqueStringFactory uniquestring.UniqueStringFactory
 }
