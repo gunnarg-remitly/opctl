@@ -125,14 +125,6 @@ func newCli(
 			}
 		})
 
-		opCmd.Command("kill", "Kill an op", func(killCmd *mow.Cmd) {
-			opID := killCmd.StringArg("OP_ID", "", "Id of the op to kill")
-
-			killCmd.Action = func() {
-				core.Op().Kill(ctx, *opID)
-			}
-		})
-
 		opCmd.Command("validate", "Validate an op", func(validateCmd *mow.Cmd) {
 			opRef := validateCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 

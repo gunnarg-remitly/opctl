@@ -13,7 +13,6 @@ import (
 type Op interface {
 	Creater
 	Installer
-	Killer
 	Validater
 }
 
@@ -31,10 +30,6 @@ func New(
 			cliExiter,
 			dataResolver,
 		),
-		Killer: newKiller(
-			cliExiter,
-			api,
-		),
 		Validater: newValidater(
 			cliExiter,
 			dataResolver,
@@ -45,6 +40,5 @@ func New(
 type _op struct {
 	Creater
 	Installer
-	Killer
 	Validater
 }
