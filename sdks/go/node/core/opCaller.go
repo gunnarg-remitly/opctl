@@ -1,10 +1,10 @@
 package core
 
 import (
-	"strings"
-	"regexp"
 	"context"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/opspec/interpreter/call/op/outputs"
@@ -33,16 +33,16 @@ func newOpCaller(
 	dataDirPath string,
 ) opCaller {
 	return _opCaller{
-		caller:             caller,
-		stateStore:         stateStore,
-		callScratchDir:     filepath.Join(dataDirPath, "call"),
+		caller:         caller,
+		stateStore:     stateStore,
+		callScratchDir: filepath.Join(dataDirPath, "call"),
 	}
 }
 
 type _opCaller struct {
-	stateStore         stateStore
-	caller             caller
-	callScratchDir     string
+	stateStore     stateStore
+	caller         caller
+	callScratchDir string
 }
 
 func (oc _opCaller) Call(
@@ -56,9 +56,6 @@ func (oc _opCaller) Call(
 	map[string]*model.Value,
 	error,
 ) {
-	var err error
-	outboundScope := map[string]*model.Value{}
-
 	// form scope for op call by combining defined inputs & op dir
 	opCallScope := map[string]*model.Value{}
 	for varName, varData := range opCall.Inputs {
@@ -89,7 +86,7 @@ func (oc _opCaller) Call(
 		rootCallID,
 	)
 	if nil != err {
-		return outboundScope, err
+		return nil, err
 	}
 
 	var opFile *model.OpSpec
@@ -98,7 +95,7 @@ func (oc _opCaller) Call(
 		opCall.OpPath,
 	)
 	if nil != err {
-		return outboundScope, err
+		return nil, err
 	}
 	opOutputs, err = outputs.Interpret(
 		opOutputs,
@@ -106,6 +103,8 @@ func (oc _opCaller) Call(
 		opCall.OpPath,
 		filepath.Join(oc.callScratchDir, opCall.OpID),
 	)
+
+	outboundScope := map[string]*model.Value{}
 
 	// filter op outboundScope to bound call outboundScope
 	for boundName, boundValue := range opCallSpec.Outputs {
