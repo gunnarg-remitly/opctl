@@ -86,6 +86,7 @@ func (clr _caller) Call(
 		return nil, nil
 	}
 
+	// emit a call ended event after this call is complete
 	defer func() {
 		// defer must be defined before conditional return statements so it always runs
 
@@ -108,6 +109,9 @@ func (clr _caller) Call(
 		if nil != ctx.Err() {
 			// this call or parent call killed/cancelled
 			event.CallEnded.Outcome = model.OpOutcomeKilled
+			event.CallEnded.Error = &model.CallEndedError{
+				Message: ctx.Err().Error(),
+			}
 		} else if nil != err {
 			event.CallEnded.Outcome = model.OpOutcomeFailed
 			event.CallEnded.Error = &model.CallEndedError{
