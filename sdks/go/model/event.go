@@ -4,7 +4,6 @@ import "time"
 
 // Event represents a distributed state change
 type Event struct {
-	AuthAdded                *AuthAdded                `json:"authAdded,omitempty"`
 	CallEnded                *CallEnded                `json:"callEnded,omitempty"`
 	CallStarted              *CallStarted              `json:"callStarted,omitempty"`
 	ContainerStdErrWrittenTo *ContainerStdErrWrittenTo `json:"containerStdErrWrittenTo,omitempty"`

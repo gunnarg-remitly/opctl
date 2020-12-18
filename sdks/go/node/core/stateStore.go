@@ -27,6 +27,8 @@ type stateStore interface {
 
 	// TryGetCreds returns creds for a ref if any exist
 	TryGetAuth(resource string) *model.Auth
+
+	AddAuth(req model.AuthAdded) error
 }
 
 func newStateStore(
@@ -61,8 +63,6 @@ func newStateStore(
 
 		for event := range eventChannel {
 			switch {
-			case nil != event.AuthAdded:
-				stateStore.applyAuthAdded(*event.AuthAdded)
 			case nil != event.CallEnded:
 				stateStore.applyCallEnded(*event.CallEnded)
 			case nil != event.CallStarted:
@@ -74,7 +74,6 @@ func newStateStore(
 	}()
 
 	return stateStore
-
 }
 
 type _stateStore struct {
@@ -118,7 +117,7 @@ func (ss *_stateStore) updateLastAppliedEventTimestamp(lastAppliedEventTimestamp
 	})
 }
 
-func (ss *_stateStore) applyAuthAdded(authAdded model.AuthAdded) error {
+func (ss *_stateStore) AddAuth(authAdded model.AuthAdded) error {
 	return ss.db.Update(func(txn *badger.Txn) error {
 		auth := authAdded.Auth
 		encodedAuth, err := json.Marshal(auth)
