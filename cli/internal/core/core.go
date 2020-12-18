@@ -23,7 +23,6 @@ import (
 //counterfeiter:generate -o fakes/core.go . Core
 type Core interface {
 	Auther
-	Eventser
 	Lser
 	Oper
 	Runer
@@ -74,11 +73,6 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 			dataResolver,
 			c,
 		),
-		Eventser: newEventser(
-			cliExiter,
-			cliOutput,
-			c,
-		),
 		Lser: newLser(
 			cliExiter,
 			cliOutput,
@@ -102,7 +96,6 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 
 type _core struct {
 	Auther
-	Eventser
 	Lser
 	Oper
 	Runer

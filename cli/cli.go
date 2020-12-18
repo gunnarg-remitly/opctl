@@ -88,12 +88,6 @@ func newCli(
 			})
 	})
 
-	cli.Command("events", "Stream events", func(eventsCmd *mow.Cmd) {
-		eventsCmd.Action = func() {
-			core.Events(ctx)
-		}
-	})
-
 	cli.Command("ls", "List operations (only valid ops will be listed)", func(lsCmd *mow.Cmd) {
 		const dirRefArgName = "DIR_REF"
 		lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
