@@ -226,15 +226,9 @@ github.com/go-logr/logr
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
-# github.com/golang-interfaces/encoding-ijson v0.0.0-20170731144015-49fbc3963d10
-## explicit
-github.com/golang-interfaces/encoding-ijson
 # github.com/golang-interfaces/github.com-gorilla-websocket v0.0.0-20190604222234-f7c71d63fecb
 ## explicit
 github.com/golang-interfaces/github.com-gorilla-websocket
-# github.com/golang-interfaces/ihttp v0.0.0-20170731143308-228dd9eedf13
-## explicit
-github.com/golang-interfaces/ihttp
 # github.com/golang-interfaces/iio v0.0.0-20170731143437-c90328b79385
 ## explicit
 github.com/golang-interfaces/iio
@@ -273,12 +267,8 @@ github.com/google/gofuzz
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/openapiv2
-# github.com/gorilla/handlers v1.4.1
-## explicit
-github.com/gorilla/handlers
 # github.com/gorilla/mux v1.7.3
 ## explicit
-github.com/gorilla/mux
 # github.com/gorilla/websocket v1.4.0
 ## explicit
 github.com/gorilla/websocket
@@ -304,9 +294,6 @@ github.com/jawher/mow.cli/internal/parser
 github.com/jawher/mow.cli/internal/values
 # github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99
 github.com/jbenet/go-context/io
-# github.com/jfbus/httprs v0.0.0-20180614100821-7861a1150846
-## explicit
-github.com/jfbus/httprs
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
 # github.com/kevinburke/ssh_config v0.0.0-20190725054713-01f96b0aa0cd
@@ -339,14 +326,8 @@ github.com/maxbrunsfeld/counterfeiter/v6
 github.com/maxbrunsfeld/counterfeiter/v6/arguments
 github.com/maxbrunsfeld/counterfeiter/v6/command
 github.com/maxbrunsfeld/counterfeiter/v6/generator
-# github.com/mitchellh/copystructure v1.0.0
-## explicit
-github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.1.0
 github.com/mitchellh/go-homedir
-# github.com/mitchellh/reflectwalk v1.0.1
-## explicit
-github.com/mitchellh/reflectwalk
 # github.com/mjibson/esc v0.2.0
 ## explicit
 github.com/mjibson/esc
@@ -410,22 +391,13 @@ github.com/pkg/errors
 # github.com/rakyll/statik v0.1.7-0.20191104211043-6b2f3ee522b6
 ## explicit
 github.com/rakyll/statik
-github.com/rakyll/statik/fs
 # github.com/satori/go.uuid v0.0.0-20181028125025-b2ce2384e17b
 ## explicit
 github.com/satori/go.uuid
 # github.com/sergi/go-diff v1.1.0
 github.com/sergi/go-diff/diffmatchpatch
-# github.com/sethgrid/pester v0.0.0-20180430140037-03e26c9abbbf
-## explicit
-github.com/sethgrid/pester
 # github.com/sirupsen/logrus v1.4.2
 github.com/sirupsen/logrus
-# github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-## explicit
-github.com/skratchdot/open-golang/open
-# github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a
-## explicit
 # github.com/spf13/cobra v0.0.5
 github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
