@@ -38,26 +38,15 @@ func newCaller(
 		dataDirPath:     dataDirPath,
 		pubSub:          pubSub,
 	}
-
 	instance.opCaller = newOpCaller(
 		stateStore,
 		instance,
 		dataDirPath,
 	)
-
 	instance.parallelCaller = newParallelCaller(instance)
-
-	instance.parallelLoopCaller = newParallelLoopCaller(
-		instance,
-		pubSub,
-	)
-
+	instance.parallelLoopCaller = newParallelLoopCaller(instance)
 	instance.serialCaller = newSerialCaller(instance)
-
-	instance.serialLoopCaller = newSerialLoopCaller(
-		instance,
-		pubSub,
-	)
+	instance.serialLoopCaller = newSerialLoopCaller(instance)
 
 	return instance
 }
