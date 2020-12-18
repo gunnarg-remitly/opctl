@@ -2,8 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
-	"runtime/debug"
 
 	"github.com/opctl/opctl/sdks/go/data"
 	"github.com/opctl/opctl/sdks/go/data/fs"
@@ -64,19 +62,9 @@ func (this _core) StartOp(
 		opCallSpec.Outputs[name] = ""
 	}
 
-	opCtx, cancelOp := context.WithCancel(ctx)
 	go func() {
-		defer func() {
-			if panicArg := recover(); panicArg != nil {
-				// recover from panics; treat as errors
-				fmt.Println(panicArg, debug.Stack())
-			}
-
-			cancelOp()
-		}()
-
 		this.caller.Call(
-			opCtx,
+			ctx,
 			callID,
 			req.Args,
 			&model.CallSpec{
