@@ -52,10 +52,7 @@ func newCaller(
 		pubSub,
 	)
 
-	instance.serialCaller = newSerialCaller(
-		instance,
-		pubSub,
-	)
+	instance.serialCaller = newSerialCaller(instance)
 
 	instance.serialLoopCaller = newSerialLoopCaller(
 		instance,
