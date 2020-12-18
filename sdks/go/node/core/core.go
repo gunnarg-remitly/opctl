@@ -5,12 +5,9 @@ package core
 
 import (
 	"context"
-	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 
-	"github.com/dgraph-io/badger/v2"
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
@@ -81,29 +78,18 @@ func New(
 	dataDirPath string,
 	eventChannel chan model.Event,
 ) (Core, error) {
-	eventDbPath := path.Join(dataDirPath, "dcg", "events")
-	if err := os.MkdirAll(eventDbPath, 0700); nil != err {
-		return nil, err
-	}
-
 	// per badger README.MD#FAQ "maximizes throughput"
 	runtime.GOMAXPROCS(128)
 
-	db, err := badger.Open(
-		badger.DefaultOptions(
-			eventDbPath,
-		).WithLogger(nil),
+	uniqueStringFactory := uniquestring.NewUniqueStringFactory()
+
+	stateStore, err := newStateStore(
+		ctx,
+		dataDirPath,
 	)
 	if err != nil {
 		return nil, err
 	}
-
-	uniqueStringFactory := uniquestring.NewUniqueStringFactory()
-
-	stateStore := newStateStore(
-		ctx,
-		db,
-	)
 
 	caller := newCaller(
 		newContainerCaller(
