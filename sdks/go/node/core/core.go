@@ -92,11 +92,10 @@ func New(
 	ctx context.Context,
 	containerRuntime containerruntime.ContainerRuntime,
 	dataDirPath string,
-) Core {
+) (Core, error) {
 	eventDbPath := path.Join(dataDirPath, "dcg", "events")
-	err := os.MkdirAll(eventDbPath, 0700)
-	if nil != err {
-		panic(err)
+	if err := os.MkdirAll(eventDbPath, 0700); nil != err {
+		return nil, err
 	}
 
 	// per badger README.MD#FAQ "maximizes throughput"
@@ -108,7 +107,7 @@ func New(
 		).WithLogger(nil),
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	pubSub := pubsub.New(db)
@@ -176,7 +175,7 @@ func New(
 		pubSub:              pubSub,
 		stateStore:          stateStore,
 		uniqueStringFactory: uniqueStringFactory,
-	}
+	}, nil
 }
 
 type _core struct {

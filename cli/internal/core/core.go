@@ -57,7 +57,10 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 			panic(err)
 		}
 	}
-	c := core.New(ctx, cr, datadirPath)
+	c, err := core.New(ctx, cr, datadirPath)
+	if err != nil {
+		panic(err)
+	}
 
 	dataResolver := dataresolver.New(
 		cliExiter,
