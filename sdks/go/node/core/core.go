@@ -22,7 +22,7 @@ import (
 type Core interface {
 	AddAuth(
 		req model.AddAuthReq,
-	)
+	) error
 	GetEventStream(
 		ctx context.Context,
 		req *model.GetEventStreamReq,
@@ -33,7 +33,7 @@ type Core interface {
 
 	KillOp(
 		req model.KillOpReq,
-	)
+	) error
 
 	StartOp(
 		ctx context.Context,
@@ -124,11 +124,14 @@ func New(
 			switch {
 			case nil != event.CallKillRequested:
 				req := event.CallKillRequested.Request
-				callKiller.Kill(
+				err := callKiller.Kill(
 					ctx,
 					req.OpID,
 					req.RootCallID,
 				)
+				if err != nil {
+					panic(err)
+				}
 			}
 		}
 	}()

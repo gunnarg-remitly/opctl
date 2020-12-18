@@ -10,6 +10,5 @@ func (c client) KillOp(
 	ctx context.Context,
 	req model.KillOpReq,
 ) error {
-	c.core.KillOp(req)
-	return nil
+	return c.core.KillOp(req)
 }

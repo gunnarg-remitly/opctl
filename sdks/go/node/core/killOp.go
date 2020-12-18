@@ -8,7 +8,7 @@ import (
 
 func (this _core) KillOp(
 	req model.KillOpReq,
-) {
+) error {
 	// killing an op is async
 	this.pubSub.Publish(
 		model.Event{
@@ -18,4 +18,5 @@ func (this _core) KillOp(
 			Timestamp: time.Now().UTC(),
 		},
 	)
+	return nil
 }

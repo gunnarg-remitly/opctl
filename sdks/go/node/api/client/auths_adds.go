@@ -10,6 +10,5 @@ func (c client) AddAuth(
 	ctx context.Context,
 	req model.AddAuthReq,
 ) error {
-	c.core.AddAuth(req)
-	return nil
+	return c.core.AddAuth(req)
 }

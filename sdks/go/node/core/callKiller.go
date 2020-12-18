@@ -19,7 +19,7 @@ type callKiller interface {
 		ctx context.Context,
 		callID string,
 		rootCallID string,
-	)
+	) error
 }
 
 func newCallKiller(
@@ -44,11 +44,13 @@ func (ckr _callKiller) Kill(
 	ctx context.Context,
 	callID string,
 	rootCallID string,
-) {
-	ckr.containerRuntime.DeleteContainerIfExists(
+) error {
+	if err := ckr.containerRuntime.DeleteContainerIfExists(
 		ctx,
 		callID,
-	)
+	); err != nil {
+		return err
+	}
 
 	var waitGroup sync.WaitGroup
 
@@ -80,5 +82,5 @@ func (ckr _callKiller) Kill(
 	}
 
 	waitGroup.Wait()
-
+	return nil
 }
