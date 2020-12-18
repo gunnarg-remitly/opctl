@@ -6,29 +6,35 @@ with opctl.
 ## reliability/complexity
 
 I find opctl quite unreliable. The major issues are issues connecting to port
-42224 and opctl not properly cleaning up after itself. The core architecture of
-opctl starts up a persistent webserver on 42224 that actually manages running
-the core business logic of opctl. The CLI then interacts with that webserver
-using http api calls and a websocket connection to pipe output back to the user.
+42224 and opctl not properly cleaning up after itself, resulting in docker
+containers hanging around. The core architecture of opctl starts up a persistent
+webserver on 42224 that actually manages running the core business logic of
+opctl. The CLI then interacts with that webserver using http api calls and a
+websocket connection to pipe output back to the user.
 
 Since opctl's primary value to me is a reusable "op" runner, this webserver
-feels very unnecessary. It doesn't maintain much (any?) internal state, such as
-to allow me to query and interact with running ops. The network interactions
-are what I suspect are the primary causes of reliability issues.
+feels very unnecessary. It doesn't maintain much internal state, and the state
+it does maintain doesn't allow me to query and interact with running ops. The 
+network interactions are what I suspect are the primary causes of reliability 
+issues.
 
 Because of this, I've entirely removed this webserver component of opctl in
 favor of the CLI directly running core logic. This allows me to pass a
-cancellation context properly, which I'm hoping will prevent errors leaving
-active containers hanging around.
+cancellable context through the entire call chain, and directly respond to
+returned errors.
+
+Opctl also uses a custom publisher/subscriber event bus internally, which
+becomes pretty unnecessary once the centralized API is gone. I've replaced this
+with a standard go channel that the events can be passed back through.
 
 ## line count
 
-This project is _huge_ and can be difficult to work in. This removes checked-in
-vendored code, the web UI for opctl, the JS sdk, and the react SDK.
+This project is _huge_ and can be difficult to work in. This ~removes checked-in
+vendored code,~ the web UI for opctl, the JS sdk, and the react SDK.
 
 The project also has many layers of abstraction, that I feel could be reduced
 to make changes easier. I also think the code could be refactored to be more
-idomatic to the go language.
+idiomatic to the go language.
 
 ## usability
 
