@@ -80,7 +80,10 @@ func newCli(
 			}
 			mow.Exit(0)
 		} else {
-			cliOutput.Error(err.Error())
+			msg := err.Error()
+			if msg != "" {
+				cliOutput.Error(msg)
+			}
 			if re, ok := err.(*corePkg.RunError); ok {
 				mow.Exit(re.ExitCode)
 			} else {

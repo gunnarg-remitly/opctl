@@ -168,7 +168,9 @@ func (ivkr _runer) Run(
 				return errors.New("Event channel closed unexpectedly")
 			}
 
-			ivkr.cliOutput.Event(&event)
+			if ctx.Err() != context.Canceled {
+				ivkr.cliOutput.Event(&event)
+			}
 
 			if nil != event.CallEnded {
 				if event.CallEnded.Call.ID == rootCallID {
