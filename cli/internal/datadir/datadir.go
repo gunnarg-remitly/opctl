@@ -12,9 +12,6 @@ import (
 
 // DataDir is an interface exposing the functionality we require in conjunction with our "data dir".
 type DataDir interface {
-	// InitAndLock initializes and locks an opctl data dir
-	InitAndLock() error
-
 	// Path resolves the data dir path
 	Path() string
 }
@@ -23,10 +20,7 @@ type DataDir interface {
 func ensureExists(
 	resolvedDataDirPath string,
 ) error {
-	if err := os.MkdirAll(resolvedDataDirPath, 0775|os.ModeSetgid); nil != err {
-		return err
-	}
-	return nil
+	return os.MkdirAll(resolvedDataDirPath, 0775|os.ModeSetgid)
 }
 
 // New returns an initialized data dir instance

@@ -11,7 +11,6 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
-	"github.com/opctl/opctl/cli/internal/datadir"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
@@ -32,20 +31,13 @@ type Core interface {
 
 // New returns initialized cli core
 func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
-	dataDir, err := datadir.New(datadirPath)
-	if err != nil {
-		panic(err)
-	}
-	if err := dataDir.InitAndLock(); nil != err {
-		panic(err)
-	}
-
 	_os := ios.New()
-	cliOutput := clioutput.New(cliColorer, dataDir.Path(), os.Stderr, os.Stdout)
+	cliOutput := clioutput.New(cliColorer, datadirPath, os.Stderr, os.Stdout)
 	cliExiter := cliexiter.New(cliOutput, _os)
 	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
 
 	var cr containerruntime.ContainerRuntime
+	var err error
 	if "k8s" == containerRuntime {
 		cr, err = k8s.New()
 		if nil != err {
