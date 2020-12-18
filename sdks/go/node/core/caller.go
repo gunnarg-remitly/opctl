@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 	"time"
 
 	"github.com/opctl/opctl/sdks/go/model"
@@ -95,7 +94,6 @@ func (clr _caller) Call(
 	callCtx, cancelCall := context.WithCancel(ctx)
 	defer cancelCall()
 	var err error
-	var isKilled bool
 	var outputs map[string]*model.Value
 	var call *model.Call
 	callStartTime := time.Now().UTC()
@@ -124,7 +122,7 @@ func (clr _caller) Call(
 			Timestamp: time.Now().UTC(),
 		}
 
-		if isKilled || nil != ctx.Err() {
+		if nil != ctx.Err() {
 			// this call or parent call killed/cancelled
 			event.CallEnded.Outcome = model.OpOutcomeKilled
 		} else if nil != err {
@@ -171,35 +169,6 @@ func (clr _caller) Call(
 			},
 		},
 	)
-
-	go func() {
-		defer func() {
-			if panicArg := recover(); panicArg != nil {
-				// recover from panics; treat as errors
-				err = fmt.Errorf(
-					fmt.Sprint(panicArg, debug.Stack()),
-				)
-			}
-		}()
-
-		defer cancelCall()
-
-		eventChannel, _ := clr.pubSub.Subscribe(
-			callCtx,
-			model.EventFilter{
-				Roots: []string{rootCallID},
-				Since: &callStartTime,
-			},
-		)
-
-		for event := range eventChannel {
-			switch {
-			case nil != event.CallKillRequested && event.CallKillRequested.Request.OpID == id:
-				isKilled = true
-				return
-			}
-		}
-	}()
 
 	switch {
 	case nil != callSpec.Container:

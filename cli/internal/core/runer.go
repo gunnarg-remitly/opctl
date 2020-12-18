@@ -64,6 +64,8 @@ func (ivkr _runer) Run(
 ) {
 	startTime := time.Now().UTC()
 
+	ctx, cancel := context.WithCancel(ctx)
+
 	opHandle := ivkr.dataResolver.Resolve(
 		ctx,
 		opRef,
@@ -168,14 +170,7 @@ func (ivkr _runer) Run(
 			if !aSigIntWasReceivedAlready {
 				fmt.Println(ivkr.cliColorer.Error("Gracefully stopping... (signal Control-C again to force)"))
 				aSigIntWasReceivedAlready = true
-
-				ivkr.core.KillOp(
-					// ctx,
-					model.KillOpReq{
-						OpID:       rootCallID,
-						RootCallID: rootCallID,
-					},
-				)
+				cancel()
 			} else {
 				ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: "Terminated by Control-C", Code: 130})
 				return // support fake exiter
@@ -183,15 +178,7 @@ func (ivkr _runer) Run(
 
 		case <-sigTermChannel:
 			fmt.Println(ivkr.cliColorer.Error("Gracefully stopping..."))
-
-			ivkr.core.KillOp(
-				// ctx,
-				model.KillOpReq{
-					OpID:       rootCallID,
-					RootCallID: rootCallID,
-				},
-			)
-			return // support fake exiter
+			cancel()
 
 		case event, isEventChannelOpen := <-eventChannel:
 			if !isEventChannelOpen {

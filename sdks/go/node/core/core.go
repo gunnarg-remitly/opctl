@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
@@ -30,10 +29,6 @@ type Core interface {
 		<-chan model.Event,
 		<-chan error,
 	)
-
-	KillOp(
-		req model.KillOpReq,
-	) error
 
 	StartOp(
 		ctx context.Context,
@@ -130,38 +125,6 @@ func New(
 		stateStore,
 		pubSub,
 	)
-
-	go func() {
-		// process events in background
-		callKiller := newCallKiller(
-			stateStore,
-			containerRuntime,
-			pubSub,
-		)
-
-		since := time.Now().UTC()
-		eventChannel, _ := pubSub.Subscribe(
-			ctx,
-			model.EventFilter{
-				Since: &since,
-			},
-		)
-
-		for event := range eventChannel {
-			switch {
-			case nil != event.CallKillRequested:
-				req := event.CallKillRequested.Request
-				err := callKiller.Kill(
-					ctx,
-					req.OpID,
-					req.RootCallID,
-				)
-				if err != nil {
-					panic(err)
-				}
-			}
-		}
-	}()
 
 	return _core{
 		caller:           caller,

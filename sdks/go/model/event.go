@@ -9,7 +9,6 @@ type Event struct {
 	CallStarted              *CallStarted              `json:"callStarted,omitempty"`
 	ContainerStdErrWrittenTo *ContainerStdErrWrittenTo `json:"containerStdErrWrittenTo,omitempty"`
 	ContainerStdOutWrittenTo *ContainerStdOutWrittenTo `json:"containerStdOutWrittenTo,omitempty"`
-	CallKillRequested        *CallKillRequested        `json:"callKillRequested,omitempty"`
 	Timestamp                time.Time                 `json:"timestamp"`
 }
 
@@ -22,11 +21,6 @@ const (
 // AuthAdded represents auth was added for external resources
 type AuthAdded struct {
 	Auth Auth `json:"auth"`
-}
-
-// CallKillRequested represents a request was made to kill an op; a CallEnded event may follow
-type CallKillRequested struct {
-	Request KillOpReq `json:"request"`
 }
 
 // CallEnded represents a call ended; no further events will occur for the call

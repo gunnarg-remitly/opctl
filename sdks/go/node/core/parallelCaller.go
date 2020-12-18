@@ -77,11 +77,12 @@ func (pc _parallelCaller) Call(
 
 	startTime := time.Now().UTC()
 	childCallIndexByID := map[string]int{}
-	childCallIDByName := map[string]string{}
+	childCallCancellationByName := map[string]context.CancelFunc{}
 	childCallOutputsByIndex := map[int]map[string]*model.Value{}
 
 	// perform calls in parallel w/ cancellation
 	for childCallIndex, childCall := range callSpecParallelCall {
+		childCtx := parallelCtx
 
 		childCallID, err := pc.uniqueStringFactory.Construct()
 		if nil != err {
@@ -92,7 +93,10 @@ func (pc _parallelCaller) Call(
 		childCallIndexByID[childCallID] = childCallIndex
 
 		if nil != childCall.Name {
-			childCallIDByName[*childCall.Name] = childCallID
+			newCtx, cancel := context.WithCancel(childCtx)
+			childCtx = newCtx
+
+			childCallCancellationByName[*childCall.Name] = cancel
 		}
 
 		go func(childCall *model.CallSpec) {
@@ -107,7 +111,7 @@ func (pc _parallelCaller) Call(
 			}()
 
 			pc.caller.Call(
-				parallelCtx,
+				childCtx,
 				childCallID,
 				inboundScope,
 				childCall,
@@ -152,18 +156,8 @@ eventLoop:
 
 				for neededCallName, neededCount := range childCallNeededCountByName {
 					if 1 > neededCount {
-						if neededCallID, ok := childCallIDByName[neededCallName]; ok {
-							pc.pubSub.Publish(
-								model.Event{
-									CallKillRequested: &model.CallKillRequested{
-										Request: model.KillOpReq{
-											OpID:       neededCallID,
-											RootCallID: rootCallID,
-										},
-									},
-									Timestamp: time.Now().UTC(),
-								},
-							)
+						if cancel, ok := childCallCancellationByName[neededCallName]; ok {
+							cancel()
 						}
 					}
 				}

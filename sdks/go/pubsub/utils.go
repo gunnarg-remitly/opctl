@@ -33,8 +33,6 @@ func getEventRootCallID(
 		return event.ContainerStdErrWrittenTo.RootCallID
 	case nil != event.ContainerStdOutWrittenTo:
 		return event.ContainerStdOutWrittenTo.RootCallID
-	case nil != event.CallKillRequested:
-		return event.CallKillRequested.Request.RootCallID
 	case nil != event.CallStarted:
 		return event.CallStarted.Call.RootID
 	default:
