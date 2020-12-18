@@ -65,6 +65,7 @@ func (ivkr _runer) Run(
 	startTime := time.Now().UTC()
 
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	opHandle := ivkr.dataResolver.Resolve(
 		ctx,
@@ -154,17 +155,12 @@ func (ivkr _runer) Run(
 			},
 		},
 	)
-	go func() {
-		for {
-			err := <-errChan
-			if err != nil {
-				fmt.Printf("error received: %v\n", err)
-			}
-		}
-	}()
 
 	for {
 		select {
+		case err := <-errChan:
+			fmt.Printf("error received: %v\n", err)
+			cancel()
 
 		case <-sigIntChannel:
 			if !aSigIntWasReceivedAlready {
@@ -203,7 +199,5 @@ func (ivkr _runer) Run(
 				}
 			}
 		}
-
 	}
-
 }
