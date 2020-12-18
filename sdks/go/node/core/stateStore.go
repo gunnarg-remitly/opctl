@@ -25,8 +25,6 @@ type stateStore interface {
 	// lists all calls w/ parentID
 	ListWithParentID(parentID string) []*model.Call
 
-	TryGet(id string) *model.Call
-
 	// TryGetCreds returns creds for a ref if any exist
 	TryGetAuth(resource string) *model.Auth
 }
@@ -170,19 +168,6 @@ func (ss *_stateStore) ListWithParentID(parentID string) []*model.Call {
 		}
 	}
 	return results
-}
-
-func (ss *_stateStore) TryGet(
-	id string,
-) *model.Call {
-	ss.mux.RLock()
-	defer ss.mux.RUnlock()
-
-	if call, ok := ss.callsByID[id]; ok {
-		return call
-	}
-
-	return nil
 }
 
 func (ss *_stateStore) TryGetAuth(
