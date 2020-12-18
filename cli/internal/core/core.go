@@ -13,6 +13,7 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/datadir"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
+	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker"
@@ -56,7 +57,10 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 			panic(err)
 		}
 	}
-	c, err := core.New(ctx, cr, datadirPath)
+
+	eventChannel := make(chan model.Event)
+
+	c, err := core.New(ctx, cr, datadirPath, eventChannel)
 	if err != nil {
 		panic(err)
 	}
@@ -88,6 +92,7 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 			cliOutput,
 			cliParamSatisfier,
 			dataResolver,
+			eventChannel,
 			c,
 		),
 		SelfUpdater: newSelfUpdater(cliExiter),

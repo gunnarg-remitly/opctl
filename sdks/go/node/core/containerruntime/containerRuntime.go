@@ -9,7 +9,6 @@ import (
 	"io"
 
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 // ContainerRuntime defines the interface container runtimes must implement to be supported by
@@ -26,8 +25,7 @@ type ContainerRuntime interface {
 		req *model.ContainerCall,
 		// @TODO: get rid of in combination with eventPublisher
 		rootCallID string,
-		// @TODO: get rid of this; just use stdout/stderr
-		eventPublisher pubsub.EventPublisher,
+		eventChannel chan model.Event,
 		stdout io.WriteCloser,
 		stderr io.WriteCloser,
 	) (*int64, error)

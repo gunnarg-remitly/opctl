@@ -9,7 +9,6 @@ import (
 func (this _core) AddAuth(
 	req model.AddAuthReq,
 ) error {
-	// killing an op is async
 	this.pubSub.Publish(
 		model.Event{
 			AuthAdded: &model.AuthAdded{

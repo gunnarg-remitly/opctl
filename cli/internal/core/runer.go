@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/opctl/opctl/cli/internal/clicolorer"
 	"github.com/opctl/opctl/cli/internal/cliexiter"
@@ -36,6 +35,7 @@ func newRuner(
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
+	eventChannel chan model.Event,
 	core core.Core,
 ) Runer {
 	return _runer{
@@ -44,6 +44,7 @@ func newRuner(
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
+		eventChannel:      eventChannel,
 		core:              core,
 	}
 }
@@ -54,6 +55,7 @@ type _runer struct {
 	cliExiter         cliexiter.CliExiter
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
+	eventChannel      chan model.Event
 	core              core.Core
 }
 
@@ -62,8 +64,6 @@ func (ivkr _runer) Run(
 	opRef string,
 	opts *cliModel.RunOpts,
 ) {
-	startTime := time.Now().UTC()
-
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -145,23 +145,8 @@ func (ivkr _runer) Run(
 		return // support fake exiter
 	}
 
-	// start event loop
-	eventChannel, errChan := ivkr.core.GetEventStream(
-		ctx,
-		&model.GetEventStreamReq{
-			Filter: model.EventFilter{
-				Roots: []string{rootCallID},
-				Since: &startTime,
-			},
-		},
-	)
-
 	for {
 		select {
-		case err := <-errChan:
-			fmt.Printf("error received: %v\n", err)
-			cancel()
-
 		case <-sigIntChannel:
 			if !aSigIntWasReceivedAlready {
 				fmt.Println(ivkr.cliColorer.Error("Gracefully stopping... (signal Control-C again to force)"))
@@ -176,7 +161,7 @@ func (ivkr _runer) Run(
 			fmt.Println(ivkr.cliColorer.Error("Gracefully stopping..."))
 			cancel()
 
-		case event, isEventChannelOpen := <-eventChannel:
+		case event, isEventChannelOpen := <-ivkr.eventChannel:
 			if !isEventChannelOpen {
 				ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: "Event channel closed unexpectedly", Code: 1})
 				return // support fake exiter

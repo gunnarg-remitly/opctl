@@ -13,7 +13,6 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerClientPkg "github.com/docker/docker/client"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 type runContainer interface {
@@ -21,7 +20,7 @@ type runContainer interface {
 		ctx context.Context,
 		req *model.ContainerCall,
 		rootCallID string,
-		eventPublisher pubsub.EventPublisher,
+		eventChannel chan model.Event,
 		stdout io.WriteCloser,
 		stderr io.WriteCloser,
 	) (*int64, error)
@@ -62,7 +61,7 @@ func (cr _runContainer) RunContainer(
 	ctx context.Context,
 	req *model.ContainerCall,
 	rootCallID string,
-	eventPublisher pubsub.EventPublisher,
+	eventChannel chan model.Event,
 	stdout io.WriteCloser,
 	stderr io.WriteCloser,
 ) (*int64, error) {
@@ -112,7 +111,7 @@ func (cr _runContainer) RunContainer(
 			req.Image.PullCreds,
 			*req.Image.Ref,
 			rootCallID,
-			eventPublisher,
+			eventChannel,
 		)
 		// don't err yet; image might be cached. We allow this to support offline use
 	}

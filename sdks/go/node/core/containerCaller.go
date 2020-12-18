@@ -10,7 +10,6 @@ import (
 	"github.com/golang-interfaces/iio"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 //counterfeiter:generate -o internal/fakes/containerCaller.go . containerCaller
@@ -30,13 +29,13 @@ type containerCaller interface {
 
 func newContainerCaller(
 	containerRuntime containerruntime.ContainerRuntime,
-	pubSub pubsub.PubSub,
+	eventChannel chan model.Event,
 	stateStore stateStore,
 ) containerCaller {
 
 	return _containerCaller{
 		containerRuntime: containerRuntime,
-		pubSub:           pubSub,
+		eventChannel:     eventChannel,
 		stateStore:       stateStore,
 		io:               iio.New(),
 	}
@@ -45,7 +44,7 @@ func newContainerCaller(
 
 type _containerCaller struct {
 	containerRuntime containerruntime.ContainerRuntime
-	pubSub           pubsub.PubSub
+	eventChannel     chan model.Event
 	stateStore       stateStore
 	io               iio.IIO
 }
@@ -92,7 +91,7 @@ func (cc _containerCaller) Call(
 		ctx,
 		containerCall,
 		rootCallID,
-		cc.pubSub,
+		cc.eventChannel,
 		logStdOutPW,
 		logStdErrPW,
 	)
@@ -127,17 +126,15 @@ func (this _containerCaller) interpretLogs(
 		stdOutLogChan <- readChunks(
 			stdOutReader,
 			func(chunk []byte) {
-				this.pubSub.Publish(
-					model.Event{
-						Timestamp: time.Now().UTC(),
-						ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
-							Data:        chunk,
-							ContainerID: containerCall.ContainerID,
-							OpRef:       containerCall.OpPath,
-							RootCallID:  rootCallID,
-						},
+				this.eventChannel <- model.Event{
+					Timestamp: time.Now().UTC(),
+					ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
+						Data:        chunk,
+						ContainerID: containerCall.ContainerID,
+						OpRef:       containerCall.OpPath,
+						RootCallID:  rootCallID,
 					},
-				)
+				}
 			})
 	}()
 
@@ -147,17 +144,15 @@ func (this _containerCaller) interpretLogs(
 		stdErrLogChan <- readChunks(
 			stdErrReader,
 			func(chunk []byte) {
-				this.pubSub.Publish(
-					model.Event{
-						Timestamp: time.Now().UTC(),
-						ContainerStdErrWrittenTo: &model.ContainerStdErrWrittenTo{
-							Data:        chunk,
-							ContainerID: containerCall.ContainerID,
-							OpRef:       containerCall.OpPath,
-							RootCallID:  rootCallID,
-						},
+				this.eventChannel <- model.Event{
+					Timestamp: time.Now().UTC(),
+					ContainerStdErrWrittenTo: &model.ContainerStdErrWrittenTo{
+						Data:        chunk,
+						ContainerID: containerCall.ContainerID,
+						OpRef:       containerCall.OpPath,
+						RootCallID:  rootCallID,
 					},
-				)
+				}
 			})
 	}()
 

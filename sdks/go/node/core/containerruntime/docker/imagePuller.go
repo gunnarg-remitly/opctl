@@ -9,7 +9,6 @@ import (
 	dockerClientPkg "github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 //counterfeiter:generate -o internal/fakes/imagePuller.go . imagePuller
@@ -20,7 +19,7 @@ type imagePuller interface {
 		imagePullCreds *model.Creds,
 		imageRef string,
 		rootCallID string,
-		eventPublisher pubsub.EventPublisher,
+		eventChannel chan model.Event,
 	) error
 }
 
@@ -42,7 +41,7 @@ func (ip _imagePuller) Pull(
 	imagePullCreds *model.Creds,
 	imageRef string,
 	rootCallID string,
-	eventPublisher pubsub.EventPublisher,
+	eventChannel chan model.Event,
 ) error {
 
 	imagePullOptions := types.ImagePullOptions{}
@@ -69,7 +68,7 @@ func (ip _imagePuller) Pull(
 	}
 	defer imagePullResp.Close()
 
-	stdOutWriter := NewStdOutWriteCloser(eventPublisher, containerCall, rootCallID)
+	stdOutWriter := NewStdOutWriteCloser(eventChannel, containerCall, rootCallID)
 	defer stdOutWriter.Close()
 
 	dec := json.NewDecoder(imagePullResp)

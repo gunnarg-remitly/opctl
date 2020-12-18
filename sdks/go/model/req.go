@@ -18,10 +18,6 @@ type EventFilter struct {
 	Since *time.Time
 }
 
-type GetEventStreamReq struct {
-	Filter EventFilter
-}
-
 // GetDataReq deprecated
 type GetDataReq struct {
 	ContentPath string

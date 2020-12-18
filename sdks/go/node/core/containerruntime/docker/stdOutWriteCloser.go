@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 func NewStdOutWriteCloser(
-	eventPublisher pubsub.EventPublisher,
+	eventChannel chan model.Event,
 	containerCall *model.ContainerCall,
 	rootCallID string,
 ) io.WriteCloser {
@@ -25,17 +24,15 @@ func NewStdOutWriteCloser(
 			// chunk on newlines
 			if b, err = reader.ReadBytes('\n'); len(b) > 0 {
 				// always publish if len(bytes) read to ensure full stream sent; even under error conditions
-				eventPublisher.Publish(
-					model.Event{
-						Timestamp: time.Now().UTC(),
-						ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
-							Data:        b,
-							OpRef:       containerCall.OpPath,
-							ContainerID: containerCall.ContainerID,
-							RootCallID:  rootCallID,
-						},
+				eventChannel <- model.Event{
+					Timestamp: time.Now().UTC(),
+					ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
+						Data:        b,
+						OpRef:       containerCall.OpPath,
+						ContainerID: containerCall.ContainerID,
+						RootCallID:  rootCallID,
 					},
-				)
+				}
 			}
 
 			if nil != err {

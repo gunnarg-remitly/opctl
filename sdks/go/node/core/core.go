@@ -22,13 +22,6 @@ type Core interface {
 	AddAuth(
 		req model.AddAuthReq,
 	) error
-	GetEventStream(
-		ctx context.Context,
-		req *model.GetEventStreamReq,
-	) (
-		<-chan model.Event,
-		<-chan error,
-	)
 
 	StartOp(
 		ctx context.Context,
@@ -87,6 +80,7 @@ func New(
 	ctx context.Context,
 	containerRuntime containerruntime.ContainerRuntime,
 	dataDirPath string,
+	eventChannel chan model.Event,
 ) (Core, error) {
 	eventDbPath := path.Join(dataDirPath, "dcg", "events")
 	if err := os.MkdirAll(eventDbPath, 0700); nil != err {
@@ -118,12 +112,12 @@ func New(
 	caller := newCaller(
 		newContainerCaller(
 			containerRuntime,
-			pubSub,
+			eventChannel,
 			stateStore,
 		),
 		dataDirPath,
 		stateStore,
-		pubSub,
+		eventChannel,
 	)
 
 	return _core{

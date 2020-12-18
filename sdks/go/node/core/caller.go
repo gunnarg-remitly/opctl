@@ -7,7 +7,6 @@ import (
 
 	"github.com/opctl/opctl/sdks/go/model"
 	callpkg "github.com/opctl/opctl/sdks/go/opspec/interpreter/call"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 //counterfeiter:generate -o internal/fakes/caller.go . caller
@@ -31,12 +30,12 @@ func newCaller(
 	containerCaller containerCaller,
 	dataDirPath string,
 	stateStore stateStore,
-	pubSub pubsub.PubSub,
+	eventChannel chan model.Event,
 ) caller {
 	instance := &_caller{
 		containerCaller: containerCaller,
 		dataDirPath:     dataDirPath,
-		pubSub:          pubSub,
+		eventChannel:    eventChannel,
 	}
 	instance.opCaller = newOpCaller(
 		stateStore,
@@ -54,10 +53,10 @@ func newCaller(
 type _caller struct {
 	containerCaller    containerCaller
 	dataDirPath        string
+	eventChannel       chan model.Event
 	opCaller           opCaller
 	parallelCaller     parallelCaller
 	parallelLoopCaller parallelLoopCaller
-	pubSub             pubsub.PubSub
 	serialCaller       serialCaller
 	serialLoopCaller   serialLoopCaller
 }
@@ -121,7 +120,7 @@ func (clr _caller) Call(
 			event.CallEnded.Outcome = model.OpOutcomeSucceeded
 		}
 
-		clr.pubSub.Publish(event)
+		clr.eventChannel <- event
 	}()
 
 	if nil == callSpec {
@@ -147,15 +146,13 @@ func (clr _caller) Call(
 		return outputs, err
 	}
 
-	clr.pubSub.Publish(
-		model.Event{
-			Timestamp: callStartTime,
-			CallStarted: &model.CallStarted{
-				Call: *call,
-				Ref:  opPath,
-			},
+	clr.eventChannel <- model.Event{
+		Timestamp: callStartTime,
+		CallStarted: &model.CallStarted{
+			Call: *call,
+			Ref:  opPath,
 		},
-	)
+	}
 
 	switch {
 	case nil != callSpec.Container:

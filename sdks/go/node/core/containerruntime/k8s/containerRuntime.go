@@ -7,7 +7,6 @@ import (
 
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -58,7 +57,7 @@ func (cr _containerRuntime) RunContainer(
 	ctx context.Context,
 	req *model.ContainerCall,
 	rootCallID string,
-	eventPublisher pubsub.EventPublisher,
+	eventChannel chan model.Event,
 	stdout io.WriteCloser,
 	stderr io.WriteCloser,
 ) (*int64, error) {
