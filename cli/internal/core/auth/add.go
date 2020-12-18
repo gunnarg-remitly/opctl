@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 )
@@ -15,23 +14,18 @@ type Adder interface {
 		resources string,
 		username string,
 		password string,
-	)
+	) error
 }
 
 // newAdder returns an initialized "auth add" sub command
-func newAdder(
-	cliExiter cliexiter.CliExiter,
-	core core.Core,
-) Adder {
+func newAdder(core core.Core) Adder {
 	return _adder{
-		cliExiter: cliExiter,
-		core:      core,
+		core: core,
 	}
 }
 
 type _adder struct {
-	cliExiter cliexiter.CliExiter
-	core      core.Core
+	core core.Core
 }
 
 func (ivkr _adder) Add(
@@ -39,8 +33,8 @@ func (ivkr _adder) Add(
 	resources string,
 	username string,
 	password string,
-) {
-	err := ivkr.core.AddAuth(
+) error {
+	return ivkr.core.AddAuth(
 		model.AddAuthReq{
 			Resources: resources,
 			Creds: model.Creds{
@@ -49,8 +43,4 @@ func (ivkr _adder) Add(
 			},
 		},
 	)
-	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
-	}
 }

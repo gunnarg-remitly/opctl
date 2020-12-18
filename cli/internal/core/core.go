@@ -4,11 +4,7 @@ package core
 
 import (
 	"context"
-	"os"
 
-	"github.com/golang-interfaces/ios"
-	"github.com/opctl/opctl/cli/internal/clicolorer"
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
@@ -30,11 +26,13 @@ type Core interface {
 }
 
 // New returns initialized cli core
-func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime, datadirPath string) Core {
-	_os := ios.New()
-	cliOutput := clioutput.New(cliColorer, datadirPath, os.Stderr, os.Stdout)
-	cliExiter := cliexiter.New(cliOutput, _os)
-	cliParamSatisfier := cliparamsatisfier.New(cliExiter, cliOutput)
+func New(
+	ctx context.Context,
+	cliOutput clioutput.CliOutput,
+	containerRuntime string,
+	datadirPath string,
+) Core {
+	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
 
 	var cr containerruntime.ContainerRuntime
 	var err error
@@ -58,36 +56,30 @@ func New(ctx context.Context, cliColorer clicolorer.CliColorer, containerRuntime
 	}
 
 	dataResolver := dataresolver.New(
-		cliExiter,
 		cliParamSatisfier,
 		c,
 	)
 
 	return _core{
 		Auther: newAuther(
-			cliExiter,
 			dataResolver,
 			c,
 		),
 		Lser: newLser(
-			cliExiter,
 			cliOutput,
 			dataResolver,
 		),
 		Oper: newOper(
-			cliExiter,
 			dataResolver,
 		),
 		Runer: newRuner(
-			cliColorer,
-			cliExiter,
 			cliOutput,
 			cliParamSatisfier,
 			dataResolver,
 			eventChannel,
 			c,
 		),
-		SelfUpdater: newSelfUpdater(cliExiter),
+		SelfUpdater: newSelfUpdater(),
 	}
 }
 

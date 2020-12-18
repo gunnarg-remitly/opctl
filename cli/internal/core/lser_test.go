@@ -1,15 +1,17 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/opctl/opctl/cli/internal/cliexiter"
-	cliexiterFakes "github.com/opctl/opctl/cli/internal/cliexiter/fakes"
-	"github.com/opctl/opctl/cli/internal/dataresolver"
+	clioutput "github.com/opctl/opctl/cli/internal/clioutput/fakes"
+	dataresolver "github.com/opctl/opctl/cli/internal/dataresolver/fakes"
+	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/model/fakes"
-	"os"
 )
 
 var _ = Context("Lser", func() {
@@ -19,21 +21,15 @@ var _ = Context("Lser", func() {
 			providedDirRef := "dummyDirRef"
 
 			fakeOpHandle := new(FakeDataHandle)
-			fakeOpHandle.ListDescendantsReturns(nil, errors.New(""))
+			fakeOpHandle.ListDescendantsReturns(nil, nil)
 
-			fakeDataResolver := new(dataresolver.Fake)
-			fakeDataResolver.ResolveReturns(fakeOpHandle)
+			fakeDataResolver := new(dataresolver.FakeDataResolver)
+			fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
 
-			fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
-			objectUnderTest := _lsInvoker{
-				dataResolver: fakeDataResolver,
-				cliExiter:    fakeCliExiter,
-				writer:       os.Stdout,
-			}
+			objectUnderTest := newLser(new(clioutput.FakeCliOutput), fakeDataResolver)
 
 			/* act */
-			objectUnderTest.Ls(
+			err := objectUnderTest.Ls(
 				context.Background(),
 				providedDirRef,
 			)
@@ -41,36 +37,65 @@ var _ = Context("Lser", func() {
 			/* assert */
 			actualDirRef,
 				actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
-
+			Expect(err).To(BeNil())
 			Expect(actualDirRef).To(Equal(providedDirRef))
 			Expect(actualPullCreds).To(BeNil())
 		})
-		Context("opLister.List errors", func() {
-			It("should call exiter w/ expected args", func() {
+		It("should return dataResolver.Resolve errors", func() {
+			/* arrange */
+			expectedError := errors.New("expected")
+			fakeDataResolver := new(dataresolver.FakeDataResolver)
+			fakeDataResolver.ResolveReturns(nil, expectedError)
+
+			objectUnderTest := newLser(new(clioutput.FakeCliOutput), fakeDataResolver)
+
+			/* act */
+			err := objectUnderTest.Ls(context.Background(), "dummy")
+
+			/* assert */
+			Expect(err).To(MatchError(err))
+		})
+		Context("opLister.List", func() {
+			It("works", func() {
 				/* arrange */
-				fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 				fakeOpHandle := new(FakeDataHandle)
-				fakeOpHandle.ListDescendantsReturns(nil, errors.New(""))
-
-				fakeDataResolver := new(dataresolver.Fake)
-				fakeDataResolver.ResolveReturns(fakeOpHandle)
+				fakeOpHandle.ListDescendantsReturns([]*model.DirEntry{{
+					Path: "/path/op.yml",
+				}}, nil)
+				rs := bytes.NewReader([]byte(`{"name": "validater_valid"}`))
+				fakeOpHandle.GetContentReturns(mockReadSeekCloser{rs}, nil)
+				fakeDataResolver := new(dataresolver.FakeDataResolver)
+				fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
 
 				objectUnderTest := _lsInvoker{
 					dataResolver: fakeDataResolver,
-					cliExiter:    fakeCliExiter,
 					writer:       os.Stdout,
 				}
 
 				/* act */
-				objectUnderTest.Ls(
-					context.Background(),
-					"dummyDirRef",
-				)
+				err := objectUnderTest.Ls(context.Background(), "dummyDirRef")
 
 				/* assert */
-				Expect(fakeCliExiter.ExitArgsForCall(0)).
-					To(Equal(cliexiter.ExitReq{Message: "", Code: 1}))
+				Expect(err).To(BeNil())
+			})
+			It("should return errors", func() {
+				/* arrange */
+				expectedError := errors.New("expected")
+				fakeOpHandle := new(FakeDataHandle)
+				fakeOpHandle.ListDescendantsReturns(nil, expectedError)
+				fakeDataResolver := new(dataresolver.FakeDataResolver)
+				fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
+
+				objectUnderTest := _lsInvoker{
+					dataResolver: fakeDataResolver,
+					writer:       os.Stdout,
+				}
+
+				/* act */
+				err := objectUnderTest.Ls(context.Background(), "dummyDirRef")
+
+				/* assert */
+				Expect(err).To(MatchError(expectedError))
 			})
 		})
 	})

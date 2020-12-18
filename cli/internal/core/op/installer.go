@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/opspec"
@@ -20,22 +19,19 @@ type Installer interface {
 		opRef,
 		username,
 		password string,
-	)
+	) error
 }
 
 // newInstaller returns an initialized "op install" sub command
 func newInstaller(
-	cliExiter cliexiter.CliExiter,
 	dataResolver dataresolver.DataResolver,
 ) Installer {
 	return _installer{
-		cliExiter:    cliExiter,
 		dataResolver: dataResolver,
 	}
 }
 
 type _installer struct {
-	cliExiter    cliexiter.CliExiter
 	dataResolver dataresolver.DataResolver
 }
 
@@ -45,7 +41,7 @@ func (ivkr _installer) Install(
 	opRef,
 	username,
 	password string,
-) {
+) error {
 	// install the whole pkg in case relative (intra pkg) refs exist
 	opRefParts := strings.SplitN(opRef, "#", 2)
 	var pkgRef string
@@ -57,7 +53,7 @@ func (ivkr _installer) Install(
 		}
 	}
 
-	opDirHandle := ivkr.dataResolver.Resolve(
+	opDirHandle, err := ivkr.dataResolver.Resolve(
 		ctx,
 		pkgRef,
 		&model.Creds{
@@ -65,13 +61,13 @@ func (ivkr _installer) Install(
 			Password: password,
 		},
 	)
+	if err != nil {
+		return err
+	}
 
-	if err := opspec.Install(
+	return opspec.Install(
 		ctx,
 		filepath.Join(path, pkgRef),
 		opDirHandle,
-	); nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-	}
-
+	)
 }

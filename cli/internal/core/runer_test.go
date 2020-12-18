@@ -1,18 +1,18 @@
 package core
 
 // import (
+// 	"bytes"
 // 	"context"
 // 	"errors"
+// 	"fmt"
+// 	"io"
 // 	"time"
 
 // 	. "github.com/onsi/ginkgo"
 // 	. "github.com/onsi/gomega"
-// 	"github.com/opctl/opctl/cli/internal/clicolorer"
-// 	"github.com/opctl/opctl/cli/internal/cliexiter"
-// 	cliexiterFakes "github.com/opctl/opctl/cli/internal/cliexiter/fakes"
 // 	clioutputFakes "github.com/opctl/opctl/cli/internal/clioutput/fakes"
 // 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
-// 	"github.com/opctl/opctl/cli/internal/dataresolver"
+// 	dataresolver "github.com/opctl/opctl/cli/internal/dataresolver/fakes"
 // 	cliModel "github.com/opctl/opctl/cli/internal/model"
 // 	modelFakes "github.com/opctl/opctl/cli/internal/model/fakes"
 // 	"github.com/opctl/opctl/cli/internal/nodeprovider"
@@ -32,64 +32,186 @@ package core
 // 	return dataHandle
 // }
 
+// // errReadSeekCloser is a mock ReadSeekCloser that returns an error on Read
+// type errReadSeekCloser struct {
+// 	err error // if not specified, will panic with bytes.ErrToLarge
+// }
+
+// func (e errReadSeekCloser) Read(p []byte) (n int, err error) {
+// 	return 0, e.err
+// }
+// func (errReadSeekCloser) Close() error {
+// 	return nil
+// }
+// func (errReadSeekCloser) Seek(offset int64, whence int) (int64, error) {
+// 	return 0, nil
+// }
+
+// type mockReadSeekCloser struct {
+// 	io.ReadSeeker
+// }
+
+// func (mockReadSeekCloser) Close() error {
+// 	return errors.New("not implemented")
+// }
+
 // var _ = Context("Runer", func() {
+// 	It("can be constructed", func() {
+// 		newRuner(
+// 			new(clioutputFakes.FakeCliOutput),
+// 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+// 			new(dataresolver.FakeDataResolver),
+// 			new(nodeprovider.Fake),
+// 		)
+// 	})
 
 // 	Context("Run", func() {
-// 		It("should call dataResolver.Resolve w/ expected args", func() {
+// 		It("dataResolver.Resolve call", func() {
 // 			/* arrange */
 // 			providedOpRef := "dummyOpRef"
 
-// 			dummyOpDataHandle := getDummyOpDataHandle()
-
-// 			fakeDataResolver := new(dataresolver.Fake)
-// 			fakeDataResolver.ResolveReturns(dummyOpDataHandle)
-
-// 			fakeNodeProvider := new(nodeprovider.Fake)
-// 			// error to trigger return
-// 			fakeNodeProvider.CreateNodeIfNotExistsReturns(nil, errors.New(""))
+// 			expected := errors.New("data resolution error")
+// 			fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 			fakeDataResolver.ResolveReturns(nil, expected)
 
 // 			objectUnderTest := _runer{
 // 				dataResolver:      fakeDataResolver,
-// 				cliExiter:         new(cliexiterFakes.FakeCliExiter),
 // 				cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-// 				nodeProvider:      fakeNodeProvider,
+// 				nodeProvider:      new(nodeprovider.Fake),
 // 			}
 
 // 			/* act */
-// 			objectUnderTest.Run(context.TODO(), providedOpRef, &cliModel.RunOpts{})
+// 			err := objectUnderTest.Run(context.TODO(), providedOpRef, &cliModel.RunOpts{})
 
 // 			/* assert */
+// 			Expect(err).To(MatchError(expected))
 // 			actualOpRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
 // 			Expect(actualOpRef).To(Equal(providedOpRef))
 // 			Expect(actualPullCreds).To(BeNil())
 // 		})
-// 		Context("opfile.GetContent errors", func() {
-// 			It("should call exiter w/ expected args", func() {
+// 		It("opfile.GetContent call", func() {
+// 			/* arrange */
+
+// 			fakeOpHandle := new(FakeDataHandle)
+// 			fakeOpHandle.GetContentReturns(nil, errors.New(""))
+
+// 			fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 			fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
+
+// 			objectUnderTest := _runer{
+// 				dataResolver:      fakeDataResolver,
+// 				cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+// 			}
+
+// 			/* act */
+// 			err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+
+// 			/* assert */
+// 			Expect(err).To(MatchError(""))
+// 		})
+// 		Context("opfile.Get doesn't error", func() {
+// 			It("opfile.GetContent reader failure", func() {
 // 				/* arrange */
+// 				expectedError := errors.New("expected")
 
 // 				fakeOpHandle := new(FakeDataHandle)
-// 				fakeOpHandle.GetContentReturns(nil, errors.New(""))
+// 				fakeOpHandle.GetContentReturns(errReadSeekCloser{err: expectedError}, nil)
 
-// 				fakeDataResolver := new(dataresolver.Fake)
-// 				fakeDataResolver.ResolveReturns(fakeOpHandle)
-
-// 				fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
 
 // 				objectUnderTest := _runer{
 // 					dataResolver:      fakeDataResolver,
-// 					cliExiter:         fakeCliExiter,
 // 					cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 				}
 
 // 				/* act */
-// 				objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
 
 // 				/* assert */
-// 				Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 					To(Equal(cliexiter.ExitReq{Message: "", Code: 1}))
+// 				Expect(err).To(MatchError(expectedError))
 // 			})
-// 		})
-// 		Context("opfile.Get doesn't error", func() {
+// 			It("opfile.Unmarshal failure", func() {
+// 				/* arrange */
+// 				fakeOpHandle := new(FakeDataHandle)
+// 				rs := bytes.NewReader([]byte("garbage"))
+// 				fakeOpHandle.GetContentReturns(mockReadSeekCloser{rs}, nil)
+
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(fakeOpHandle, nil)
+
+// 				objectUnderTest := _runer{
+// 					dataResolver:      fakeDataResolver,
+// 					cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+// 				}
+
+// 				/* act */
+// 				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+
+// 				/* assert */
+// 				Expect(err).NotTo(BeNil())
+// 			})
+// 			It("cliParamSatisfier yml file failure", func() {
+// 				/* arrange */
+// 				expectedError := errors.New("expected")
+// 				dummyOpDataHandle := getDummyOpDataHandle()
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+// 				fakeCliParamSatisfier := new(cliparamsatisfierFakes.FakeCLIParamSatisfier)
+// 				fakeCliParamSatisfier.NewYMLFileInputSrcReturns(nil, expectedError)
+
+// 				objectUnderTest := _runer{
+// 					dataResolver:      fakeDataResolver,
+// 					cliParamSatisfier: fakeCliParamSatisfier,
+// 				}
+
+// 				/* act */
+// 				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"})
+
+// 				/* assert */
+// 				Expect(err).To(MatchError(fmt.Errorf("unable to load arg file at '%v'; error was: %v", "argfile", expectedError)))
+// 			})
+// 			It("cliParamSatisfier satisfaction failure", func() {
+// 				/* arrange */
+// 				expectedError := errors.New("expected")
+// 				dummyOpDataHandle := getDummyOpDataHandle()
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+// 				fakeCliParamSatisfier := new(cliparamsatisfierFakes.FakeCLIParamSatisfier)
+// 				fakeCliParamSatisfier.SatisfyReturns(nil, expectedError)
+
+// 				objectUnderTest := _runer{
+// 					dataResolver:      fakeDataResolver,
+// 					cliParamSatisfier: fakeCliParamSatisfier,
+// 				}
+
+// 				/* act */
+// 				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"})
+
+// 				/* assert */
+// 				Expect(err).To(MatchError(expectedError))
+// 			})
+// 			It("create node failure", func() {
+// 				/* arrange */
+// 				expectedError := errors.New("expected")
+// 				dummyOpDataHandle := getDummyOpDataHandle()
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+// 				fakeNodeProvider := new(nodeprovider.Fake)
+// 				fakeNodeProvider.CreateNodeIfNotExistsReturns(nil, expectedError)
+
+// 				objectUnderTest := _runer{
+// 					dataResolver:      fakeDataResolver,
+// 					cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+// 					nodeProvider:      fakeNodeProvider,
+// 				}
+
+// 				/* act */
+// 				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+
+// 				/* assert */
+// 				Expect(err).To(MatchError(expectedError))
+// 			})
 // 			It("should call nodeHandle.APIClient().StartOp w/ expected args", func() {
 // 				/* arrange */
 // 				dummyOpDataHandle := getDummyOpDataHandle()
@@ -107,8 +229,8 @@ package core
 // 					},
 // 				}
 
-// 				fakeDataResolver := new(dataresolver.Fake)
-// 				fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 				fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 				// stub node provider
 // 				fakeAPIClient := new(clientFakes.FakeClient)
@@ -125,11 +247,10 @@ package core
 // 				fakeNodeProvider.CreateNodeIfNotExistsReturns(fakeNodeHandle, nil)
 
 // 				fakeCliParamSatisfier := new(cliparamsatisfierFakes.FakeCLIParamSatisfier)
-// 				fakeCliParamSatisfier.SatisfyReturns(expectedArgs.Args)
+// 				fakeCliParamSatisfier.SatisfyReturns(expectedArgs.Args, nil)
 
 // 				objectUnderTest := _runer{
 // 					dataResolver:      fakeDataResolver,
-// 					cliExiter:         new(cliexiterFakes.FakeCliExiter),
 // 					cliParamSatisfier: fakeCliParamSatisfier,
 // 					nodeProvider:      fakeNodeProvider,
 // 				}
@@ -143,15 +264,14 @@ package core
 // 				Expect(actualArgs).To(Equal(expectedArgs))
 // 			})
 // 			Context("apiClient.StartOp errors", func() {
-// 				It("should call exiter w/ expected args", func() {
+// 				It("should return expected error", func() {
 // 					/* arrange */
-// 					fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
 // 					returnedError := errors.New("dummyError")
 
 // 					dummyOpDataHandle := getDummyOpDataHandle()
 
-// 					fakeDataResolver := new(dataresolver.Fake)
-// 					fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 					fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 					fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 					// stub node provider
 // 					fakeAPIClient := new(clientFakes.FakeClient)
@@ -165,17 +285,15 @@ package core
 
 // 					objectUnderTest := _runer{
 // 						dataResolver:      fakeDataResolver,
-// 						cliExiter:         fakeCliExiter,
 // 						cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 						nodeProvider:      fakeNodeProvider,
 // 					}
 
 // 					/* act */
-// 					objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 					err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
 
 // 					/* assert */
-// 					Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 						To(Equal(cliexiter.ExitReq{Message: returnedError.Error(), Code: 1}))
+// 					Expect(err).To(MatchError(returnedError))
 // 				})
 // 			})
 // 			Context("apiClient.StartOp doesn't error", func() {
@@ -193,8 +311,8 @@ package core
 
 // 					dummyOpDataHandle := getDummyOpDataHandle()
 
-// 					fakeDataResolver := new(dataresolver.Fake)
-// 					fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 					fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 					fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 					// stub node provider
 // 					fakeAPIClient := new(clientFakes.FakeClient)
@@ -212,7 +330,6 @@ package core
 
 // 					objectUnderTest := _runer{
 // 						dataResolver:      fakeDataResolver,
-// 						cliExiter:         new(cliexiterFakes.FakeCliExiter),
 // 						cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 						nodeProvider:      fakeNodeProvider,
 // 					}
@@ -233,15 +350,14 @@ package core
 // 					Expect(actualReq).To(Equal(expectedReq))
 // 				})
 // 				Context("apiClient.GetEventStream errors", func() {
-// 					It("should call exiter w/ expected args", func() {
+// 					It("should return expected error", func() {
 // 						/* arrange */
-// 						fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
 // 						returnedError := errors.New("dummyError")
 
 // 						dummyOpDataHandle := getDummyOpDataHandle()
 
-// 						fakeDataResolver := new(dataresolver.Fake)
-// 						fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 						fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 						fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 						fakeAPIClient := new(clientFakes.FakeClient)
 // 						fakeAPIClient.GetEventStreamReturns(nil, returnedError)
@@ -254,29 +370,25 @@ package core
 
 // 						objectUnderTest := _runer{
 // 							dataResolver:      fakeDataResolver,
-// 							cliExiter:         fakeCliExiter,
 // 							cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 							nodeProvider:      fakeNodeProvider,
 // 						}
 
 // 						/* act */
-// 						objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 						err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
 
 // 						/* assert */
-// 						Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 							To(Equal(cliexiter.ExitReq{Message: returnedError.Error(), Code: 1}))
+// 						Expect(err).To(MatchError(returnedError))
 // 					})
 // 				})
 // 				Context("apiClient.GetEventStream doesn't error", func() {
 // 					Context("event channel closes", func() {
-// 						It("should call exiter w/ expected args", func() {
+// 						It("should return expected error", func() {
 // 							/* arrange */
-// 							fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 							dummyOpDataHandle := getDummyOpDataHandle()
 
-// 							fakeDataResolver := new(dataresolver.Fake)
-// 							fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 							fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 							fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 							fakeAPIClient := new(clientFakes.FakeClient)
 // 							eventChannel := make(chan model.Event)
@@ -291,17 +403,15 @@ package core
 
 // 							objectUnderTest := _runer{
 // 								dataResolver:      fakeDataResolver,
-// 								cliExiter:         fakeCliExiter,
 // 								cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 								nodeProvider:      fakeNodeProvider,
 // 							}
 
 // 							/* act */
-// 							objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 							err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
 
 // 							/* assert */
-// 							Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 								To(Equal(cliexiter.ExitReq{Message: "Event channel closed unexpectedly", Code: 1}))
+// 							Expect(err).To(MatchError("Event channel closed unexpectedly"))
 // 						})
 // 					})
 // 					Context("event channel doesn't close", func() {
@@ -309,7 +419,7 @@ package core
 // 							rootCallID := "dummyRootCallID"
 // 							Context("CallEnded", func() {
 // 								Context("Outcome==SUCCEEDED", func() {
-// 									It("should call exiter w/ expected args", func() {
+// 									It("should return expected error", func() {
 // 										/* arrange */
 // 										opEnded := model.Event{
 // 											Timestamp: time.Now(),
@@ -321,12 +431,10 @@ package core
 // 											},
 // 										}
 
-// 										fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 										dummyOpDataHandle := getDummyOpDataHandle()
 
-// 										fakeDataResolver := new(dataresolver.Fake)
-// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 										fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 										fakeAPIClient := new(clientFakes.FakeClient)
 // 										eventChannel := make(chan model.Event, 10)
@@ -343,21 +451,18 @@ package core
 
 // 										objectUnderTest := _runer{
 // 											dataResolver:      fakeDataResolver,
-// 											cliColorer:        clicolorer.New(),
-// 											cliExiter:         fakeCliExiter,
 // 											cliOutput:         new(clioutputFakes.FakeCliOutput),
 // 											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 											nodeProvider:      fakeNodeProvider,
 // 										}
 
 // 										/* act/assert */
-// 										objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-// 										Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 											To(Equal(cliexiter.ExitReq{Code: 0}))
+// 										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 										Expect(err).To(BeNil())
 // 									})
 // 								})
 // 								Context("Outcome==KILLED", func() {
-// 									It("should call exiter w/ expected args", func() {
+// 									It("should return expected error", func() {
 // 										/* arrange */
 // 										opEnded := model.Event{
 // 											Timestamp: time.Now(),
@@ -369,12 +474,10 @@ package core
 // 											},
 // 										}
 
-// 										fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 										dummyOpDataHandle := getDummyOpDataHandle()
 
-// 										fakeDataResolver := new(dataresolver.Fake)
-// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 										fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 										fakeAPIClient := new(clientFakes.FakeClient)
 // 										eventChannel := make(chan model.Event, 10)
@@ -391,22 +494,19 @@ package core
 
 // 										objectUnderTest := _runer{
 // 											dataResolver:      fakeDataResolver,
-// 											cliColorer:        clicolorer.New(),
-// 											cliExiter:         fakeCliExiter,
 // 											cliOutput:         new(clioutputFakes.FakeCliOutput),
 // 											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 											nodeProvider:      fakeNodeProvider,
 // 										}
 
 // 										/* act/assert */
-// 										objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-// 										Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 											To(Equal(cliexiter.ExitReq{Code: 137}))
+// 										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 										Expect(err).To(MatchError(&RunError{ExitCode: 137}))
 // 									})
 
 // 								})
 // 								Context("Outcome==FAILED", func() {
-// 									It("should call exiter w/ expected args", func() {
+// 									It("should return expected error", func() {
 // 										/* arrange */
 // 										opEnded := model.Event{
 // 											Timestamp: time.Now(),
@@ -418,12 +518,10 @@ package core
 // 											},
 // 										}
 
-// 										fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 										dummyOpDataHandle := getDummyOpDataHandle()
 
-// 										fakeDataResolver := new(dataresolver.Fake)
-// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 										fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 										fakeAPIClient := new(clientFakes.FakeClient)
 // 										eventChannel := make(chan model.Event, 10)
@@ -440,21 +538,18 @@ package core
 
 // 										objectUnderTest := _runer{
 // 											dataResolver:      fakeDataResolver,
-// 											cliColorer:        clicolorer.New(),
-// 											cliExiter:         fakeCliExiter,
 // 											cliOutput:         new(clioutputFakes.FakeCliOutput),
 // 											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 											nodeProvider:      fakeNodeProvider,
 // 										}
 
 // 										/* act/assert */
-// 										objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-// 										Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 											To(Equal(cliexiter.ExitReq{Code: 1}))
+// 										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 										Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 // 									})
 // 								})
 // 								Context("Outcome==?", func() {
-// 									It("should call exiter w/ expected args", func() {
+// 									It("should return expected error", func() {
 // 										/* arrange */
 // 										opEnded := model.Event{
 // 											Timestamp: time.Now(),
@@ -466,12 +561,10 @@ package core
 // 											},
 // 										}
 
-// 										fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 										dummyOpDataHandle := getDummyOpDataHandle()
 
-// 										fakeDataResolver := new(dataresolver.Fake)
-// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle)
+// 										fakeDataResolver := new(dataresolver.FakeDataResolver)
+// 										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 // 										fakeAPIClient := new(clientFakes.FakeClient)
 // 										eventChannel := make(chan model.Event, 10)
@@ -488,17 +581,14 @@ package core
 
 // 										objectUnderTest := _runer{
 // 											dataResolver:      fakeDataResolver,
-// 											cliColorer:        clicolorer.New(),
-// 											cliExiter:         fakeCliExiter,
 // 											cliOutput:         new(clioutputFakes.FakeCliOutput),
 // 											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 // 											nodeProvider:      fakeNodeProvider,
 // 										}
 
 // 										/* act/assert */
-// 										objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-// 										Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 											To(Equal(cliexiter.ExitReq{Code: 1}))
+// 										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+// 										Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 // 									})
 // 								})
 // 							})

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/sdks/go/opspec"
@@ -20,17 +19,15 @@ type Lser interface {
 	Ls(
 		ctx context.Context,
 		dirRef string,
-	)
+	) error
 }
 
 // newLser returns an initialized "ls" command
 func newLser(
-	cliExiter cliexiter.CliExiter,
 	cliOutput clioutput.CliOutput,
 	dataResolver dataresolver.DataResolver,
 ) Lser {
 	return _lsInvoker{
-		cliExiter:    cliExiter,
 		cliOutput:    cliOutput,
 		dataResolver: dataResolver,
 		writer:       os.Stdout,
@@ -38,7 +35,6 @@ func newLser(
 }
 
 type _lsInvoker struct {
-	cliExiter    cliexiter.CliExiter
 	cliOutput    clioutput.CliOutput
 	dataResolver dataresolver.DataResolver
 	writer       io.Writer
@@ -47,32 +43,33 @@ type _lsInvoker struct {
 func (ivkr _lsInvoker) Ls(
 	ctx context.Context,
 	dirRef string,
-) {
+) error {
 	_tabWriter := new(tabwriter.Writer)
 	defer _tabWriter.Flush()
 	_tabWriter.Init(ivkr.writer, 0, 8, 1, '\t', 0)
 
 	fmt.Fprintln(_tabWriter, "REF\tDESCRIPTION")
 
-	dirHandle := ivkr.dataResolver.Resolve(
+	dirHandle, err := ivkr.dataResolver.Resolve(
 		ctx,
 		dirRef,
 		nil,
 	)
+	if nil != err {
+		return err
+	}
 
 	opsByPath, err := opspec.List(
 		ctx,
 		dirHandle,
 	)
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	cwd, err := os.Getwd()
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	for path, op := range opsByPath {
@@ -81,8 +78,7 @@ func (ivkr _lsInvoker) Ls(
 			// make absolute paths relative
 			relOpRef, err := filepath.Rel(cwd, opRef)
 			if nil != err {
-				ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-				return // support fake exiter
+				return err
 			}
 
 			opRef = strings.TrimPrefix(relOpRef, ".opspec/")
@@ -90,6 +86,7 @@ func (ivkr _lsInvoker) Ls(
 
 		fmt.Fprintf(_tabWriter, "%v\t%v", opRef, op.Description)
 		fmt.Fprintln(_tabWriter)
-
 	}
+
+	return nil
 }

@@ -2,14 +2,13 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/opctl/opctl/cli/internal/clicolorer"
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
@@ -25,13 +24,11 @@ type Runer interface {
 		ctx context.Context,
 		opRef string,
 		opts *cliModel.RunOpts,
-	)
+	) error
 }
 
 // newRuner returns an initialized "run" command
 func newRuner(
-	cliColorer clicolorer.CliColorer,
-	cliExiter cliexiter.CliExiter,
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
@@ -39,8 +36,6 @@ func newRuner(
 	core core.Core,
 ) Runer {
 	return _runer{
-		cliColorer:        cliColorer,
-		cliExiter:         cliExiter,
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
@@ -51,8 +46,6 @@ func newRuner(
 
 type _runer struct {
 	dataResolver      dataresolver.DataResolver
-	cliColorer        clicolorer.CliColorer
-	cliExiter         cliexiter.CliExiter
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	eventChannel      chan model.Event
@@ -63,47 +56,45 @@ func (ivkr _runer) Run(
 	ctx context.Context,
 	opRef string,
 	opts *cliModel.RunOpts,
-) {
+) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	opHandle := ivkr.dataResolver.Resolve(
+	opHandle, err := ivkr.dataResolver.Resolve(
 		ctx,
 		opRef,
 		nil,
 	)
+	if nil != err {
+		return err
+	}
 
 	opFileReader, err := opHandle.GetContent(
 		ctx,
 		opfile.FileName,
 	)
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	opFileBytes, err := ioutil.ReadAll(opFileReader)
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	opFile, err := opfile.Unmarshal(
 		opFileBytes,
 	)
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	ymlFileInputSrc, err := ivkr.cliParamSatisfier.NewYMLFileInputSrc(opts.ArgFile)
 	if nil != err {
-		err = fmt.Errorf("unable to load arg file at '%v'; error was: %v", opts.ArgFile, err.Error())
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return fmt.Errorf("unable to load arg file at '%v'; error was: %v", opts.ArgFile, err.Error())
 	}
 
-	argsMap := ivkr.cliParamSatisfier.Satisfy(
+	argsMap, err := ivkr.cliParamSatisfier.Satisfy(
 		cliparamsatisfier.NewInputSourcer(
 			ivkr.cliParamSatisfier.NewSliceInputSrc(opts.Args, "="),
 			ymlFileInputSrc,
@@ -113,6 +104,9 @@ func (ivkr _runer) Run(
 		),
 		opFile.Inputs,
 	)
+	if nil != err {
+		return err
+	}
 
 	// init signal channel
 	aSigIntWasReceivedAlready := false
@@ -141,30 +135,30 @@ func (ivkr _runer) Run(
 		},
 	)
 	if nil != err {
-		ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return // support fake exiter
+		return err
 	}
 
 	for {
 		select {
 		case <-sigIntChannel:
 			if !aSigIntWasReceivedAlready {
-				fmt.Println(ivkr.cliColorer.Error("Gracefully stopping... (signal Control-C again to force)"))
+				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
 				aSigIntWasReceivedAlready = true
 				cancel()
 			} else {
-				ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: "Terminated by Control-C", Code: 130})
-				return // support fake exiter
+				return &RunError{
+					ExitCode: 130,
+					message:  "Terminated by Control-C",
+				}
 			}
 
 		case <-sigTermChannel:
-			fmt.Println(ivkr.cliColorer.Error("Gracefully stopping..."))
+			ivkr.cliOutput.Error("Gracefully stopping...")
 			cancel()
 
 		case event, isEventChannelOpen := <-ivkr.eventChannel:
 			if !isEventChannelOpen {
-				ivkr.cliExiter.Exit(cliexiter.ExitReq{Message: "Event channel closed unexpectedly", Code: 1})
-				return // support fake exiter
+				return errors.New("Event channel closed unexpectedly")
 			}
 
 			ivkr.cliOutput.Event(&event)
@@ -173,14 +167,12 @@ func (ivkr _runer) Run(
 				if event.CallEnded.Call.ID == rootCallID {
 					switch event.CallEnded.Outcome {
 					case model.OpOutcomeSucceeded:
-						ivkr.cliExiter.Exit(cliexiter.ExitReq{Code: 0})
+						return nil
 					case model.OpOutcomeKilled:
-						ivkr.cliExiter.Exit(cliexiter.ExitReq{Code: 137})
+						return &RunError{ExitCode: 137}
 					default:
-						// treat model.OpOutcomeFailed & unexpected values as errors.
-						ivkr.cliExiter.Exit(cliexiter.ExitReq{Code: 1})
+						return &RunError{ExitCode: 1}
 					}
-					return // support fake exiter
 				}
 			}
 		}

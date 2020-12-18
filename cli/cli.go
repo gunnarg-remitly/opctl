@@ -5,11 +5,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/appdataspec/sdk-golang/appdatapath"
 	mow "github.com/jawher/mow.cli"
 	"github.com/opctl/opctl/cli/internal/clicolorer"
+	"github.com/opctl/opctl/cli/internal/clioutput"
 	corePkg "github.com/opctl/opctl/cli/internal/core"
 	"github.com/opctl/opctl/cli/internal/model"
 	op "github.com/opctl/opctl/sdks/go/opspec"
@@ -23,14 +25,13 @@ type cli interface {
 // newCorer allows swapping out corePkg.New for unit tests
 type newCorer func(
 	ctx context.Context,
-	cliColorer clicolorer.CliColorer,
+	cliOutput clioutput.CliOutput,
 	containerRuntime,
 	datadirPath string,
 ) corePkg.Core
 
 func newCli(
 	ctx context.Context,
-	cliColorer clicolorer.CliColorer,
 	newCorer newCorer,
 ) cli {
 	cli := mow.App(
@@ -62,13 +63,31 @@ func newCli(
 		},
 	)
 
-	core := newCorer(ctx, cliColorer, *containerRuntime, *dataDir)
+	cliOutput := clioutput.New(clicolorer.New(), *dataDir, os.Stderr, os.Stdout)
+
+	core := newCorer(ctx, cliOutput, *containerRuntime, *dataDir)
+
+	exitWith := func(successMessage string, err error) {
+		if err == nil {
+			if successMessage != "" {
+				cliOutput.Success(successMessage)
+			}
+			mow.Exit(0)
+		} else {
+			cliOutput.Error(err.Error())
+			if re, ok := err.(*corePkg.RunError); ok {
+				mow.Exit(re.ExitCode)
+			} else {
+				mow.Exit(1)
+			}
+		}
+	}
 
 	noColor := cli.BoolOpt("nc no-color", false, "Disable output coloring")
 
 	cli.Before = func() {
 		if *noColor {
-			cliColorer.Disable()
+			cliOutput.DisableColor()
 		}
 	}
 
@@ -83,7 +102,7 @@ func newCli(
 				password := addCmd.StringOpt("p password", "", "Password")
 
 				addCmd.Action = func() {
-					core.Auth().Add(ctx, *resources, *username, *password)
+					exitWith("", core.Auth().Add(ctx, *resources, *username, *password))
 				}
 			})
 	})
@@ -92,6 +111,7 @@ func newCli(
 		const dirRefArgName = "DIR_REF"
 		lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
 		dirRef := lsCmd.StringArg(dirRefArgName, op.DotOpspecDirName, "Reference to dir ops will be listed from")
+
 		lsCmd.Action = func() {
 			core.Ls(ctx, *dirRef)
 		}
@@ -115,7 +135,7 @@ func newCli(
 			password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
 
 			installCmd.Action = func() {
-				core.Op().Install(ctx, *path, *opRef, *username, *password)
+				exitWith("", core.Op().Install(ctx, *path, *opRef, *username, *password))
 			}
 		})
 
@@ -134,14 +154,14 @@ func newCli(
 		opRef := runCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 		runCmd.Action = func() {
-			core.Run(ctx, *opRef, &model.RunOpts{Args: *args, ArgFile: *argFile})
+			exitWith("", core.Run(ctx, *opRef, &model.RunOpts{Args: *args, ArgFile: *argFile}))
 		}
 	})
 
 	cli.Command("self-update", "Update opctl", func(selfUpdateCmd *mow.Cmd) {
 		channel := selfUpdateCmd.StringOpt("c channel", "stable", "Release channel to update from (either `stable`, `alpha`, or `beta`)")
 		selfUpdateCmd.Action = func() {
-			core.SelfUpdate(*channel)
+			exitWith(core.SelfUpdate(*channel))
 		}
 	})
 

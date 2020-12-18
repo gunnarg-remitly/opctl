@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/golang-interfaces/ios"
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/sdks/go/data"
 	"github.com/opctl/opctl/sdks/go/data/fs"
@@ -24,16 +23,14 @@ type DataResolver interface {
 		ctx context.Context,
 		dataRef string,
 		pullCreds *model.Creds,
-	) model.DataHandle
+	) (model.DataHandle, error)
 }
 
 func New(
-	cliExiter cliexiter.CliExiter,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	core core.Core,
 ) DataResolver {
 	return _dataResolver{
-		cliExiter:         cliExiter,
 		cliParamSatisfier: cliParamSatisfier,
 		core:              core,
 		os:                ios.New(),
@@ -41,7 +38,6 @@ func New(
 }
 
 type _dataResolver struct {
-	cliExiter         cliexiter.CliExiter
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	core              core.Core
 	os                ios.IOS
@@ -51,11 +47,10 @@ func (dtr _dataResolver) Resolve(
 	ctx context.Context,
 	dataRef string,
 	pullCreds *model.Creds,
-) model.DataHandle {
+) (model.DataHandle, error) {
 	cwd, err := dtr.os.Getwd()
 	if nil != err {
-		dtr.cliExiter.Exit(cliexiter.ExitReq{Message: err.Error(), Code: 1})
-		return nil // support fake exiter
+		return nil, err
 	}
 
 	fsProvider := fs.New(
@@ -81,15 +76,18 @@ func (dtr _dataResolver) Resolve(
 
 		switch {
 		case nil == err:
-			return opDirHandle
+			return opDirHandle, err
 		case isAuthError:
 			// auth errors can be fixed by supplying correct creds so don't give up; prompt
-			argMap := dtr.cliParamSatisfier.Satisfy(
+			argMap, err := dtr.cliParamSatisfier.Satisfy(
 				cliparamsatisfier.NewInputSourcer(
 					dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs),
 				),
 				credsPromptInputs,
 			)
+			if nil != err {
+				return nil, err
+			}
 
 			// save providedArgs & re-attempt
 			pullCreds = &model.Creds{
@@ -99,13 +97,7 @@ func (dtr _dataResolver) Resolve(
 			continue
 		default:
 			// uncorrectable error.. give up
-			dtr.cliExiter.Exit(
-				cliexiter.ExitReq{
-					Message: fmt.Sprintf("Unable to resolve pkg '%v'; error was %v", dataRef, err.Error()),
-					Code:    1,
-				},
-			)
-			return nil // support fake exiter
+			return nil, fmt.Errorf("Unable to resolve pkg '%v'; error was %v", dataRef, err.Error())
 		}
 
 	}

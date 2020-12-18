@@ -3,11 +3,10 @@ package dataresolver
 // import (
 // 	"errors"
 // 	"fmt"
+
 // 	"github.com/golang-interfaces/ios"
 // 	. "github.com/onsi/ginkgo"
 // 	. "github.com/onsi/gomega"
-// 	"github.com/opctl/opctl/cli/internal/cliexiter"
-// 	cliexiterFakes "github.com/opctl/opctl/cli/internal/cliexiter/fakes"
 // 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
 // 	modelFakes "github.com/opctl/opctl/cli/internal/model/fakes"
 // 	"github.com/opctl/opctl/cli/internal/nodeprovider"
@@ -16,6 +15,12 @@ package dataresolver
 // )
 
 // var _ = Context("dataResolver", func() {
+// 	It("Can be constructed", func() {
+// 		Expect(New(
+// 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+// 			new(nodeprovider.Fake),
+// 		)).NotTo(BeNil())
+// 	})
 // 	Context("Resolve", func() {
 // 		Context("data.Resolve errs", func() {
 // 			Context("data.ErrDataProviderAuthorization", func() {
@@ -41,11 +46,11 @@ package dataresolver
 // 							usernameInputName: {String: &username},
 // 							passwordInputName: {String: &password},
 // 						},
+// 						nil,
 // 					)
 
 // 					objectUnderTest := _dataResolver{
 // 						cliParamSatisfier: fakeCliParamSatisfier,
-// 						cliExiter:         new(cliexiterFakes.FakeCliExiter),
 // 						os:                new(ios.Fake),
 // 						nodeProvider:      fakeNodeProvider,
 // 					}
@@ -59,7 +64,7 @@ package dataresolver
 // 				})
 // 			})
 // 			Context("not data.ErrAuthenticationFailed", func() {
-// 				It("should call exiter w/ expected args", func() {
+// 				It("should return expected error", func() {
 // 					/* arrange */
 // 					providedDataRef := "dummyDataRef"
 
@@ -73,21 +78,17 @@ package dataresolver
 // 					fakeNodeProvider := new(nodeprovider.Fake)
 // 					fakeNodeProvider.CreateNodeIfNotExistsReturns(fakeNodeHandle, nil)
 
-// 					fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 					objectUnderTest := _dataResolver{
-// 						cliExiter:    fakeCliExiter,
 // 						os:           new(ios.Fake),
 // 						nodeProvider: fakeNodeProvider,
 // 					}
 
 // 					/* act */
-// 					objectUnderTest.Resolve(providedDataRef, &model.Creds{})
+// 					response, err := objectUnderTest.Resolve(providedDataRef, &model.Creds{})
 
 // 					/* assert */
-// 					Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 						To(Equal(cliexiter.ExitReq{Message: fmt.Sprintf("Unable to resolve pkg 'dummyDataRef'; error was %s", expectedErr), Code: 1}))
-
+// 					Expect(response).To(BeNil())
+// 					Expect(err.Error()).To(Equal(fmt.Sprintf("Unable to resolve pkg 'dummyDataRef'; error was %s", expectedErr)))
 // 				})
 // 			})
 // 		})
@@ -107,12 +108,13 @@ package dataresolver
 // 				}
 
 // 				/* act */
-// 				actualPkgHandle := objectUnderTest.Resolve(
+// 				actualPkgHandle, err := objectUnderTest.Resolve(
 // 					"testdata/dummy-op",
 // 					&model.Creds{},
 // 				)
 
 // 				/* assert */
+// 				Expect(err).To(BeNil())
 // 				Expect(actualPkgHandle.Ref()).To(Equal("testdata/dummy-op"))
 // 			})
 // 		})

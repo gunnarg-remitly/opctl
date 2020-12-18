@@ -1,7 +1,6 @@
 package core
 
 import (
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/core/op"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 )
@@ -13,12 +12,10 @@ type Oper interface {
 
 // newOper returns an initialized "op" sub command
 func newOper(
-	cliExiter cliexiter.CliExiter,
 	dataResolver dataresolver.DataResolver,
 ) Oper {
 	return _oper{
 		op: op.New(
-			cliExiter,
 			dataResolver,
 		),
 	}

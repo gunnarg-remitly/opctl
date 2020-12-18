@@ -6,8 +6,6 @@ package auth
 
 // 	. "github.com/onsi/ginkgo"
 // 	. "github.com/onsi/gomega"
-// 	"github.com/opctl/opctl/cli/internal/cliexiter"
-// 	cliexiterFakes "github.com/opctl/opctl/cli/internal/cliexiter/fakes"
 // 	modelFakes "github.com/opctl/opctl/cli/internal/model/fakes"
 // 	"github.com/opctl/opctl/cli/internal/nodeprovider"
 // 	"github.com/opctl/opctl/sdks/go/model"
@@ -41,7 +39,7 @@ package auth
 // 			}
 
 // 			/* act */
-// 			objectUnderTest.Add(
+// 			err := objectUnderTest.Add(
 // 				expectedCtx,
 // 				expectedReq.Resources,
 // 				expectedReq.Username,
@@ -50,11 +48,12 @@ package auth
 
 // 			/* assert */
 // 			actualCtx, actualReq := fakeAPIClient.AddAuthArgsForCall(0)
+// 			Expect(err).To(BeNil())
 // 			Expect(actualCtx).To(Equal(expectedCtx))
 // 			Expect(actualReq).To(BeEquivalentTo(expectedReq))
 // 		})
 // 		Context("apiClient.Invoke errors", func() {
-// 			It("should call exiter w/ expected args", func() {
+// 			It("should return expected error", func() {
 // 				/* arrange */
 // 				fakeAPIClient := new(clientFakes.FakeClient)
 // 				expectedError := errors.New("dummyError")
@@ -66,19 +65,15 @@ package auth
 // 				fakeNodeProvider := new(nodeprovider.Fake)
 // 				fakeNodeProvider.CreateNodeIfNotExistsReturns(fakeNodeHandle, nil)
 
-// 				fakeCliExiter := new(cliexiterFakes.FakeCliExiter)
-
 // 				objectUnderTest := _adder{
-// 					cliExiter:    fakeCliExiter,
 // 					nodeProvider: fakeNodeProvider,
 // 				}
 
 // 				/* act */
-// 				objectUnderTest.Add(context.TODO(), "", "", "")
+// 				err := objectUnderTest.Add(context.TODO(), "", "", "")
 
 // 				/* assert */
-// 				Expect(fakeCliExiter.ExitArgsForCall(0)).
-// 					To(Equal(cliexiter.ExitReq{Message: expectedError.Error(), Code: 1}))
+// 				Expect(err).To(MatchError(expectedError))
 // 			})
 // 		})
 // 	})

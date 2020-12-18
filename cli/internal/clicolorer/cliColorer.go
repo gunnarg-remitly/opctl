@@ -9,7 +9,7 @@ import (
 //counterfeiter:generate -o fakes/cliColorer.go . CliColorer
 type CliColorer interface {
 	// silently disables coloring
-	Disable()
+	DisableColor()
 
 	// attention colors
 	Attention(
@@ -65,7 +65,7 @@ type cliColorer struct {
 	mutedCliColorer     *color.Color
 }
 
-func (this *cliColorer) Disable() {
+func (this *cliColorer) DisableColor() {
 	this.attentionCliColorer.DisableColor()
 	this.errorCliColorer.DisableColor()
 	this.infoCliColorer.DisableColor()

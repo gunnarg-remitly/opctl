@@ -1,7 +1,6 @@
 package core
 
 import (
-	"github.com/opctl/opctl/cli/internal/cliexiter"
 	"github.com/opctl/opctl/cli/internal/core/auth"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/sdks/go/node/core"
@@ -14,13 +13,11 @@ type Auther interface {
 
 // newAuther returns an initialized "auth" sub command
 func newAuther(
-	cliExiter cliexiter.CliExiter,
 	dataResolver dataresolver.DataResolver,
 	core core.Core,
 ) Auther {
 	return _auther{
 		auth: auth.New(
-			cliExiter,
 			dataResolver,
 			core,
 		),
