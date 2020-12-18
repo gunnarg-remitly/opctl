@@ -82,10 +82,15 @@ func (cc _containerCaller) Call(
 		)
 	}()
 
+	naturallyExited := false
+	defer func() { naturallyExited = true }()
 	// kill the container if context is cancelled
 	go func() {
 		select {
 		case <-ctx.Done():
+			if naturallyExited {
+				return
+			}
 			// we need to use fresh context here, since the current context has been cancelled
 			if err := cc.containerRuntime.DeleteContainerIfExists(
 				context.Background(),
