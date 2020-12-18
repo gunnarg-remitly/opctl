@@ -103,9 +103,8 @@ func New(
 	)
 
 	return _core{
-		caller:           caller,
-		containerRuntime: containerRuntime,
-		dataCachePath:    filepath.Join(dataDirPath, "ops"),
+		caller:        caller,
+		dataCachePath: filepath.Join(dataDirPath, "ops"),
 		opCaller: newOpCaller(
 			stateStore,
 			caller,
@@ -118,7 +117,6 @@ func New(
 
 type _core struct {
 	caller              caller
-	containerRuntime    containerruntime.ContainerRuntime
 	dataCachePath       string
 	opCaller            opCaller
 	stateStore          stateStore
