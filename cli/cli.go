@@ -45,7 +45,7 @@ func newCli(
 		return nil, err
 	}
 
-	dataDir := cli.String(
+	datadirPath := cli.String(
 		mow.StringOpt{
 			Desc:   "Path of dir used to store opctl data",
 			EnvVar: "OPCTL_DATA_DIR",
@@ -54,7 +54,7 @@ func newCli(
 		},
 	)
 
-	cliOutput, err := clioutput.New(clicolorer.New(), *dataDir, os.Stderr, os.Stdout)
+	cliOutput, err := clioutput.New(clicolorer.New(), *datadirPath, os.Stderr, os.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func newCli(
 		},
 	)
 
-	core, err := newCorer(ctx, cliOutput, *containerRuntime, *dataDir)
+	core, err := newCorer(ctx, cliOutput, *containerRuntime, *datadirPath)
 	if err != nil {
 		return nil, err
 	}

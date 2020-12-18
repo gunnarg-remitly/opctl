@@ -31,6 +31,7 @@ type Runer interface {
 func newRuner(
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
+	datadirPath string,
 	dataResolver dataresolver.DataResolver,
 	eventChannel chan model.Event,
 	core core.Core,
@@ -38,6 +39,7 @@ func newRuner(
 	return _runer{
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
+		datadirPath:       datadirPath,
 		dataResolver:      dataResolver,
 		eventChannel:      eventChannel,
 		core:              core,
@@ -46,6 +48,7 @@ func newRuner(
 
 type _runer struct {
 	dataResolver      dataresolver.DataResolver
+	datadirPath       string
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	eventChannel      chan model.Event
@@ -94,7 +97,7 @@ func (ivkr _runer) Run(
 		return fmt.Errorf("unable to load arg file at '%v'; error was: %v", opts.ArgFile, err.Error())
 	}
 
-	cliPromptInputSrc, err := ivkr.cliParamSatisfier.NewCliPromptInputSrc(opFile.Inputs)
+	cliPromptInputSrc, err := ivkr.cliParamSatisfier.NewCliPromptInputSrc(ivkr.datadirPath, opFile.Inputs)
 	if nil != err {
 		return err
 	}

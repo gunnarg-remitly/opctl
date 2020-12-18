@@ -27,10 +27,12 @@ type DataResolver interface {
 }
 
 func New(
+	datadirPath string,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	core core.Core,
 ) DataResolver {
 	return _dataResolver{
+		datadirPath:       datadirPath,
 		cliParamSatisfier: cliParamSatisfier,
 		core:              core,
 		os:                ios.New(),
@@ -38,6 +40,7 @@ func New(
 }
 
 type _dataResolver struct {
+	datadirPath       string
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	core              core.Core
 	os                ios.IOS
@@ -79,7 +82,7 @@ func (dtr _dataResolver) Resolve(
 			return opDirHandle, err
 		case isAuthError:
 			// auth errors can be fixed by supplying correct creds so don't give up; prompt
-			cliPromptInputSrc, err := dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs)
+			cliPromptInputSrc, err := dtr.cliParamSatisfier.NewCliPromptInputSrc(dtr.datadirPath, credsPromptInputs)
 			if nil != err {
 				return nil, err
 			}

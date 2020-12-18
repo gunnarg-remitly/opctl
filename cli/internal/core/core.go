@@ -53,6 +53,7 @@ func New(
 	}
 
 	dataResolver := dataresolver.New(
+		datadirPath,
 		cliParamSatisfier,
 		c,
 	)
@@ -72,6 +73,7 @@ func New(
 		Runer: newRuner(
 			cliOutput,
 			cliParamSatisfier,
+			datadirPath,
 			dataResolver,
 			eventChannel,
 			c,

@@ -12,9 +12,10 @@ import (
 )
 
 func New(
+	datadirPath string,
 	inputs map[string]*model.Param,
 ) (inputsrc.InputSrc, error) {
-	cliOutput, err := clioutput.New(clicolorer.New(), "", os.Stderr, os.Stdout)
+	cliOutput, err := clioutput.New(clicolorer.New(), datadirPath, os.Stderr, os.Stdout)
 	return cliPromptInputSrc{
 		inputs: inputs,
 		// TODO
