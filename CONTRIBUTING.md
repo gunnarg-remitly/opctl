@@ -59,3 +59,23 @@ Pull requests are subject to:
 
 - approval by one or more [maintainers](https://github.com/orgs/opctl/teams/maintainers/members)
 - the [build](.opspec/build) op continuing to run with a successful outcome
+
+# Local development
+
+## Native toolchain
+
+First, ensure dependencies are installed
+
+- [go 1.15](https://golang.org/doc/go1.15)
+- [gpgme](https://www.gnupg.org/related_software/gpgme/) (on macOS, `brew install gpgme`)
+- [dlv](https://github.com/go-delve/delve) (for debugging) - Because this project uses go modules, install this globally with `go get github.com/go-delve/delve` to run the tool outside of the project directory.
+
+Build a binary with
+
+`go build -o opctl-beta ./cli`
+
+To debug
+
+`go run github.com/go-delve/delve/cmd/dlv --check-go-version=false --listen=127.0.0.1:40000 --headless=true --api-version=2 exec /PATH/TO/OPCTL/opctl-beta run dev`
+
+This will suspend execution until a client connects on port 40000. If using VSCode, you can use the saved run configuration to connect.
