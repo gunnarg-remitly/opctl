@@ -1,9 +1,10 @@
 package call
 
 import (
-	"path/filepath"
+	"context"
 	"errors"
 	"os"
+	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,6 +24,7 @@ var _ = Context("Interpret", func() {
 
 				/* act */
 				_, actualError := Interpret(
+					context.TODO(),
 					map[string]*model.Value{},
 					&model.CallSpec{
 						If: &predicateSpec,
@@ -76,6 +78,7 @@ var _ = Context("Interpret", func() {
 
 			/* act */
 			actualCall, actualError := Interpret(
+				context.TODO(),
 				providedScope,
 				&model.CallSpec{
 					Container: &containerSpec,
@@ -115,6 +118,7 @@ var _ = Context("Interpret", func() {
 			}
 
 			expectedOp, err := op.Interpret(
+				context.TODO(),
 				providedScope,
 				&opSpec,
 				providedID,
@@ -134,6 +138,7 @@ var _ = Context("Interpret", func() {
 
 			/* act */
 			actualCall, actualError := Interpret(
+				context.TODO(),
 				providedScope,
 				&model.CallSpec{
 					Op: &opSpec,
@@ -175,6 +180,7 @@ var _ = Context("Interpret", func() {
 
 			/* act */
 			actualCall, actualError := Interpret(
+				context.TODO(),
 				providedScope,
 				&model.CallSpec{
 					Parallel: &parallelSpec,
@@ -206,7 +212,7 @@ var _ = Context("Interpret", func() {
 			serialSpec := []*model.CallSpec{}
 
 			expectedCall := &model.Call{
-				Serial: serialSpec,
+				Serial:   serialSpec,
 				ID:       providedID,
 				ParentID: providedParentID,
 				RootID:   providedRootCallID,
@@ -214,6 +220,7 @@ var _ = Context("Interpret", func() {
 
 			/* act */
 			actualCall, actualError := Interpret(
+				context.TODO(),
 				providedScope,
 				&model.CallSpec{
 					Serial: &serialSpec,

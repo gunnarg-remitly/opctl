@@ -501,32 +501,6 @@ var _ = Context("output", func() {
 			})
 		})
 	})
-	Context("Info", func() {
-		providedFormat := "dummyFormat %v %v"
-		It("should call stdWriter w/ expected args", func() {
-			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Info(providedFormat),
-				),
-			)
-
-			fakeStdWriter := new(fakeWriter)
-			objectUnderTest, _ := New(
-				_cliColorer,
-				"/dataDirPath",
-				new(fakeWriter),
-				fakeStdWriter,
-			)
-
-			/* act */
-			objectUnderTest.Info(providedFormat)
-
-			/* assert */
-			Expect(fakeStdWriter.WriteArgsForCall(0)).
-				To(Equal(expectedWriteArg))
-		})
-	})
 	Context("Success", func() {
 		providedFormat := "dummyFormat %v %v"
 		It("should call stdWriter w/ expected args", func() {

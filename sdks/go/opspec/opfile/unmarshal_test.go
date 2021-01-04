@@ -14,10 +14,10 @@ var _ = Context("Unmarshal", func() {
 		It("should return the expected error", func() {
 			/* arrange */
 			/* act */
-			_, actualError := Unmarshal([]byte("&"))
+			_, actualError := Unmarshal("opRef", []byte("&"))
 
 			/* assert */
-			Expect(actualError).To(Equal(errors.New("\n-\n  Error(s):\n    - error converting YAML to JSON: yaml: did not find expected alphabetic or numeric character\n-")))
+			Expect(actualError).To(Equal(errors.New("opspec syntax error:\nopRef\n- error converting YAML to JSON: yaml: did not find expected alphabetic or numeric character")))
 		})
 	})
 	Context("Validator.Validate doesn't return errors", func() {
@@ -61,7 +61,7 @@ var _ = Context("Unmarshal", func() {
 			}
 
 			/* act */
-			actualOpFile, _ := Unmarshal(providedBytes)
+			actualOpFile, _ := Unmarshal("opRef", providedBytes)
 
 			/* assert */
 			Expect(*actualOpFile).To(Equal(*expectedOpFile))

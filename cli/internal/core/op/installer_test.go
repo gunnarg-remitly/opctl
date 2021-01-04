@@ -42,6 +42,7 @@ var _ = Context("Installer", func() {
 		})
 		It("should call dataResolver w/ expected args", func() {
 			/* arrange */
+			providedCtx := context.TODO()
 			providedPkgRef := "providedPkgRef#0.0.0"
 			providedOpRef := fmt.Sprintf("%s/subpath", providedPkgRef)
 			providedPullCreds := &model.Creds{
@@ -58,7 +59,7 @@ var _ = Context("Installer", func() {
 
 			/* act */
 			err := objectUnderTest.Install(
-				context.Background(),
+				providedCtx,
 				"dummyPath",
 				providedOpRef,
 				providedPullCreds.Username,
@@ -66,9 +67,9 @@ var _ = Context("Installer", func() {
 			)
 
 			/* assert */
-			actualPkgRef,
-				actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
+			actualCtx, actualPkgRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
 			Expect(err).To(BeNil())
+			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualPkgRef).To(Equal(providedPkgRef))
 			Expect(actualPullCreds).To(Equal(providedPullCreds))
 		})

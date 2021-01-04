@@ -33,11 +33,11 @@ var _ = Context("imagePuller", func() {
 			/* act */
 			err := objectUnderTest.Pull(
 				providedCtx,
-				"",
+				&model.ContainerCall{},
 				&model.Creds{},
 				providedImageRef,
 				"",
-				new(FakeEventPublisher),
+				make(chan model.Event),
 			)
 			if nil != err {
 				panic(err)
@@ -66,11 +66,11 @@ var _ = Context("imagePuller", func() {
 				/* act */
 				actualError := objectUnderTest.Pull(
 					context.Background(),
-					"",
+					nil,
 					nil,
 					"dummyImageRef",
 					"",
-					new(FakeEventPublisher),
+					make(chan model.Event),
 				)
 
 				/* assert */

@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
+	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
 )
 
 var _ = Context("_node", func() {
@@ -16,7 +17,7 @@ var _ = Context("_node", func() {
 			/* arrange */
 			providedDataRef := "dummyDataRef"
 
-			fakeAPIClient := new(clientFakes.FakeClient)
+			fakeCore := new(coreFakes.FakeCore)
 
 			providedPullCreds := &model.Creds{
 				Username: "dummyUsername",
@@ -24,7 +25,7 @@ var _ = Context("_node", func() {
 			}
 
 			objectUnderTest := _node{
-				apiClient: fakeAPIClient,
+				core:      fakeCore,
 				pullCreds: providedPullCreds,
 			}
 
@@ -36,7 +37,7 @@ var _ = Context("_node", func() {
 
 			/* assert */
 			actualContext,
-				actualReq := fakeAPIClient.ListDescendantsArgsForCall(0)
+				actualReq := fakeCore.ListDescendantsArgsForCall(0)
 
 			Expect(actualContext).To(Equal(context.TODO()))
 			Expect(actualReq).To(Equal(model.ListDescendantsReq{
@@ -47,13 +48,13 @@ var _ = Context("_node", func() {
 		Context("apiClient.ListDirEntryd errs", func() {
 			It("should return expected result", func() {
 				/* arrange */
-				fakeAPIClient := new(clientFakes.FakeClient)
+				fakeCore := new(coreFakes.FakeCore)
 
 				listDirEntrysErr := errors.New("dummyError")
-				fakeAPIClient.ListDescendantsReturns(nil, listDirEntrysErr)
+				fakeCore.ListDescendantsReturns(nil, listDirEntrysErr)
 
 				objectUnderTest := _node{
-					apiClient: fakeAPIClient,
+					core: fakeCore,
 				}
 
 				/* act */
@@ -71,7 +72,7 @@ var _ = Context("_node", func() {
 				/* arrange */
 				providedDataRef := "dummyDataRef"
 
-				fakeAPIClient := new(clientFakes.FakeClient)
+				fakeCore := new(coreFakes.FakeCore)
 
 				providedPullCreds := &model.Creds{
 					Username: "dummyUsername",
@@ -79,7 +80,7 @@ var _ = Context("_node", func() {
 				}
 
 				objectUnderTest := _node{
-					apiClient: fakeAPIClient,
+					core:      fakeCore,
 					pullCreds: providedPullCreds,
 				}
 
@@ -90,7 +91,7 @@ var _ = Context("_node", func() {
 				)
 
 				/* assert */
-				Expect(actualHandle).To(Equal(newHandle(fakeAPIClient, providedDataRef, providedPullCreds)))
+				Expect(actualHandle).To(Equal(newHandle(fakeCore, providedDataRef, providedPullCreds)))
 				Expect(actualErr).To(BeNil())
 			})
 		})

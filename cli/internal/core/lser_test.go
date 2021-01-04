@@ -18,6 +18,7 @@ var _ = Context("Lser", func() {
 	Context("Ls", func() {
 		It("should call dataResolver.Resolve w/ expected args", func() {
 			/* arrange */
+			providedCtx := context.TODO()
 			providedDirRef := "dummyDirRef"
 
 			fakeOpHandle := new(FakeDataHandle)
@@ -30,14 +31,14 @@ var _ = Context("Lser", func() {
 
 			/* act */
 			err := objectUnderTest.Ls(
-				context.Background(),
+				providedCtx,
 				providedDirRef,
 			)
 
 			/* assert */
-			actualDirRef,
-				actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
+			actualCtx, actualDirRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
 			Expect(err).To(BeNil())
+			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualDirRef).To(Equal(providedDirRef))
 			Expect(actualPullCreds).To(BeNil())
 		})

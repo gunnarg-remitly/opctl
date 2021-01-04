@@ -1,6 +1,7 @@
 package dataresolver
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -8,8 +9,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
-	modelFakes "github.com/opctl/opctl/cli/internal/model/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
+	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
 )
 
 var _ = Context("dataResolver", func() {
@@ -17,6 +18,7 @@ var _ = Context("dataResolver", func() {
 		Expect(New(
 			"/dataDirPath",
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+			new(coreFakes.FakeCore),
 		)).NotTo(BeNil())
 	})
 	Context("Resolve", func() {
@@ -24,13 +26,10 @@ var _ = Context("dataResolver", func() {
 			Context("data.ErrDataProviderAuthorization", func() {
 				It("should call cliParamSatisfier.Satisfy w/ expected args", func() {
 					/* arrange */
-					fakeAPIClient := new(clientFakes.FakeClient)
+					fakeCore := new(coreFakes.FakeCore)
 
-					fakeAPIClient.ListDescendantsReturnsOnCall(0, nil, model.ErrDataProviderAuthorization{})
-					fakeAPIClient.ListDescendantsReturnsOnCall(1, nil, errors.New(""))
-
-					fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-					fakeNodeHandle.APIClientReturns(fakeAPIClient)
+					fakeCore.ListDescendantsReturnsOnCall(0, nil, model.ErrDataProviderAuthorization{})
+					fakeCore.ListDescendantsReturnsOnCall(1, nil, errors.New(""))
 
 					username := "dummyUsername"
 					password := "dummyPassword"
@@ -45,12 +44,13 @@ var _ = Context("dataResolver", func() {
 					)
 
 					objectUnderTest := _dataResolver{
+						core:              fakeCore,
 						cliParamSatisfier: fakeCliParamSatisfier,
 						os:                new(ios.Fake),
 					}
 
 					/* act */
-					objectUnderTest.Resolve("ref", &model.Creds{})
+					objectUnderTest.Resolve(context.TODO(), "ref", &model.Creds{})
 
 					/* assert */
 					_, actualInputs := fakeCliParamSatisfier.SatisfyArgsForCall(0)
@@ -63,18 +63,16 @@ var _ = Context("dataResolver", func() {
 					providedDataRef := "dummyDataRef"
 
 					expectedErr := "expectedErr"
-					fakeAPIClient := new(clientFakes.FakeClient)
-					fakeAPIClient.ListDescendantsReturns(nil, errors.New(expectedErr))
-
-					fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-					fakeNodeHandle.APIClientReturns(fakeAPIClient)
+					fakeCore := new(coreFakes.FakeCore)
+					fakeCore.ListDescendantsReturns(nil, errors.New(expectedErr))
 
 					objectUnderTest := _dataResolver{
-						os: new(ios.Fake),
+						core: fakeCore,
+						os:   new(ios.Fake),
 					}
 
 					/* act */
-					response, err := objectUnderTest.Resolve(providedDataRef, &model.Creds{})
+					response, err := objectUnderTest.Resolve(context.TODO(), providedDataRef, &model.Creds{})
 
 					/* assert */
 					Expect(response).To(BeNil())
@@ -85,16 +83,16 @@ var _ = Context("dataResolver", func() {
 		Context("data.Resolve doesn't err", func() {
 			It("should return expected result", func() {
 				/* arrange */
-				fakeAPIClient := new(clientFakes.FakeClient)
-				fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-				fakeNodeHandle.APIClientReturns(fakeAPIClient)
+				fakeCore := new(coreFakes.FakeCore)
 
 				objectUnderTest := _dataResolver{
-					os: new(ios.Fake),
+					core: fakeCore,
+					os:   new(ios.Fake),
 				}
 
 				/* act */
 				actualPkgHandle, err := objectUnderTest.Resolve(
+					context.TODO(),
 					"testdata/dummy-op",
 					&model.Creds{},
 				)

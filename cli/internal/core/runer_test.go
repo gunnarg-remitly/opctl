@@ -14,10 +14,10 @@ import (
 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
 	dataresolver "github.com/opctl/opctl/cli/internal/dataresolver/fakes"
 	cliModel "github.com/opctl/opctl/cli/internal/model"
-	modelFakes "github.com/opctl/opctl/cli/internal/model/fakes"
 	"github.com/opctl/opctl/sdks/go/data/fs"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/model/fakes"
+	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
 )
 
 var fsDataProvider = fs.New("testdata")
@@ -58,13 +58,17 @@ var _ = Context("Runer", func() {
 		newRuner(
 			new(clioutputFakes.FakeCliOutput),
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+			"/datadir",
 			new(dataresolver.FakeDataResolver),
+			make(chan model.Event),
+			new(coreFakes.FakeCore),
 		)
 	})
 
 	Context("Run", func() {
 		It("dataResolver.Resolve call", func() {
 			/* arrange */
+			providedCtx := context.TODO()
 			providedOpRef := "dummyOpRef"
 
 			expected := errors.New("data resolution error")
@@ -77,11 +81,12 @@ var _ = Context("Runer", func() {
 			}
 
 			/* act */
-			err := objectUnderTest.Run(context.TODO(), providedOpRef, &cliModel.RunOpts{})
+			err := objectUnderTest.Run(providedCtx, providedOpRef, &cliModel.RunOpts{})
 
 			/* assert */
 			Expect(err).To(MatchError(expected))
-			actualOpRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
+			actualCtx, actualOpRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
+			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualOpRef).To(Equal(providedOpRef))
 			Expect(actualPullCreds).To(BeNil())
 		})
@@ -226,20 +231,17 @@ var _ = Context("Runer", func() {
 				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 				// stub node provider
-				fakeAPIClient := new(clientFakes.FakeClient)
+				fakeCore := new(coreFakes.FakeCore)
 
 				// stub GetEventStream w/ closed channel so test doesn't wait for events indefinitely
 				eventChannel := make(chan model.Event)
-				close(eventChannel)
-				fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-
-				fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-				fakeNodeHandle.APIClientReturns(fakeAPIClient)
 
 				fakeCliParamSatisfier := new(cliparamsatisfierFakes.FakeCLIParamSatisfier)
 				fakeCliParamSatisfier.SatisfyReturns(expectedArgs.Args, nil)
 
 				objectUnderTest := _runer{
+					eventChannel:      eventChannel,
+					core:              fakeCore,
 					dataResolver:      fakeDataResolver,
 					cliParamSatisfier: fakeCliParamSatisfier,
 				}
@@ -248,7 +250,7 @@ var _ = Context("Runer", func() {
 				objectUnderTest.Run(providedContext, "", &cliModel.RunOpts{})
 
 				/* assert */
-				actualCtx, actualArgs := fakeAPIClient.StartOpArgsForCall(0)
+				actualCtx, actualArgs := fakeCore.StartOpArgsForCall(0)
 				Expect(actualCtx).To(Equal(expectedCtx))
 				Expect(actualArgs).To(Equal(expectedArgs))
 			})
@@ -263,13 +265,11 @@ var _ = Context("Runer", func() {
 					fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
 					// stub node provider
-					fakeAPIClient := new(clientFakes.FakeClient)
-					fakeAPIClient.StartOpReturns("dummyCallID", returnedError)
-
-					fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-					fakeNodeHandle.APIClientReturns(fakeAPIClient)
+					fakeCore := new(coreFakes.FakeCore)
+					fakeCore.StartOpReturns("dummyCallID", returnedError)
 
 					objectUnderTest := _runer{
+						core:              fakeCore,
 						dataResolver:      fakeDataResolver,
 						cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 					}
@@ -282,71 +282,21 @@ var _ = Context("Runer", func() {
 				})
 			})
 			Context("apiClient.StartOp doesn't error", func() {
-				It("should call nodeHandle.APIClient().GetEventStream w/ expected args", func() {
-					/* arrange */
-					providedCtx := context.Background()
-					rootCallIDReturnedFromStartOp := "dummyRootCallID"
-					startTime := time.Now().UTC()
-					expectedReq := &model.GetEventStreamReq{
-						Filter: model.EventFilter{
-							Roots: []string{rootCallIDReturnedFromStartOp},
-							Since: &startTime,
-						},
-					}
-
-					dummyOpDataHandle := getDummyOpDataHandle()
-
-					fakeDataResolver := new(dataresolver.FakeDataResolver)
-					fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
-
-					// stub node provider
-					fakeAPIClient := new(clientFakes.FakeClient)
-					fakeAPIClient.StartOpReturns(rootCallIDReturnedFromStartOp, nil)
-
-					fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-					fakeNodeHandle.APIClientReturns(fakeAPIClient)
-
-					eventChannel := make(chan model.Event)
-					close(eventChannel)
-					fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-
-					objectUnderTest := _runer{
-						dataResolver:      fakeDataResolver,
-						cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-					}
-
-					/* act */
-					objectUnderTest.Run(providedCtx, "", &cliModel.RunOpts{})
-
-					/* assert */
-					actualCtx,
-						actualReq := fakeAPIClient.GetEventStreamArgsForCall(0)
-
-					// @TODO: implement/use VTime (similar to IOS & VFS) so we don't need custom assertions on temporal fields
-					Expect(*actualReq.Filter.Since).To(BeTemporally("~", time.Now().UTC(), 5*time.Second))
-					// set temporal fields to expected vals since they're already asserted
-					actualReq.Filter.Since = &startTime
-
-					Expect(actualCtx).To(Equal(providedCtx))
-					Expect(actualReq).To(Equal(expectedReq))
-				})
-				Context("apiClient.GetEventStream errors", func() {
+				Context("event channel closes", func() {
 					It("should return expected error", func() {
 						/* arrange */
-						returnedError := errors.New("dummyError")
-
 						dummyOpDataHandle := getDummyOpDataHandle()
 
 						fakeDataResolver := new(dataresolver.FakeDataResolver)
 						fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
-						fakeAPIClient := new(clientFakes.FakeClient)
-						fakeAPIClient.GetEventStreamReturns(nil, returnedError)
-
-						fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-						fakeNodeHandle.APIClientReturns(fakeAPIClient)
+						fakeCore := new(coreFakes.FakeCore)
+						eventChannel := make(chan model.Event)
+						close(eventChannel)
 
 						objectUnderTest := _runer{
+							eventChannel:      eventChannel,
+							core:              fakeCore,
 							dataResolver:      fakeDataResolver,
 							cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 						}
@@ -355,198 +305,160 @@ var _ = Context("Runer", func() {
 						err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
 
 						/* assert */
-						Expect(err).To(MatchError(returnedError))
+						Expect(err).To(MatchError("Event channel closed unexpectedly"))
 					})
 				})
-				Context("apiClient.GetEventStream doesn't error", func() {
-					Context("event channel closes", func() {
-						It("should return expected error", func() {
-							/* arrange */
-							dummyOpDataHandle := getDummyOpDataHandle()
-
-							fakeDataResolver := new(dataresolver.FakeDataResolver)
-							fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
-
-							fakeAPIClient := new(clientFakes.FakeClient)
-							eventChannel := make(chan model.Event)
-							close(eventChannel)
-							fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-
-							fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-							fakeNodeHandle.APIClientReturns(fakeAPIClient)
-
-							objectUnderTest := _runer{
-								dataResolver:      fakeDataResolver,
-								cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-							}
-
-							/* act */
-							err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-
-							/* assert */
-							Expect(err).To(MatchError("Event channel closed unexpectedly"))
-						})
-					})
-					Context("event channel doesn't close", func() {
-						Context("event received", func() {
-							rootCallID := "dummyRootCallID"
-							Context("CallEnded", func() {
-								Context("Outcome==SUCCEEDED", func() {
-									It("should return expected error", func() {
-										/* arrange */
-										opEnded := model.Event{
-											Timestamp: time.Now(),
-											CallEnded: &model.CallEnded{
-												Call: model.Call{
-													ID: rootCallID,
-												},
-												Outcome: model.OpOutcomeSucceeded,
+				Context("event channel doesn't close", func() {
+					Context("event received", func() {
+						rootCallID := "dummyRootCallID"
+						Context("CallEnded", func() {
+							Context("Outcome==SUCCEEDED", func() {
+								It("should return expected error", func() {
+									/* arrange */
+									opEnded := model.Event{
+										Timestamp: time.Now(),
+										CallEnded: &model.CallEnded{
+											Call: model.Call{
+												ID: rootCallID,
 											},
-										}
+											Outcome: model.OpOutcomeSucceeded,
+										},
+									}
 
-										dummyOpDataHandle := getDummyOpDataHandle()
+									dummyOpDataHandle := getDummyOpDataHandle()
 
-										fakeDataResolver := new(dataresolver.FakeDataResolver)
-										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+									fakeDataResolver := new(dataresolver.FakeDataResolver)
+									fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
-										fakeAPIClient := new(clientFakes.FakeClient)
-										eventChannel := make(chan model.Event, 10)
-										eventChannel <- opEnded
-										defer close(eventChannel)
-										fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-										fakeAPIClient.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
+									fakeCore := new(coreFakes.FakeCore)
+									eventChannel := make(chan model.Event, 10)
+									eventChannel <- opEnded
+									defer close(eventChannel)
+									fakeCore.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
 
-										fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-										fakeNodeHandle.APIClientReturns(fakeAPIClient)
+									objectUnderTest := _runer{
+										eventChannel:      eventChannel,
+										core:              fakeCore,
+										dataResolver:      fakeDataResolver,
+										cliOutput:         new(clioutputFakes.FakeCliOutput),
+										cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+									}
 
-										objectUnderTest := _runer{
-											dataResolver:      fakeDataResolver,
-											cliOutput:         new(clioutputFakes.FakeCliOutput),
-											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-										}
-
-										/* act/assert */
-										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-										Expect(err).To(BeNil())
-									})
+									/* act/assert */
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									Expect(err).To(BeNil())
 								})
-								Context("Outcome==KILLED", func() {
-									It("should return expected error", func() {
-										/* arrange */
-										opEnded := model.Event{
-											Timestamp: time.Now(),
-											CallEnded: &model.CallEnded{
-												Call: model.Call{
-													ID: rootCallID,
-												},
-												Outcome: model.OpOutcomeKilled,
+							})
+							Context("Outcome==KILLED", func() {
+								It("should return expected error", func() {
+									/* arrange */
+									opEnded := model.Event{
+										Timestamp: time.Now(),
+										CallEnded: &model.CallEnded{
+											Call: model.Call{
+												ID: rootCallID,
 											},
-										}
+											Outcome: model.OpOutcomeKilled,
+										},
+									}
 
-										dummyOpDataHandle := getDummyOpDataHandle()
+									dummyOpDataHandle := getDummyOpDataHandle()
 
-										fakeDataResolver := new(dataresolver.FakeDataResolver)
-										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+									fakeDataResolver := new(dataresolver.FakeDataResolver)
+									fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
-										fakeAPIClient := new(clientFakes.FakeClient)
-										eventChannel := make(chan model.Event, 10)
-										eventChannel <- opEnded
-										defer close(eventChannel)
-										fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-										fakeAPIClient.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
+									fakeCore := new(coreFakes.FakeCore)
+									eventChannel := make(chan model.Event, 10)
+									eventChannel <- opEnded
+									defer close(eventChannel)
+									fakeCore.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
 
-										fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-										fakeNodeHandle.APIClientReturns(fakeAPIClient)
+									objectUnderTest := _runer{
+										eventChannel:      eventChannel,
+										core:              fakeCore,
+										dataResolver:      fakeDataResolver,
+										cliOutput:         new(clioutputFakes.FakeCliOutput),
+										cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+									}
 
-										objectUnderTest := _runer{
-											dataResolver:      fakeDataResolver,
-											cliOutput:         new(clioutputFakes.FakeCliOutput),
-											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-										}
-
-										/* act/assert */
-										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-										Expect(err).To(MatchError(&RunError{ExitCode: 137}))
-									})
-
+									/* act/assert */
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									Expect(err).To(MatchError(&RunError{ExitCode: 137}))
 								})
-								Context("Outcome==FAILED", func() {
-									It("should return expected error", func() {
-										/* arrange */
-										opEnded := model.Event{
-											Timestamp: time.Now(),
-											CallEnded: &model.CallEnded{
-												Call: model.Call{
-													ID: rootCallID,
-												},
-												Outcome: model.OpOutcomeFailed,
+
+							})
+							Context("Outcome==FAILED", func() {
+								It("should return expected error", func() {
+									/* arrange */
+									opEnded := model.Event{
+										Timestamp: time.Now(),
+										CallEnded: &model.CallEnded{
+											Call: model.Call{
+												ID: rootCallID,
 											},
-										}
+											Outcome: model.OpOutcomeFailed,
+										},
+									}
 
-										dummyOpDataHandle := getDummyOpDataHandle()
+									dummyOpDataHandle := getDummyOpDataHandle()
 
-										fakeDataResolver := new(dataresolver.FakeDataResolver)
-										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+									fakeDataResolver := new(dataresolver.FakeDataResolver)
+									fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
-										fakeAPIClient := new(clientFakes.FakeClient)
-										eventChannel := make(chan model.Event, 10)
-										eventChannel <- opEnded
-										defer close(eventChannel)
-										fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-										fakeAPIClient.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
+									fakeCore := new(coreFakes.FakeCore)
+									eventChannel := make(chan model.Event, 10)
+									eventChannel <- opEnded
+									defer close(eventChannel)
+									fakeCore.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
 
-										fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-										fakeNodeHandle.APIClientReturns(fakeAPIClient)
+									objectUnderTest := _runer{
+										eventChannel:      eventChannel,
+										core:              fakeCore,
+										dataResolver:      fakeDataResolver,
+										cliOutput:         new(clioutputFakes.FakeCliOutput),
+										cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+									}
 
-										objectUnderTest := _runer{
-											dataResolver:      fakeDataResolver,
-											cliOutput:         new(clioutputFakes.FakeCliOutput),
-											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-										}
-
-										/* act/assert */
-										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-										Expect(err).To(MatchError(&RunError{ExitCode: 1}))
-									})
+									/* act/assert */
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 								})
-								Context("Outcome==?", func() {
-									It("should return expected error", func() {
-										/* arrange */
-										opEnded := model.Event{
-											Timestamp: time.Now(),
-											CallEnded: &model.CallEnded{
-												Call: model.Call{
-													ID: rootCallID,
-												},
-												Outcome: "some unexpected outcome",
+							})
+							Context("Outcome==?", func() {
+								It("should return expected error", func() {
+									/* arrange */
+									opEnded := model.Event{
+										Timestamp: time.Now(),
+										CallEnded: &model.CallEnded{
+											Call: model.Call{
+												ID: rootCallID,
 											},
-										}
+											Outcome: "some unexpected outcome",
+										},
+									}
 
-										dummyOpDataHandle := getDummyOpDataHandle()
+									dummyOpDataHandle := getDummyOpDataHandle()
 
-										fakeDataResolver := new(dataresolver.FakeDataResolver)
-										fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
+									fakeDataResolver := new(dataresolver.FakeDataResolver)
+									fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
 
-										fakeAPIClient := new(clientFakes.FakeClient)
-										eventChannel := make(chan model.Event, 10)
-										eventChannel <- opEnded
-										defer close(eventChannel)
-										fakeAPIClient.GetEventStreamReturns(eventChannel, nil)
-										fakeAPIClient.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
+									fakeCore := new(coreFakes.FakeCore)
+									eventChannel := make(chan model.Event, 10)
+									eventChannel <- opEnded
+									defer close(eventChannel)
+									fakeCore.StartOpReturns(opEnded.CallEnded.Call.ID, nil)
 
-										fakeNodeHandle := new(modelFakes.FakeNodeHandle)
-										fakeNodeHandle.APIClientReturns(fakeAPIClient)
+									objectUnderTest := _runer{
+										eventChannel:      eventChannel,
+										core:              fakeCore,
+										dataResolver:      fakeDataResolver,
+										cliOutput:         new(clioutputFakes.FakeCliOutput),
+										cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
+									}
 
-										objectUnderTest := _runer{
-											dataResolver:      fakeDataResolver,
-											cliOutput:         new(clioutputFakes.FakeCliOutput),
-											cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-										}
-
-										/* act/assert */
-										err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-										Expect(err).To(MatchError(&RunError{ExitCode: 1}))
-									})
+									/* act/assert */
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 								})
 							})
 						})

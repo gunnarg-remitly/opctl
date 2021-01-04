@@ -53,6 +53,8 @@ var _ = Context("constructContainerConfig", func() {
 			providedImageRef,
 			providedPortBindings,
 			providedWorkDir,
+			"containerID",
+			"rootCallID",
 		)
 
 		/* assert */

@@ -17,6 +17,7 @@ var _ = Context("Validater", func() {
 	Context("Validate", func() {
 		It("should call dataResolver.Resolve w/ expected args", func() {
 			/* arrange */
+			providedCtx := context.TODO()
 			providedPkgRef := "dummyPkgRef"
 
 			fakeDataResolver := new(dataresolver.FakeDataResolver)
@@ -31,14 +32,14 @@ var _ = Context("Validater", func() {
 
 			/* act */
 			objectUnderTest.Validate(
-				context.Background(),
+				providedCtx,
 				providedPkgRef,
 			)
 
 			/* assert */
-			actualPkgRef,
-				actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
+			actualCtx, actualPkgRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
 
+			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualPkgRef).To(Equal(providedPkgRef))
 			Expect(actualPullCreds).To(BeNil())
 		})

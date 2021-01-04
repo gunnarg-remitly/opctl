@@ -49,7 +49,7 @@ var _ = Context("RunContainer", func() {
 			context.Background(),
 			providedReq,
 			"rootCallID",
-			new(FakeEventPublisher),
+			make(chan model.Event),
 			nopWriteCloser{ioutil.Discard},
 			nopWriteCloser{ioutil.Discard},
 		)
@@ -83,7 +83,7 @@ var _ = Context("RunContainer", func() {
 					},
 				},
 				"rootCallID",
-				new(FakeEventPublisher),
+				make(chan model.Event),
 				nopWriteCloser{ioutil.Discard},
 				nopWriteCloser{ioutil.Discard},
 			)
@@ -140,7 +140,7 @@ var _ = Context("RunContainer", func() {
 				context.Background(),
 				providedReq,
 				"rootCallID",
-				new(FakeEventPublisher),
+				make(chan model.Event),
 				nopWriteCloser{ioutil.Discard},
 				nopWriteCloser{ioutil.Discard},
 			)
@@ -167,7 +167,7 @@ var _ = Context("RunContainer", func() {
 			}
 			providedRootCallID := "providedRootCallID"
 
-			providedEventPublisher := new(FakeEventPublisher)
+			providedEventChannel := make(chan model.Event)
 
 			fakeImagePuller := new(FakeImagePuller)
 
@@ -188,7 +188,7 @@ var _ = Context("RunContainer", func() {
 				providedCtx,
 				providedReq,
 				providedRootCallID,
-				providedEventPublisher,
+				providedEventChannel,
 				nopWriteCloser{ioutil.Discard},
 				nopWriteCloser{ioutil.Discard},
 			)
@@ -206,7 +206,7 @@ var _ = Context("RunContainer", func() {
 			Expect(actualImagePullCreds).To(Equal(providedReq.Image.PullCreds))
 			Expect(actualImageRef).To(Equal(*providedReq.Image.Ref))
 			Expect(actualRootCallID).To(Equal(providedRootCallID))
-			Expect(actualEventPublisher).To(Equal(providedEventPublisher))
+			Expect(actualEventPublisher).To(Equal(providedEventChannel))
 		})
 
 		It("should call dockerClient.ContainerCreate w/ expected args", func() {
@@ -230,6 +230,8 @@ var _ = Context("RunContainer", func() {
 				*providedReq.Image.Ref,
 				expectedPortBindings,
 				providedReq.WorkDir,
+				"containerID",
+				"rootCallID",
 			)
 
 			fakeHostConfigFactory := new(FakeHostConfigFactory)
@@ -263,7 +265,7 @@ var _ = Context("RunContainer", func() {
 				providedCtx,
 				providedReq,
 				"rootCallID",
-				new(FakeEventPublisher),
+				make(chan model.Event),
 				nopWriteCloser{ioutil.Discard},
 				nopWriteCloser{ioutil.Discard},
 			)

@@ -1,11 +1,12 @@
 package cliparamsatisfier
 
 import (
+	"os"
+	"path/filepath"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	"os"
-	"path/filepath"
 )
 
 var _ = Describe("inputSrcFactory", func() {
@@ -17,7 +18,7 @@ var _ = Describe("inputSrcFactory", func() {
 	Context("NewCLIPromptInputSrc()", func() {
 		It("should not return nil", func() {
 			/* arrange/act/assert */
-			Expect(_inputSrcFactory{}.NewCliPromptInputSrc(nil)).To(Not(BeNil()))
+			Expect(_inputSrcFactory{}.NewCliPromptInputSrc("", nil)).To(Not(BeNil()))
 		})
 	})
 	Context("NewEnvVarInputSrc()", func() {

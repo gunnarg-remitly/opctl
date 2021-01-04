@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
+	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
 )
 
 var _ = Context("handle", func() {
@@ -20,10 +21,10 @@ var _ = Context("handle", func() {
 			dataRef := "dummyDataRef"
 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-			fakeClient := new(clientFakes.FakeClient)
+			fakeCore := new(coreFakes.FakeCore)
 
 			objectUnderTest := handle{
-				client:    fakeClient,
+				core:      fakeCore,
 				dataRef:   dataRef,
 				pullCreds: pullCreds,
 			}
@@ -33,7 +34,7 @@ var _ = Context("handle", func() {
 
 			/* assert */
 			actualCtx,
-				actualReq := fakeClient.GetDataArgsForCall(0)
+				actualReq := fakeCore.GetDataArgsForCall(0)
 
 			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualReq).To(Equal(model.GetDataReq{
@@ -52,10 +53,10 @@ var _ = Context("handle", func() {
 			dataRef := "dummyDataRef"
 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-			fakeClient := new(clientFakes.FakeClient)
+			fakeCore := new(coreFakes.FakeCore)
 
 			objectUnderTest := handle{
-				client:    fakeClient,
+				core:      fakeCore,
 				dataRef:   dataRef,
 				pullCreds: pullCreds,
 			}
@@ -65,7 +66,7 @@ var _ = Context("handle", func() {
 
 			/* assert */
 			actualCtx,
-				actualReq := fakeClient.ListDescendantsArgsForCall(0)
+				actualReq := fakeCore.ListDescendantsArgsForCall(0)
 
 			Expect(actualCtx).To(Equal(providedCtx))
 			Expect(actualReq).To(Equal(model.ListDescendantsReq{
@@ -80,10 +81,10 @@ var _ = Context("handle", func() {
 			/* arrange */
 			dataRef := "dummyDataRef"
 
-			fakeClient := new(clientFakes.FakeClient)
+			fakeCore := new(coreFakes.FakeCore)
 
 			objectUnderTest := handle{
-				client:  fakeClient,
+				core:    fakeCore,
 				dataRef: dataRef,
 			}
 
