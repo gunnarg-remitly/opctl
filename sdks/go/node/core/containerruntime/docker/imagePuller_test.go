@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io/ioutil"
+
 	"github.com/docker/docker/api/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker/internal/fakes"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
-	"io/ioutil"
 )
 
 var _ = Context("imagePuller", func() {

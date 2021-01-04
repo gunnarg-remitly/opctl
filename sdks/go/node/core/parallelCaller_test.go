@@ -11,7 +11,6 @@ import (
 	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
 )
 
 var _ = Context("parallelCaller", func() {
@@ -20,7 +19,6 @@ var _ = Context("parallelCaller", func() {
 			/* arrange/act/assert */
 			Expect(newParallelCaller(
 				new(FakeCaller),
-				new(FakePubSub),
 			)).To(Not(BeNil()))
 		})
 	})
@@ -79,9 +77,6 @@ var _ = Context("parallelCaller", func() {
 				return nil, nil
 			}
 
-			fakePubSub := new(FakePubSub)
-			fakePubSub.SubscribeReturns(eventChannel, nil)
-
 			fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 			uniqueStringCallIndex := 0
 			expectedChildCallIDs := []string{}
@@ -96,7 +91,6 @@ var _ = Context("parallelCaller", func() {
 
 			objectUnderTest := _parallelCaller{
 				caller:              fakeCaller,
-				pubSub:              fakePubSub,
 				uniqueStringFactory: fakeUniqueStringFactory,
 			}
 
@@ -195,9 +189,6 @@ var _ = Context("parallelCaller", func() {
 					return nil, nil
 				}
 
-				fakePubSub := new(FakePubSub)
-				fakePubSub.SubscribeReturns(eventChannel, nil)
-
 				fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 				uniqueStringCallIndex := 0
 				expectedChildCallIDs := []string{}
@@ -212,7 +203,6 @@ var _ = Context("parallelCaller", func() {
 
 				objectUnderTest := _parallelCaller{
 					caller:              fakeCaller,
-					pubSub:              fakePubSub,
 					uniqueStringFactory: fakeUniqueStringFactory,
 				}
 
@@ -286,9 +276,6 @@ var _ = Context("parallelCaller", func() {
 					return nil, nil
 				}
 
-				fakePubSub := new(FakePubSub)
-				fakePubSub.SubscribeReturns(eventChannel, nil)
-
 				fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 				uniqueStringCallIndex := 0
 				expectedChildCallIDs := []string{}
@@ -303,7 +290,6 @@ var _ = Context("parallelCaller", func() {
 
 				objectUnderTest := _parallelCaller{
 					caller:              fakeCaller,
-					pubSub:              fakePubSub,
 					uniqueStringFactory: fakeUniqueStringFactory,
 				}
 

@@ -11,7 +11,6 @@ import (
 	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
 )
 
 var _ = Context("core", func() {
@@ -96,7 +95,6 @@ var _ = Context("core", func() {
 					objectUnderTest := _core{
 						caller:              fakeCaller,
 						dataCachePath:       dataCachePath,
-						pubSub:              new(FakePubSub),
 						uniqueStringFactory: fakeUniqueStringFactory,
 					}
 

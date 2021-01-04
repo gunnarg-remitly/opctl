@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
 )
 
 var _ = Context("serialLoopCaller", func() {
@@ -19,7 +18,6 @@ var _ = Context("serialLoopCaller", func() {
 			/* arrange/act/assert */
 			Expect(newSerialLoopCaller(
 				new(FakeCaller),
-				new(FakePubSub),
 			)).To(Not(BeNil()))
 		})
 	})
@@ -31,9 +29,8 @@ var _ = Context("serialLoopCaller", func() {
 				fakeCaller := new(FakeCaller)
 
 				objectUnderTest := _serialLoopCaller{
-					caller:                fakeCaller,
-					pubSub:                new(FakePubSub),
-					uniqueStringFactory:   new(uniquestringFakes.FakeUniqueStringFactory),
+					caller:              fakeCaller,
+					uniqueStringFactory: new(uniquestringFakes.FakeUniqueStringFactory),
 				}
 
 				/* act */
@@ -66,9 +63,8 @@ var _ = Context("serialLoopCaller", func() {
 				fakeCaller := new(FakeCaller)
 
 				objectUnderTest := _serialLoopCaller{
-					caller:                fakeCaller,
-					pubSub:                new(FakePubSub),
-					uniqueStringFactory:   new(uniquestringFakes.FakeUniqueStringFactory),
+					caller:              fakeCaller,
+					uniqueStringFactory: new(uniquestringFakes.FakeUniqueStringFactory),
 				}
 
 				/* act */
@@ -116,30 +112,12 @@ var _ = Context("serialLoopCaller", func() {
 
 				callID := "callID"
 
-				fakePubSub := new(FakePubSub)
-				eventChannel := make(chan model.Event, 100)
-				fakePubSub.SubscribeStub = func(ctx context.Context, filter model.EventFilter) (<-chan model.Event, <-chan error) {
-					eventChannel <- model.Event{
-						CallEnded: &model.CallEnded{
-							Call: model.Call{
-								ID: callID,
-							},
-							Error: &model.CallEndedError{
-								Message: "message",
-							},
-						},
-					}
-
-					return eventChannel, make(chan error)
-				}
-
 				fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 				fakeUniqueStringFactory.ConstructReturns(callID, nil)
 
 				objectUnderTest := _serialLoopCaller{
-					caller:                fakeCaller,
-					pubSub:                fakePubSub,
-					uniqueStringFactory:   fakeUniqueStringFactory,
+					caller:              fakeCaller,
+					uniqueStringFactory: fakeUniqueStringFactory,
 				}
 
 				/* act */

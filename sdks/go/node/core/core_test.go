@@ -1,10 +1,13 @@
 package core
 
 import (
+	"context"
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
-	"os"
 )
 
 var _ = Context("core", func() {
@@ -13,8 +16,10 @@ var _ = Context("core", func() {
 			/* arrange/act/assert */
 			Expect(
 				New(
+					context.Background(),
 					new(FakeContainerRuntime),
 					os.TempDir(),
+					make(chan model.Event),
 				),
 			).To(Not(BeNil()))
 		})

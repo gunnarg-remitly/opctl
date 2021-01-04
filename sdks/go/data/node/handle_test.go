@@ -1,97 +1,97 @@
 package node
 
-// import (
-// 	"context"
-// 	. "github.com/onsi/ginkgo"
-// 	. "github.com/onsi/gomega"
-// 	"github.com/opctl/opctl/sdks/go/model"
-// 	clientFakes "github.com/opctl/opctl/sdks/go/node/api/client/fakes"
-// )
+import (
+	"context"
 
-// var _ = Context("handle", func() {
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/opctl/opctl/sdks/go/model"
+)
 
-// 	Context("GetContent", func() {
+var _ = Context("handle", func() {
 
-// 		It("should call client.GetData w/ expected args", func() {
-// 			/* arrange */
-// 			providedCtx := context.TODO()
-// 			providedContentPath := "dummyContentPath"
+	Context("GetContent", func() {
 
-// 			dataRef := "dummyDataRef"
-// 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
+		It("should call client.GetData w/ expected args", func() {
+			/* arrange */
+			providedCtx := context.TODO()
+			providedContentPath := "dummyContentPath"
 
-// 			fakeClient := new(clientFakes.FakeClient)
+			dataRef := "dummyDataRef"
+			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-// 			objectUnderTest := handle{
-// 				client:    fakeClient,
-// 				dataRef:   dataRef,
-// 				pullCreds: pullCreds,
-// 			}
+			fakeClient := new(clientFakes.FakeClient)
 
-// 			/* act */
-// 			objectUnderTest.GetContent(providedCtx, providedContentPath)
+			objectUnderTest := handle{
+				client:    fakeClient,
+				dataRef:   dataRef,
+				pullCreds: pullCreds,
+			}
 
-// 			/* assert */
-// 			actualCtx,
-// 				actualReq := fakeClient.GetDataArgsForCall(0)
+			/* act */
+			objectUnderTest.GetContent(providedCtx, providedContentPath)
 
-// 			Expect(actualCtx).To(Equal(providedCtx))
-// 			Expect(actualReq).To(Equal(model.GetDataReq{
-// 				ContentPath: providedContentPath,
-// 				PkgRef:      dataRef,
-// 				PullCreds:   pullCreds,
-// 			}))
-// 		})
-// 	})
+			/* assert */
+			actualCtx,
+				actualReq := fakeClient.GetDataArgsForCall(0)
 
-// 	Context("ListDescendants", func() {
-// 		It("should call client.ListDescendants w/ expected args", func() {
-// 			/* arrange */
-// 			providedCtx := context.TODO()
+			Expect(actualCtx).To(Equal(providedCtx))
+			Expect(actualReq).To(Equal(model.GetDataReq{
+				ContentPath: providedContentPath,
+				PkgRef:      dataRef,
+				PullCreds:   pullCreds,
+			}))
+		})
+	})
 
-// 			dataRef := "dummyDataRef"
-// 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
+	Context("ListDescendants", func() {
+		It("should call client.ListDescendants w/ expected args", func() {
+			/* arrange */
+			providedCtx := context.TODO()
 
-// 			fakeClient := new(clientFakes.FakeClient)
+			dataRef := "dummyDataRef"
+			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-// 			objectUnderTest := handle{
-// 				client:    fakeClient,
-// 				dataRef:   dataRef,
-// 				pullCreds: pullCreds,
-// 			}
+			fakeClient := new(clientFakes.FakeClient)
 
-// 			/* act */
-// 			objectUnderTest.ListDescendants(providedCtx)
+			objectUnderTest := handle{
+				client:    fakeClient,
+				dataRef:   dataRef,
+				pullCreds: pullCreds,
+			}
 
-// 			/* assert */
-// 			actualCtx,
-// 				actualReq := fakeClient.ListDescendantsArgsForCall(0)
+			/* act */
+			objectUnderTest.ListDescendants(providedCtx)
 
-// 			Expect(actualCtx).To(Equal(providedCtx))
-// 			Expect(actualReq).To(Equal(model.ListDescendantsReq{
-// 				PkgRef:    dataRef,
-// 				PullCreds: pullCreds,
-// 			}))
-// 		})
-// 	})
+			/* assert */
+			actualCtx,
+				actualReq := fakeClient.ListDescendantsArgsForCall(0)
 
-// 	Context("Ref", func() {
-// 		It("should return expected ref", func() {
-// 			/* arrange */
-// 			dataRef := "dummyDataRef"
+			Expect(actualCtx).To(Equal(providedCtx))
+			Expect(actualReq).To(Equal(model.ListDescendantsReq{
+				PkgRef:    dataRef,
+				PullCreds: pullCreds,
+			}))
+		})
+	})
 
-// 			fakeClient := new(clientFakes.FakeClient)
+	Context("Ref", func() {
+		It("should return expected ref", func() {
+			/* arrange */
+			dataRef := "dummyDataRef"
 
-// 			objectUnderTest := handle{
-// 				client:  fakeClient,
-// 				dataRef: dataRef,
-// 			}
+			fakeClient := new(clientFakes.FakeClient)
 
-// 			/* act */
-// 			actualRef := objectUnderTest.Ref()
+			objectUnderTest := handle{
+				client:  fakeClient,
+				dataRef: dataRef,
+			}
 
-// 			/* assert */
-// 			Expect(actualRef).To(Equal(dataRef))
-// 		})
-// 	})
-// })
+			/* act */
+			actualRef := objectUnderTest.Ref()
+
+			/* assert */
+			Expect(actualRef).To(Equal(dataRef))
+		})
+	})
+})

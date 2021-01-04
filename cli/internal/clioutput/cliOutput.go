@@ -33,9 +33,6 @@ type CliOutput interface {
 	// @TODO: not generic
 	Event(event *model.Event)
 
-	// outputs an info msg
-	info(s string)
-
 	// outputs a success msg
 	Success(s string)
 }

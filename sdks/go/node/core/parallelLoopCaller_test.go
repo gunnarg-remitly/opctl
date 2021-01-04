@@ -3,12 +3,11 @@ package core
 import (
 	"context"
 
-	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
+	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
 )
 
 var _ = Context("parallelLoopCaller", func() {
@@ -17,7 +16,6 @@ var _ = Context("parallelLoopCaller", func() {
 			/* arrange/act/assert */
 			Expect(newParallelLoopCaller(
 				new(FakeCaller),
-				new(FakePubSub),
 			)).To(Not(BeNil()))
 		})
 	})
@@ -29,9 +27,8 @@ var _ = Context("parallelLoopCaller", func() {
 				fakeCaller := new(FakeCaller)
 
 				objectUnderTest := _parallelLoopCaller{
-					caller:                  fakeCaller,
-					pubSub:                  new(FakePubSub),
-					uniqueStringFactory:     new(uniquestringFakes.FakeUniqueStringFactory),
+					caller:              fakeCaller,
+					uniqueStringFactory: new(uniquestringFakes.FakeUniqueStringFactory),
 				}
 
 				/* act */
@@ -111,16 +108,12 @@ var _ = Context("parallelLoopCaller", func() {
 				return nil, nil
 			}
 
-			fakePubSub := new(FakePubSub)
-			fakePubSub.SubscribeReturns(eventChannel, nil)
-
 			fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 			fakeUniqueStringFactory.ConstructReturns(callID, nil)
 
 			objectUnderTest := _parallelLoopCaller{
-				caller:                  fakeCaller,
-				pubSub:                  fakePubSub,
-				uniqueStringFactory:     fakeUniqueStringFactory,
+				caller:              fakeCaller,
+				uniqueStringFactory: fakeUniqueStringFactory,
 			}
 
 			/* act */

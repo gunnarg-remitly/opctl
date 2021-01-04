@@ -9,7 +9,6 @@ import (
 	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
 )
 
 var _ = Context("serialCaller", func() {
@@ -18,7 +17,6 @@ var _ = Context("serialCaller", func() {
 			/* arrange/act/assert */
 			Expect(newSerialCaller(
 				new(FakeCaller),
-				new(FakePubSub),
 			)).To(Not(BeNil()))
 		})
 	})
@@ -45,21 +43,6 @@ var _ = Context("serialCaller", func() {
 				},
 			}
 
-			fakePubSub := new(FakePubSub)
-			eventChannel := make(chan model.Event, 100)
-			fakePubSub.SubscribeStub = func(ctx context.Context, filter model.EventFilter) (<-chan model.Event, <-chan error) {
-				for index := range providedCallSpecSerialCalls {
-					eventChannel <- model.Event{
-						CallEnded: &model.CallEnded{
-							Call: model.Call{
-								ID: fmt.Sprintf("%v", index),
-							},
-						},
-					}
-				}
-				return eventChannel, make(chan error)
-			}
-
 			fakeCaller := new(FakeCaller)
 
 			fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
@@ -73,7 +56,6 @@ var _ = Context("serialCaller", func() {
 
 			objectUnderTest := _serialCaller{
 				caller:              fakeCaller,
-				pubSub:              fakePubSub,
 				uniqueStringFactory: fakeUniqueStringFactory,
 			}
 
@@ -120,32 +102,11 @@ var _ = Context("serialCaller", func() {
 
 				callID := "callID"
 
-				expectedErrorMessage := "expectedErrorMessage"
-				fakePubSub := new(FakePubSub)
-				eventChannel := make(chan model.Event, 100)
-				fakePubSub.SubscribeStub = func(ctx context.Context, filter model.EventFilter) (<-chan model.Event, <-chan error) {
-					for range providedCallSpecSerialCalls {
-						eventChannel <- model.Event{
-							CallEnded: &model.CallEnded{
-								Call: model.Call{
-									ID: callID,
-								},
-								Error: &model.CallEndedError{
-									Message: expectedErrorMessage,
-								},
-							},
-						}
-					}
-
-					return eventChannel, make(chan error)
-				}
-
 				fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 				fakeUniqueStringFactory.ConstructReturns(callID, nil)
 
 				objectUnderTest := _serialCaller{
 					caller:              new(FakeCaller),
-					pubSub:              fakePubSub,
 					uniqueStringFactory: fakeUniqueStringFactory,
 				}
 
@@ -187,22 +148,6 @@ var _ = Context("serialCaller", func() {
 						},
 					}
 
-					fakePubSub := new(FakePubSub)
-					eventChannel := make(chan model.Event, 100)
-					fakePubSub.SubscribeStub = func(ctx context.Context, filter model.EventFilter) (<-chan model.Event, <-chan error) {
-						for index := range providedCallSpecSerialCalls {
-							eventChannel <- model.Event{
-								CallEnded: &model.CallEnded{
-									Call: model.Call{
-										ID: fmt.Sprintf("%v", index),
-									},
-								},
-							}
-						}
-
-						return eventChannel, make(chan error)
-					}
-
 					fakeCaller := new(FakeCaller)
 
 					fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
@@ -216,7 +161,6 @@ var _ = Context("serialCaller", func() {
 
 					objectUnderTest := _serialCaller{
 						caller:              fakeCaller,
-						pubSub:              fakePubSub,
 						uniqueStringFactory: fakeUniqueStringFactory,
 					}
 
@@ -271,24 +215,6 @@ var _ = Context("serialCaller", func() {
 						},
 					}
 
-					fakePubSub := new(FakePubSub)
-					eventChannel := make(chan model.Event, 100)
-					fakePubSub.SubscribeStub = func(ctx context.Context, filter model.EventFilter) (<-chan model.Event, <-chan error) {
-						for index := range providedCallSpecSerialCalls {
-							eventChannel <- model.Event{
-								CallEnded: &model.CallEnded{
-									Call: model.Call{
-										ID:     fmt.Sprintf("%v", index),
-										RootID: providedRootCallID,
-									},
-									Outputs: firstChildOutputs,
-								},
-							}
-						}
-
-						return eventChannel, make(chan error)
-					}
-
 					fakeCaller := new(FakeCaller)
 
 					fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
@@ -302,7 +228,6 @@ var _ = Context("serialCaller", func() {
 
 					objectUnderTest := _serialCaller{
 						caller:              fakeCaller,
-						pubSub:              fakePubSub,
 						uniqueStringFactory: fakeUniqueStringFactory,
 					}
 

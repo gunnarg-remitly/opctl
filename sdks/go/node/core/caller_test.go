@@ -1,16 +1,15 @@
 package core
 
 import (
-	"path/filepath"
-	"os"
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	. "github.com/opctl/opctl/sdks/go/pubsub/fakes"
 )
 
 var _ = Context("caller", func() {
@@ -22,7 +21,7 @@ var _ = Context("caller", func() {
 					new(FakeContainerCaller),
 					"dummyDataDir",
 					new(FakeStateStore),
-					new(FakePubSub),
+					make(chan model.Event),
 				),
 			).To(Not(BeNil()))
 		})
@@ -39,8 +38,7 @@ var _ = Context("caller", func() {
 				/* act */
 				objectUnderTest := _caller{
 					containerCaller: fakeContainerCaller,
-					dataDirPath: os.TempDir(),
-					pubSub:          new(FakePubSub),
+					dataDirPath:     os.TempDir(),
 				}
 
 				/* assert */
@@ -57,7 +55,7 @@ var _ = Context("caller", func() {
 		})
 
 		Context("callInterpreter.Interpret result.If falsy", func() {
-			It("should call pubSub.Publish w/ expected args", func() {
+			It("should emit events", func() {
 				/* arrange */
 				providedCallID := "dummyCallID"
 				providedOpPath := "testdata/startOp"
@@ -87,17 +85,14 @@ var _ = Context("caller", func() {
 					},
 				}
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				fakeSerialCaller := new(FakeSerialCaller)
 
+				eventChannel := make(chan model.Event)
 				objectUnderTest := _caller{
 					containerCaller: new(FakeContainerCaller),
-					dataDirPath: os.TempDir(),
-					pubSub:          fakePubSub,
+					dataDirPath:     os.TempDir(),
 					serialCaller:    fakeSerialCaller,
+					eventChannel:    eventChannel,
 				}
 
 				/* act */
@@ -115,7 +110,7 @@ var _ = Context("caller", func() {
 				)
 
 				/* assert */
-				actualEvent := fakePubSub.PublishArgsForCall(0)
+				actualEvent := <-eventChannel
 
 				// @TODO: implement/use VTime (similar to IOS & VFS) so we don't need custom assertions on temporal fields
 				Expect(actualEvent.Timestamp).To(BeTemporally("~", time.Now().UTC(), 5*time.Second))
@@ -160,14 +155,9 @@ var _ = Context("caller", func() {
 					},
 				}
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					containerCaller: fakeContainerCaller,
-					dataDirPath: os.TempDir(),
-					pubSub:          fakePubSub,
+					dataDirPath:     os.TempDir(),
 				}
 
 				/* act */
@@ -200,7 +190,7 @@ var _ = Context("caller", func() {
 			It("should call opCaller.Call w/ expected args", func() {
 				/* arrange */
 				fakeOpCaller := new(FakeOpCaller)
-				
+
 				wd, err := os.Getwd()
 				if nil != err {
 					panic(err)
@@ -227,14 +217,9 @@ var _ = Context("caller", func() {
 					},
 				}
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					dataDirPath: os.TempDir(),
-					opCaller: fakeOpCaller,
-					pubSub:   fakePubSub,
+					opCaller:    fakeOpCaller,
 				}
 
 				/* act */
@@ -283,13 +268,8 @@ var _ = Context("caller", func() {
 				providedOpPath := "providedOpPath"
 				providedRootCallID := "dummyRootCallID"
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					parallelCaller: fakeParallelCaller,
-					pubSub:         fakePubSub,
 				}
 
 				/* act */
@@ -333,13 +313,8 @@ var _ = Context("caller", func() {
 				providedRootCallID := "dummyRootCallID"
 				providedParentID := "providedParentID"
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					parallelLoopCaller: fakeParallelLoopCaller,
-					pubSub:             fakePubSub,
 				}
 
 				/* act */
@@ -387,13 +362,8 @@ var _ = Context("caller", func() {
 				providedOpPath := "providedOpPath"
 				providedRootCallID := "dummyRootCallID"
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					containerCaller: new(FakeContainerCaller),
-					pubSub:          fakePubSub,
 					serialCaller:    fakeSerialCaller,
 				}
 
@@ -440,13 +410,8 @@ var _ = Context("caller", func() {
 				providedRootCallID := "dummyRootCallID"
 				providedParentID := "providedParentID"
 
-				fakePubSub := new(FakePubSub)
-				// ensure eventChan closed so call exits
-				fakePubSub.SubscribeReturns(closedEventChan, nil)
-
 				objectUnderTest := _caller{
 					serialLoopCaller: fakeSerialLoopCaller,
-					pubSub:           fakePubSub,
 				}
 
 				/* act */

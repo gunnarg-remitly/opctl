@@ -17,6 +17,7 @@ var _ = Context("output", func() {
 			/* arrange/act/assert */
 			Expect(New(
 				new(clicolorerFakes.FakeCliColorer),
+				"/dataDirPath",
 				new(fakeWriter),
 				new(fakeWriter),
 			)).To(Not(BeNil()))
@@ -34,8 +35,9 @@ var _ = Context("output", func() {
 			)
 
 			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				_cliColorer,
+				"/dataDirPath",
 				new(fakeWriter),
 				fakeStdWriter,
 			)
@@ -59,8 +61,9 @@ var _ = Context("output", func() {
 			)
 
 			fakeErrWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				_cliColorer,
+				"/dataDirPath",
 				new(fakeWriter),
 				fakeErrWriter,
 			)
@@ -84,8 +87,9 @@ var _ = Context("output", func() {
 			)
 
 			fakeErrWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				_cliColorer,
+				"/dataDirPath",
 				fakeErrWriter,
 				new(fakeWriter),
 			)
@@ -111,8 +115,9 @@ var _ = Context("output", func() {
 				expectedWriteArg := []byte(string(providedEvent.ContainerStdErrWrittenTo.Data))
 
 				fakeErrWriter := new(fakeWriter)
-				objectUnderTest := New(
+				objectUnderTest, _ := New(
 					_cliColorer,
+					"/dataDirPath",
 					fakeErrWriter,
 					new(fakeWriter),
 				)
@@ -137,8 +142,9 @@ var _ = Context("output", func() {
 				expectedWriteArg := []byte(string(providedEvent.ContainerStdOutWrittenTo.Data))
 
 				fakeStdWriter := new(fakeWriter)
-				objectUnderTest := New(
+				objectUnderTest, _ := New(
 					_cliColorer,
+					"/dataDirPath",
 					new(fakeWriter),
 					fakeStdWriter,
 				)
@@ -187,8 +193,9 @@ var _ = Context("output", func() {
 					)
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, _ := New(
 						_cliColorer,
+						"/dataDirPath",
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -240,8 +247,9 @@ var _ = Context("output", func() {
 						)
 
 						fakeErrWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, _ := New(
 							_cliColorer,
+							"/dataDirPath",
 							fakeErrWriter,
 							new(fakeWriter),
 						)
@@ -287,8 +295,9 @@ var _ = Context("output", func() {
 						)
 
 						fakeStdWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, _ := New(
 							_cliColorer,
+							"/dataDirPath",
 							new(fakeWriter),
 							fakeStdWriter,
 						)
@@ -334,8 +343,9 @@ var _ = Context("output", func() {
 						)
 
 						fakeStdWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, _ := New(
 							_cliColorer,
+							"/dataDirPath",
 							new(fakeWriter),
 							fakeStdWriter,
 						)
@@ -379,8 +389,9 @@ var _ = Context("output", func() {
 					)
 
 					fakeErrWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, _ := New(
 						_cliColorer,
+						"/dataDirPath",
 						fakeErrWriter,
 						new(fakeWriter),
 					)
@@ -427,8 +438,9 @@ var _ = Context("output", func() {
 					)
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, _ := New(
 						_cliColorer,
+						"/dataDirPath",
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -472,8 +484,9 @@ var _ = Context("output", func() {
 					)
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, _ := New(
 						_cliColorer,
+						"/dataDirPath",
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -499,8 +512,9 @@ var _ = Context("output", func() {
 			)
 
 			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				_cliColorer,
+				"/dataDirPath",
 				new(fakeWriter),
 				fakeStdWriter,
 			)
@@ -524,8 +538,9 @@ var _ = Context("output", func() {
 			)
 
 			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				_cliColorer,
+				"/dataDirPath",
 				new(fakeWriter),
 				fakeStdWriter,
 			)
@@ -543,8 +558,9 @@ var _ = Context("output", func() {
 			/* arrange */
 			fakeCliColorer := new(clicolorerFakes.FakeCliColorer)
 
-			objectUnderTest := New(
+			objectUnderTest, _ := New(
 				fakeCliColorer,
+				"/dataDirPath",
 				new(fakeWriter),
 				new(fakeWriter),
 			)
