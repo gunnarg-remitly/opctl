@@ -74,11 +74,7 @@ func newCli(
 	}
 
 	exitWith := func(successMessage string, err error) {
-		if err == nil {
-			if successMessage != "" {
-				cliOutput.Success(successMessage)
-			}
-		} else {
+		if err != nil {
 			msg := err.Error()
 			if msg != "" {
 				cliOutput.Error(msg)
@@ -89,6 +85,11 @@ func newCli(
 				mow.Exit(1)
 			}
 		}
+
+		if successMessage != "" {
+			cliOutput.Success(successMessage)
+		}
+		// Don't exit here with .Exit to allow container cleanup to happen
 	}
 
 	noColor := cli.BoolOpt("nc no-color", false, "Disable output coloring")
