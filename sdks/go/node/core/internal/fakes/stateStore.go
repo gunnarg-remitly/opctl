@@ -8,27 +8,16 @@ import (
 )
 
 type FakeStateStore struct {
-	ListWithParentIDStub        func(string) []*model.Call
-	listWithParentIDMutex       sync.RWMutex
-	listWithParentIDArgsForCall []struct {
-		arg1 string
+	AddAuthStub        func(model.AuthAdded) error
+	addAuthMutex       sync.RWMutex
+	addAuthArgsForCall []struct {
+		arg1 model.AuthAdded
 	}
-	listWithParentIDReturns struct {
-		result1 []*model.Call
+	addAuthReturns struct {
+		result1 error
 	}
-	listWithParentIDReturnsOnCall map[int]struct {
-		result1 []*model.Call
-	}
-	TryGetStub        func(string) *model.Call
-	tryGetMutex       sync.RWMutex
-	tryGetArgsForCall []struct {
-		arg1 string
-	}
-	tryGetReturns struct {
-		result1 *model.Call
-	}
-	tryGetReturnsOnCall map[int]struct {
-		result1 *model.Call
+	addAuthReturnsOnCall map[int]struct {
+		result1 error
 	}
 	TryGetAuthStub        func(string) *model.Auth
 	tryGetAuthMutex       sync.RWMutex
@@ -45,123 +34,63 @@ type FakeStateStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeStateStore) ListWithParentID(arg1 string) []*model.Call {
-	fake.listWithParentIDMutex.Lock()
-	ret, specificReturn := fake.listWithParentIDReturnsOnCall[len(fake.listWithParentIDArgsForCall)]
-	fake.listWithParentIDArgsForCall = append(fake.listWithParentIDArgsForCall, struct {
-		arg1 string
+func (fake *FakeStateStore) AddAuth(arg1 model.AuthAdded) error {
+	fake.addAuthMutex.Lock()
+	ret, specificReturn := fake.addAuthReturnsOnCall[len(fake.addAuthArgsForCall)]
+	fake.addAuthArgsForCall = append(fake.addAuthArgsForCall, struct {
+		arg1 model.AuthAdded
 	}{arg1})
-	fake.recordInvocation("ListWithParentID", []interface{}{arg1})
-	fake.listWithParentIDMutex.Unlock()
-	if fake.ListWithParentIDStub != nil {
-		return fake.ListWithParentIDStub(arg1)
+	fake.recordInvocation("AddAuth", []interface{}{arg1})
+	fake.addAuthMutex.Unlock()
+	if fake.AddAuthStub != nil {
+		return fake.AddAuthStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.listWithParentIDReturns
+	fakeReturns := fake.addAuthReturns
 	return fakeReturns.result1
 }
 
-func (fake *FakeStateStore) ListWithParentIDCallCount() int {
-	fake.listWithParentIDMutex.RLock()
-	defer fake.listWithParentIDMutex.RUnlock()
-	return len(fake.listWithParentIDArgsForCall)
+func (fake *FakeStateStore) AddAuthCallCount() int {
+	fake.addAuthMutex.RLock()
+	defer fake.addAuthMutex.RUnlock()
+	return len(fake.addAuthArgsForCall)
 }
 
-func (fake *FakeStateStore) ListWithParentIDCalls(stub func(string) []*model.Call) {
-	fake.listWithParentIDMutex.Lock()
-	defer fake.listWithParentIDMutex.Unlock()
-	fake.ListWithParentIDStub = stub
+func (fake *FakeStateStore) AddAuthCalls(stub func(model.AuthAdded) error) {
+	fake.addAuthMutex.Lock()
+	defer fake.addAuthMutex.Unlock()
+	fake.AddAuthStub = stub
 }
 
-func (fake *FakeStateStore) ListWithParentIDArgsForCall(i int) string {
-	fake.listWithParentIDMutex.RLock()
-	defer fake.listWithParentIDMutex.RUnlock()
-	argsForCall := fake.listWithParentIDArgsForCall[i]
+func (fake *FakeStateStore) AddAuthArgsForCall(i int) model.AuthAdded {
+	fake.addAuthMutex.RLock()
+	defer fake.addAuthMutex.RUnlock()
+	argsForCall := fake.addAuthArgsForCall[i]
 	return argsForCall.arg1
 }
 
-func (fake *FakeStateStore) ListWithParentIDReturns(result1 []*model.Call) {
-	fake.listWithParentIDMutex.Lock()
-	defer fake.listWithParentIDMutex.Unlock()
-	fake.ListWithParentIDStub = nil
-	fake.listWithParentIDReturns = struct {
-		result1 []*model.Call
+func (fake *FakeStateStore) AddAuthReturns(result1 error) {
+	fake.addAuthMutex.Lock()
+	defer fake.addAuthMutex.Unlock()
+	fake.AddAuthStub = nil
+	fake.addAuthReturns = struct {
+		result1 error
 	}{result1}
 }
 
-func (fake *FakeStateStore) ListWithParentIDReturnsOnCall(i int, result1 []*model.Call) {
-	fake.listWithParentIDMutex.Lock()
-	defer fake.listWithParentIDMutex.Unlock()
-	fake.ListWithParentIDStub = nil
-	if fake.listWithParentIDReturnsOnCall == nil {
-		fake.listWithParentIDReturnsOnCall = make(map[int]struct {
-			result1 []*model.Call
+func (fake *FakeStateStore) AddAuthReturnsOnCall(i int, result1 error) {
+	fake.addAuthMutex.Lock()
+	defer fake.addAuthMutex.Unlock()
+	fake.AddAuthStub = nil
+	if fake.addAuthReturnsOnCall == nil {
+		fake.addAuthReturnsOnCall = make(map[int]struct {
+			result1 error
 		})
 	}
-	fake.listWithParentIDReturnsOnCall[i] = struct {
-		result1 []*model.Call
-	}{result1}
-}
-
-func (fake *FakeStateStore) TryGet(arg1 string) *model.Call {
-	fake.tryGetMutex.Lock()
-	ret, specificReturn := fake.tryGetReturnsOnCall[len(fake.tryGetArgsForCall)]
-	fake.tryGetArgsForCall = append(fake.tryGetArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("TryGet", []interface{}{arg1})
-	fake.tryGetMutex.Unlock()
-	if fake.TryGetStub != nil {
-		return fake.TryGetStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.tryGetReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeStateStore) TryGetCallCount() int {
-	fake.tryGetMutex.RLock()
-	defer fake.tryGetMutex.RUnlock()
-	return len(fake.tryGetArgsForCall)
-}
-
-func (fake *FakeStateStore) TryGetCalls(stub func(string) *model.Call) {
-	fake.tryGetMutex.Lock()
-	defer fake.tryGetMutex.Unlock()
-	fake.TryGetStub = stub
-}
-
-func (fake *FakeStateStore) TryGetArgsForCall(i int) string {
-	fake.tryGetMutex.RLock()
-	defer fake.tryGetMutex.RUnlock()
-	argsForCall := fake.tryGetArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeStateStore) TryGetReturns(result1 *model.Call) {
-	fake.tryGetMutex.Lock()
-	defer fake.tryGetMutex.Unlock()
-	fake.TryGetStub = nil
-	fake.tryGetReturns = struct {
-		result1 *model.Call
-	}{result1}
-}
-
-func (fake *FakeStateStore) TryGetReturnsOnCall(i int, result1 *model.Call) {
-	fake.tryGetMutex.Lock()
-	defer fake.tryGetMutex.Unlock()
-	fake.TryGetStub = nil
-	if fake.tryGetReturnsOnCall == nil {
-		fake.tryGetReturnsOnCall = make(map[int]struct {
-			result1 *model.Call
-		})
-	}
-	fake.tryGetReturnsOnCall[i] = struct {
-		result1 *model.Call
+	fake.addAuthReturnsOnCall[i] = struct {
+		result1 error
 	}{result1}
 }
 
@@ -228,10 +157,8 @@ func (fake *FakeStateStore) TryGetAuthReturnsOnCall(i int, result1 *model.Auth) 
 func (fake *FakeStateStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.listWithParentIDMutex.RLock()
-	defer fake.listWithParentIDMutex.RUnlock()
-	fake.tryGetMutex.RLock()
-	defer fake.tryGetMutex.RUnlock()
+	fake.addAuthMutex.RLock()
+	defer fake.addAuthMutex.RUnlock()
 	fake.tryGetAuthMutex.RLock()
 	defer fake.tryGetAuthMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

@@ -187,10 +187,24 @@ func _escFSByte(useLocal bool, name string) ([]byte, error) {
 	return f.data, nil
 }
 
+// _escFSMustByte is the same as _escFSByte, but panics if name is not present.
+func _escFSMustByte(useLocal bool, name string) []byte {
+	b, err := _escFSByte(useLocal, name)
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
+
 // _escFSString is the string version of _escFSByte.
 func _escFSString(useLocal bool, name string) (string, error) {
 	b, err := _escFSByte(useLocal, name)
 	return string(b), err
+}
+
+// _escFSMustString is the string version of _escFSMustByte.
+func _escFSMustString(useLocal bool, name string) string {
+	return string(_escFSMustByte(useLocal, name))
 }
 
 var _escData = map[string]*_escFile{
@@ -199,7 +213,7 @@ var _escData = map[string]*_escFile{
 		name:    "jsonschema.json",
 		local:   "../../../../opspec/opfile/jsonschema.json",
 		size:    42579,
-		modtime: 1590776473,
+		modtime: 1608133506,
 		compressed: `
 H4sIAAAAAAAC/+w9aXPbtrbf+yswavpivViUncW9dSeTcZO0L2+aZZrlzVxJzYXIIwvXJMAAoJf2+b/f
 AcBNFHeRUhZ9skUCB8DZcc4h8Pd3CA3uCHsJHh6cosFSSv90PP63YHRknlqMn48djhdydPTj2Dz7fnCo
