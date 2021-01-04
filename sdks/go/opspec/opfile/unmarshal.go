@@ -10,12 +10,14 @@ import (
 
 // Unmarshal validates and unmarshals an "op.yml" file
 func Unmarshal(
+	opRef string,
 	opFileBytes []byte,
 ) (*model.OpSpec, error) {
 	// 1) ensure valid
 	errs := Validate(opFileBytes)
 	if len(errs) > 0 {
-		messageBuffer := bytes.NewBufferString("opspec syntax error:")
+		messageBuffer := bytes.NewBufferString("opspec syntax error:\n")
+		messageBuffer.WriteString(opRef)
 		for _, validationError := range errs {
 			messageBuffer.WriteString(fmt.Sprintf("\n- %v", validationError.Error()))
 		}

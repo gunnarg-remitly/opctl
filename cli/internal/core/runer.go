@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/opctl/opctl/cli/internal/clioutput"
@@ -86,6 +87,7 @@ func (ivkr _runer) Run(
 	}
 
 	opFile, err := opfile.Unmarshal(
+		filepath.Join(opHandle.Ref(), opfile.FileName),
 		opFileBytes,
 	)
 	if nil != err {

@@ -1,9 +1,9 @@
 package opspec
 
 import (
-	"io/ioutil"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/opctl/opctl/sdks/go/model"
@@ -37,6 +37,7 @@ func List(
 			}
 
 			opFile, err := opfile.Unmarshal(
+				filepath.Join(dirHandle.Ref(), content.Path),
 				opFileBytes,
 			)
 			if nil != err {

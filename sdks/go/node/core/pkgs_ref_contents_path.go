@@ -23,6 +23,5 @@ func (c _core) GetData(
 		return nil, err
 	}
 
-	// this might not be right
 	return dataHandle.GetContent(ctx, req.ContentPath)
 }
