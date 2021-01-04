@@ -78,7 +78,6 @@ func newCli(
 			if successMessage != "" {
 				cliOutput.Success(successMessage)
 			}
-			mow.Exit(0)
 		} else {
 			msg := err.Error()
 			if msg != "" {
