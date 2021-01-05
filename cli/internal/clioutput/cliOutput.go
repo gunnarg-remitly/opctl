@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/opctl/opctl/cli/internal/clicolorer"
-	"github.com/opctl/opctl/cli/internal/datadir"
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
@@ -43,24 +42,19 @@ func New(
 	errWriter io.Writer,
 	stdWriter io.Writer,
 ) (CliOutput, error) {
-	dataDir, err := datadir.New(datadirPath)
-	if err != nil {
-		return nil, err
-	}
-
 	return _cliOutput{
-		cliColorer: cliColorer,
-		dataDir:    dataDir,
-		errWriter:  errWriter,
-		stdWriter:  stdWriter,
+		cliColorer:  cliColorer,
+		datadirPath: datadirPath,
+		errWriter:   errWriter,
+		stdWriter:   stdWriter,
 	}, nil
 }
 
 type _cliOutput struct {
-	cliColorer clicolorer.CliColorer
-	dataDir    datadir.DataDir
-	errWriter  io.Writer
-	stdWriter  io.Writer
+	cliColorer  clicolorer.CliColorer
+	datadirPath string
+	errWriter   io.Writer
+	stdWriter   io.Writer
 }
 
 func (this _cliOutput) DisableColor() {
@@ -196,7 +190,7 @@ func (this _cliOutput) formatOpRef(opRef string) string {
 		if err != nil {
 			return opRef
 		}
-		dataDirPath := this.dataDir.Path()
+		dataDirPath := this.datadirPath
 		if strings.HasPrefix(opRef, dataDirPath) {
 			return opRef[len(dataDirPath+string(os.PathListSeparator)+"ops"+string(os.PathListSeparator)):]
 		}
