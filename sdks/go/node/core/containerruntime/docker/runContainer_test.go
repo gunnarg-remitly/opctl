@@ -195,14 +195,14 @@ var _ = Context("RunContainer", func() {
 
 			/* assert */
 			actualCtx,
-				actualContainerID,
+				actualContainerCall,
 				actualImagePullCreds,
 				actualImageRef,
 				actualRootCallID,
 				actualEventPublisher := fakeImagePuller.PullArgsForCall(0)
 
 			Expect(actualCtx).To(Equal(providedCtx))
-			Expect(actualContainerID).To(Equal(providedReq.ContainerID))
+			Expect(actualContainerCall.ContainerID).To(Equal(providedReq.ContainerID))
 			Expect(actualImagePullCreds).To(Equal(providedReq.Image.PullCreds))
 			Expect(actualImageRef).To(Equal(*providedReq.Image.Ref))
 			Expect(actualRootCallID).To(Equal(providedRootCallID))
@@ -230,7 +230,7 @@ var _ = Context("RunContainer", func() {
 				*providedReq.Image.Ref,
 				expectedPortBindings,
 				providedReq.WorkDir,
-				"containerID",
+				"dummyContainerID",
 				"rootCallID",
 			)
 

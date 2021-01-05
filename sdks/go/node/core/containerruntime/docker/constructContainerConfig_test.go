@@ -36,6 +36,10 @@ var _ = Context("constructContainerConfig", func() {
 			Image:        providedImageRef,
 			WorkingDir:   providedWorkDir,
 			Tty:          true,
+			Labels: map[string]string{
+				"opctl__container_id": "dummyContainerID",
+				"opctl__root_call_id": "rootCallID",
+			},
 		}
 
 		for port := range providedPortBindings {
@@ -53,7 +57,7 @@ var _ = Context("constructContainerConfig", func() {
 			providedImageRef,
 			providedPortBindings,
 			providedWorkDir,
-			"containerID",
+			"dummyContainerID",
 			"rootCallID",
 		)
 
