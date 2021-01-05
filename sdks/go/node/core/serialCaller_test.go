@@ -222,6 +222,7 @@ var _ = Context("serialCaller", func() {
 					}
 
 					fakeCaller := new(FakeCaller)
+					fakeCaller.CallReturnsOnCall(0, firstChildOutputs, nil)
 
 					fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 					uniqueStringCallIndex := 0
@@ -238,7 +239,7 @@ var _ = Context("serialCaller", func() {
 					}
 
 					/* act */
-					objectUnderTest.Call(
+					outputs, err := objectUnderTest.Call(
 						context.Background(),
 						providedCallID,
 						providedInboundScope,
@@ -248,8 +249,24 @@ var _ = Context("serialCaller", func() {
 					)
 
 					/* assert */
+					Expect(err).To(BeNil())
 					_, _, actualInboundScopeToSecondChild, _, _, _, _ := fakeCaller.CallArgsForCall(1)
 					Expect(actualInboundScopeToSecondChild).To(Equal(expectedInboundScopeToSecondChild))
+
+					Expect(outputs).To(Equal(map[string]*model.Value{
+						"dummyVar1Name": {String: &firstChildOutput1String},
+						"dummyVar2Name": {Dir: &firstChildOutput2String},
+						"dummyVar3Name": {
+							Array:   nil,
+							Boolean: nil,
+							Dir:     nil,
+							File:    &providedInboundVar3File,
+							Number:  nil,
+							Object:  nil,
+							Socket:  nil,
+							String:  nil,
+						},
+					}))
 				})
 			})
 		})
