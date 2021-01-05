@@ -105,7 +105,7 @@ var _ = Context("output", func() {
 					},
 					Timestamp: time.Now(),
 				}
-				expectedWriteArg := "\x1b[2macontain\x1b[0m: " + string(providedEvent.ContainerStdErrWrittenTo.Data)
+				expectedWriteArg := "\x1b[2m[acontain]\x1b[0m " + string(providedEvent.ContainerStdErrWrittenTo.Data)
 
 				fakeErrWriter := new(fakeWriter)
 				objectUnderTest, err := New(
@@ -134,7 +134,7 @@ var _ = Context("output", func() {
 					},
 					Timestamp: time.Now(),
 				}
-				expectedWriteArg := "\x1b[2macontain\x1b[0m: " + string(providedEvent.ContainerStdOutWrittenTo.Data)
+				expectedWriteArg := "\x1b[2m[acontain]\x1b[0m " + string(providedEvent.ContainerStdOutWrittenTo.Data)
 
 				fakeStdWriter := new(fakeWriter)
 				objectUnderTest, err := New(
@@ -173,7 +173,7 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := "\x1b[2macontain ref\x1b[0m: \x1b[92;1mexited\x1b[0m imageRef\n"
+					expectedWriteArg := "\x1b[2m[acontain ref]\x1b[0m \x1b[92;1mexited\x1b[0m imageRef\n"
 
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(
@@ -215,7 +215,7 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := "[2mthisisac opPath[0m: [91;1mended with error[0m\nmessage\n"
+						expectedWriteArg := "[2m[thisisac opPath][0m [91;1mended with error[0m\nmessage\n"
 
 						fakeErrWriter := new(fakeWriter)
 						objectUnderTest, err := New(
@@ -252,7 +252,7 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := "\x1b[2mthisisac opPath\x1b[0m: \x1b[92;1mended\x1b[0m\n"
+						expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[92;1mended\x1b[0m\n"
 
 						fakeStdWriter := new(fakeWriter)
 						objectUnderTest, err := New(
@@ -289,7 +289,7 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := "\x1b[2mthisisac opPath\x1b[0m: \x1b[96;1mended\x1b[0m\n"
+						expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[96;1mended\x1b[0m\n"
 
 						fakeStdWriter := new(fakeWriter)
 						objectUnderTest, err := New(
@@ -324,7 +324,7 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := "\x1b[2mthisisac ref\x1b[0m: \x1b[91;1mmessage\x1b[0m\n"
+					expectedWriteArg := "\x1b[2m[thisisac ref]\x1b[0m \x1b[91;1mmessage\x1b[0m\n"
 
 					fakeErrWriter := new(fakeWriter)
 					objectUnderTest, err := New(
@@ -363,7 +363,7 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := "[2mthisisac ref[0m: [96;1mstarted container[0m imageRef\n"
+					expectedWriteArg := "[2m[thisisac ref][0m [96;1mstarted container[0m imageRef\n"
 
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(
@@ -399,7 +399,7 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := "\x1b[2mthisisac opPath\x1b[0m: \x1b[96;1mstarted op\x1b[0m\n"
+					expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[96;1mstarted op\x1b[0m\n"
 
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(

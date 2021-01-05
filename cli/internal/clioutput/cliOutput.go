@@ -214,7 +214,7 @@ func (this _cliOutput) outputPrefix(id, opRef string) string {
 	if opRef != "" {
 		parts = append(parts, opRef)
 	}
-	return this.cliColorer.Muted(strings.Join(parts, " ")) + ": "
+	return this.cliColorer.Muted("["+strings.Join(parts, " ")+"]") + " "
 }
 
 func (this _cliOutput) containerStdErrWrittenTo(event *model.ContainerStdErrWrittenTo) {
