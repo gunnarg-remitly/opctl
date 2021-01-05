@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
@@ -50,7 +49,7 @@ var _ = Context("Install", func() {
 			fakeHandle := new(modelFakes.FakeDataHandle)
 			contentsList := []*model.DirEntry{
 				{
-					Path: "dirEntry1Path",
+					Path: "dirEntry1PathGetContents",
 				},
 			}
 
@@ -59,16 +58,23 @@ var _ = Context("Install", func() {
 				nil,
 			)
 
+			expectedErr := errors.New("dummyError")
+
 			// error to trigger immediate return
-			fakeHandle.GetContentReturns(nil, errors.New("dummyError"))
+			fakeHandle.GetContentReturns(nil, expectedErr)
+
+			scratchDirPath, err := ioutil.TempDir("", "")
+			if nil != err {
+				panic(err)
+			}
 
 			/* act */
-			Install(providedCtx, os.TempDir(), fakeHandle)
+			err = Install(providedCtx, scratchDirPath, fakeHandle)
 
 			/* assert */
 			actualContext,
 				actualPath := fakeHandle.GetContentArgsForCall(0)
-
+			Expect(err).To(MatchError(expectedErr))
 			Expect(actualContext).To(Equal(providedCtx))
 			Expect(actualPath).To(Equal(contentsList[0].Path))
 		})

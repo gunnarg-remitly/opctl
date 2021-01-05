@@ -68,7 +68,11 @@ var _ = Context("Runer", func() {
 	Context("Run", func() {
 		It("dataResolver.Resolve call", func() {
 			/* arrange */
-			providedCtx := context.TODO()
+			type customContextKey struct {
+				key string
+			}
+			ctxKey, ctxVal := customContextKey{"key"}, "val"
+			providedCtx := context.WithValue(context.TODO(), ctxKey, ctxVal)
 			providedOpRef := "dummyOpRef"
 
 			expected := errors.New("data resolution error")
@@ -86,7 +90,8 @@ var _ = Context("Runer", func() {
 			/* assert */
 			Expect(err).To(MatchError(expected))
 			actualCtx, actualOpRef, actualPullCreds := fakeDataResolver.ResolveArgsForCall(0)
-			Expect(actualCtx).To(Equal(providedCtx))
+			// context inherits from originally provided context
+			Expect(actualCtx.Value(ctxKey)).To(Equal(ctxVal))
 			Expect(actualOpRef).To(Equal(providedOpRef))
 			Expect(actualPullCreds).To(BeNil())
 		})
@@ -192,30 +197,15 @@ var _ = Context("Runer", func() {
 				/* assert */
 				Expect(err).To(MatchError(expectedError))
 			})
-			It("create node failure", func() {
-				/* arrange */
-				expectedError := errors.New("expected")
-				dummyOpDataHandle := getDummyOpDataHandle()
-				fakeDataResolver := new(dataresolver.FakeDataResolver)
-				fakeDataResolver.ResolveReturns(dummyOpDataHandle, nil)
-
-				objectUnderTest := _runer{
-					dataResolver:      fakeDataResolver,
-					cliParamSatisfier: new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-				}
-
-				/* act */
-				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
-
-				/* assert */
-				Expect(err).To(MatchError(expectedError))
-			})
 			It("should call nodeHandle.APIClient().StartOp w/ expected args", func() {
 				/* arrange */
 				dummyOpDataHandle := getDummyOpDataHandle()
 
-				providedContext := context.TODO()
-				expectedCtx := providedContext
+				type customContextKey struct {
+					key string
+				}
+				ctxKey, ctxVal := customContextKey{"key"}, "val"
+				providedContext := context.WithValue(context.TODO(), ctxKey, ctxVal)
 
 				expectedArg1ValueString := "dummyArg1Value"
 				expectedArgs := model.StartOpReq{
@@ -235,6 +225,7 @@ var _ = Context("Runer", func() {
 
 				// stub GetEventStream w/ closed channel so test doesn't wait for events indefinitely
 				eventChannel := make(chan model.Event)
+				close(eventChannel)
 
 				fakeCliParamSatisfier := new(cliparamsatisfierFakes.FakeCLIParamSatisfier)
 				fakeCliParamSatisfier.SatisfyReturns(expectedArgs.Args, nil)
@@ -251,7 +242,8 @@ var _ = Context("Runer", func() {
 
 				/* assert */
 				actualCtx, actualArgs := fakeCore.StartOpArgsForCall(0)
-				Expect(actualCtx).To(Equal(expectedCtx))
+				// context inherits from originally provided context
+				Expect(actualCtx.Value(ctxKey)).To(Equal(ctxVal))
 				Expect(actualArgs).To(Equal(expectedArgs))
 			})
 			Context("apiClient.StartOp errors", func() {

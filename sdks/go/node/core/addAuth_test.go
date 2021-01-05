@@ -4,28 +4,16 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
+	fakes "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
 )
-
-type fakeStateStore struct {
-	request model.AuthAdded
-}
-
-func (ss fakeStateStore) AddAuth(req model.AuthAdded) error {
-	ss.request = req
-	return nil
-}
-
-func (ss fakeStateStore) TryGetAuth(resource string) *model.Auth {
-	return nil
-}
 
 var _ = Context("core", func() {
 	Context("AddAuth", func() {
 		It("should call opAdder.Add w/ expected args", func() {
 
 			/* arrange */
-			store := fakeStateStore{}
-			objectUnderTest := _core{stateStore: store}
+			fakeStore := new(fakes.FakeStateStore)
+			objectUnderTest := _core{stateStore: fakeStore}
 			providedReq := model.AddAuthReq{
 				Creds: model.Creds{
 					Username: "username",
@@ -39,7 +27,12 @@ var _ = Context("core", func() {
 
 			/* assert */
 			Expect(result).To(BeNil())
-			Expect(store.request.Auth.Resources).To(Equal("resources"))
+			Expect(fakeStore.AddAuthArgsForCall(0)).To(Equal(model.AuthAdded{
+				Auth: model.Auth{
+					Resources: providedReq.Resources,
+					Creds:     providedReq.Creds,
+				},
+			}))
 		})
 	})
 })
