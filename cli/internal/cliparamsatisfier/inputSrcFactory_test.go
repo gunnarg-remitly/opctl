@@ -6,6 +6,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	clioutputFakes "github.com/opctl/opctl/cli/internal/clioutput/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
@@ -18,7 +19,7 @@ var _ = Describe("inputSrcFactory", func() {
 	Context("NewCLIPromptInputSrc()", func() {
 		It("should not return nil", func() {
 			/* arrange/act/assert */
-			Expect(_inputSrcFactory{}.NewCliPromptInputSrc("", nil)).To(Not(BeNil()))
+			Expect(_inputSrcFactory{}.NewCliPromptInputSrc(new(clioutputFakes.FakeCliOutput), nil)).To(Not(BeNil()))
 		})
 	})
 	Context("NewEnvVarInputSrc()", func() {

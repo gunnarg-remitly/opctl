@@ -8,6 +8,7 @@ import (
 	"github.com/golang-interfaces/ios"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	clioutputFakes "github.com/opctl/opctl/cli/internal/clioutput/fakes"
 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
@@ -16,7 +17,7 @@ import (
 var _ = Context("dataResolver", func() {
 	It("Can be constructed", func() {
 		Expect(New(
-			"/dataDirPath",
+			new(clioutputFakes.FakeCliOutput),
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 			new(coreFakes.FakeCore),
 		)).NotTo(BeNil())

@@ -99,7 +99,7 @@ func (ivkr _runer) Run(
 		return fmt.Errorf("unable to load arg file at '%v'; error was: %v", opts.ArgFile, err.Error())
 	}
 
-	cliPromptInputSrc, err := ivkr.cliParamSatisfier.NewCliPromptInputSrc(ivkr.datadirPath, opFile.Inputs)
+	cliPromptInputSrc := ivkr.cliParamSatisfier.NewCliPromptInputSrc(ivkr.cliOutput, opFile.Inputs)
 	if nil != err {
 		return err
 	}

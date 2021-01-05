@@ -2,9 +2,7 @@ package cliprompt
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/opctl/opctl/cli/internal/clicolorer"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier/inputsrc"
 	"github.com/opctl/opctl/sdks/go/model"
@@ -12,15 +10,13 @@ import (
 )
 
 func New(
-	datadirPath string,
+	cliOutput clioutput.CliOutput,
 	inputs map[string]*model.Param,
-) (inputsrc.InputSrc, error) {
-	cliOutput, err := clioutput.New(clicolorer.New(), datadirPath, os.Stderr, os.Stdout)
+) inputsrc.InputSrc {
 	return cliPromptInputSrc{
-		inputs: inputs,
-		// TODO
+		inputs:    inputs,
 		cliOutput: cliOutput,
-	}, err
+	}
 }
 
 // cliPromptInputSrc implements InputSrc interface by sourcing inputs from std in

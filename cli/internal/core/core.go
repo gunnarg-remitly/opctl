@@ -53,7 +53,7 @@ func New(
 	}
 
 	dataResolver := dataresolver.New(
-		datadirPath,
+		cliOutput,
 		cliParamSatisfier,
 		c,
 	)

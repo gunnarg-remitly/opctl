@@ -1,6 +1,7 @@
 package cliparamsatisfier
 
 import (
+	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier/inputsrc"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier/inputsrc/cliprompt"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier/inputsrc/envvar"
@@ -12,9 +13,9 @@ import (
 
 type InputSrcFactory interface {
 	NewCliPromptInputSrc(
-		datadirPath string,
+		cliOutput clioutput.CliOutput,
 		inputs map[string]*model.Param,
-	) (inputsrc.InputSrc, error)
+	) inputsrc.InputSrc
 
 	NewEnvVarInputSrc() inputsrc.InputSrc
 
@@ -39,10 +40,10 @@ func newInputSrcFactory() InputSrcFactory {
 type _inputSrcFactory struct{}
 
 func (is _inputSrcFactory) NewCliPromptInputSrc(
-	datadirPath string,
+	cliOutput clioutput.CliOutput,
 	inputs map[string]*model.Param,
-) (inputsrc.InputSrc, error) {
-	return cliprompt.New(datadirPath, inputs)
+) inputsrc.InputSrc {
+	return cliprompt.New(cliOutput, inputs)
 }
 
 func (is _inputSrcFactory) NewEnvVarInputSrc() inputsrc.InputSrc {
