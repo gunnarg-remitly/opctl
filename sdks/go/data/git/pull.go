@@ -11,6 +11,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/pkg/errors"
 )
 
 // Pull pulls 'dataRef' to 'path'
@@ -28,7 +29,7 @@ func Pull(
 
 	parsedPkgRef, err := parseRef(dataRef)
 	if nil != err {
-		return err
+		return errors.Wrap(err, "invalid git ref")
 	}
 
 	opPath := parsedPkgRef.ToPath(path)
@@ -52,6 +53,9 @@ func Pull(
 		false,
 		cloneOptions,
 	); nil != err {
+		if _, ok := err.(git.NoMatchingRefSpecError); ok {
+			return fmt.Errorf("version \"%s\" not found", parsedPkgRef.Version)
+		}
 		switch err.Error() {
 		case transport.ErrAuthenticationRequired.Error():
 			return model.ErrDataProviderAuthentication{}

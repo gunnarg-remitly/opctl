@@ -4,6 +4,7 @@ package fs
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -26,6 +27,10 @@ type _fs struct {
 	basePaths []string
 }
 
+func (fp _fs) Label() string {
+	return "filesystem"
+}
+
 func (fp _fs) TryResolve(
 	ctx context.Context,
 	dataRef string,
@@ -33,17 +38,13 @@ func (fp _fs) TryResolve(
 
 	if filepath.IsAbs(dataRef) {
 		_, err := fp.os.Stat(dataRef)
-		if nil == err {
-			return newHandle(dataRef), nil
-		} else if !os.IsNotExist(err) {
-			// return actual errors
+		if nil != err {
 			return nil, err
 		}
-		return nil, nil
+		return newHandle(dataRef), nil
 	}
 
 	for _, basePath := range fp.basePaths {
-
 		// attempt to resolve from basePath
 		testPath := filepath.Join(basePath, dataRef)
 		_, err := fp.os.Stat(testPath)
@@ -55,5 +56,5 @@ func (fp _fs) TryResolve(
 		}
 	}
 
-	return nil, nil
+	return nil, errors.New("not found")
 }

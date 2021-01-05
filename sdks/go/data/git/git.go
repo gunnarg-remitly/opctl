@@ -33,6 +33,10 @@ type _git struct {
 	pullCreds       *model.Creds
 }
 
+func (gp _git) Label() string {
+	return "git"
+}
+
 func (gp _git) TryResolve(
 	ctx context.Context,
 	dataRef string,
@@ -44,9 +48,8 @@ func (gp _git) TryResolve(
 		func() (interface{}, error) {
 			// attempt to resolve from cache
 			handle, err := gp.localFSProvider.TryResolve(ctx, dataRef)
-			if nil != err {
-				return nil, err
-			} else if nil != handle {
+			// ignore errors from local resolution
+			if nil != handle {
 				return handle, nil
 			}
 

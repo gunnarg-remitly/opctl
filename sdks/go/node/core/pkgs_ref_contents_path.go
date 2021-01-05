@@ -15,7 +15,7 @@ func (c _core) GetData(
 	error,
 ) {
 	if req.PkgRef == "" || req.ContentPath == "" {
-		return nil, fmt.Errorf("not found: %s%s", req.PkgRef, req.ContentPath)
+		return nil, fmt.Errorf("invalid ref: %s%s", req.PkgRef, req.ContentPath)
 	}
 
 	dataHandle, err := c.ResolveData(ctx, req.PkgRef, req.PullCreds)
