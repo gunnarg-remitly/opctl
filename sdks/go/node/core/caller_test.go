@@ -26,9 +26,6 @@ var _ = Context("caller", func() {
 		})
 	})
 	Context("Call", func() {
-		closedEventChan := make(chan model.Event, 1000)
-		close(closedEventChan)
-
 		Context("Nil CallSpec", func() {
 			It("should not throw", func() {
 				/* arrange */
@@ -36,12 +33,13 @@ var _ = Context("caller", func() {
 
 				/* act */
 				objectUnderTest := _caller{
+					eventChannel:    make(chan model.Event, 1000),
 					containerCaller: fakeContainerCaller,
 					dataDirPath:     os.TempDir(),
 				}
 
 				/* assert */
-				objectUnderTest.Call(
+				_, err := objectUnderTest.Call(
 					context.Background(),
 					"dummyCallID",
 					map[string]*model.Value{},
@@ -50,6 +48,8 @@ var _ = Context("caller", func() {
 					nil,
 					"dummyRootCallID",
 				)
+
+				Expect(err).To(BeNil())
 			})
 		})
 
@@ -66,7 +66,7 @@ var _ = Context("caller", func() {
 				}
 
 				ifSpec := []*model.PredicateSpec{
-					&model.PredicateSpec{
+					{
 						Eq: &predicateSpec,
 					},
 				}
@@ -86,7 +86,7 @@ var _ = Context("caller", func() {
 
 				fakeSerialCaller := new(FakeSerialCaller)
 
-				eventChannel := make(chan model.Event)
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					containerCaller: new(FakeContainerCaller),
 					dataDirPath:     os.TempDir(),
@@ -154,9 +154,11 @@ var _ = Context("caller", func() {
 					},
 				}
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					containerCaller: fakeContainerCaller,
 					dataDirPath:     os.TempDir(),
+					eventChannel:    eventChannel,
 				}
 
 				/* act */
@@ -216,9 +218,11 @@ var _ = Context("caller", func() {
 					},
 				}
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
-					dataDirPath: os.TempDir(),
-					opCaller:    fakeOpCaller,
+					dataDirPath:  os.TempDir(),
+					opCaller:     fakeOpCaller,
+					eventChannel: eventChannel,
 				}
 
 				/* act */
@@ -267,8 +271,10 @@ var _ = Context("caller", func() {
 				providedOpPath := "providedOpPath"
 				providedRootCallID := "dummyRootCallID"
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					parallelCaller: fakeParallelCaller,
+					eventChannel:   eventChannel,
 				}
 
 				/* act */
@@ -312,8 +318,10 @@ var _ = Context("caller", func() {
 				providedRootCallID := "dummyRootCallID"
 				providedParentID := "providedParentID"
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					parallelLoopCaller: fakeParallelLoopCaller,
+					eventChannel:       eventChannel,
 				}
 
 				/* act */
@@ -361,9 +369,11 @@ var _ = Context("caller", func() {
 				providedOpPath := "providedOpPath"
 				providedRootCallID := "dummyRootCallID"
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					containerCaller: new(FakeContainerCaller),
 					serialCaller:    fakeSerialCaller,
+					eventChannel:    eventChannel,
 				}
 
 				/* act */
@@ -409,8 +419,10 @@ var _ = Context("caller", func() {
 				providedRootCallID := "dummyRootCallID"
 				providedParentID := "providedParentID"
 
+				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					serialLoopCaller: fakeSerialLoopCaller,
+					eventChannel:     eventChannel,
 				}
 
 				/* act */

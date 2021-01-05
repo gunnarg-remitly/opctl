@@ -35,7 +35,7 @@ var _ = Context("core", func() {
 				)
 
 				/* assert */
-				Expect(actualErr.Error()).To(Equal(`Get "https://dummyOpRef/info/refs?service=git-upload-pack": dial tcp: lookup dummyOpRef on 127.0.0.11:53: no such host`))
+				Expect(actualErr.Error()).To(Equal(`Get "https://dummyOpRef/info/refs?service=git-upload-pack": dial tcp: lookup dummyOpRef: no such host`))
 			})
 		})
 		Context("data.Resolve doesn't err", func() {

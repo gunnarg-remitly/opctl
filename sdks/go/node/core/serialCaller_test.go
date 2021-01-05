@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	. "github.com/onsi/ginkgo"
@@ -105,8 +106,13 @@ var _ = Context("serialCaller", func() {
 				fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
 				fakeUniqueStringFactory.ConstructReturns(callID, nil)
 
+				expectedErr := errors.New("expectedErr")
+
+				fakeCaller := new(FakeCaller)
+				fakeCaller.CallReturns(nil, expectedErr)
+
 				objectUnderTest := _serialCaller{
-					caller:              new(FakeCaller),
+					caller:              fakeCaller,
 					uniqueStringFactory: fakeUniqueStringFactory,
 				}
 
@@ -122,7 +128,7 @@ var _ = Context("serialCaller", func() {
 
 				/* assert */
 				Expect(actualOutputs).To(BeNil())
-				Expect(actualErr).To(Equal(actualErr))
+				Expect(actualErr).To(Equal(expectedErr))
 			})
 		})
 		Context("caller doesn't error", func() {
