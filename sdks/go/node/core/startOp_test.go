@@ -26,7 +26,9 @@ var _ = Context("core", func() {
 					},
 				}
 
-				objectUnderTest := _core{}
+				objectUnderTest := _core{
+					uniqueStringFactory: new(uniquestringFakes.FakeUniqueStringFactory),
+				}
 
 				/* act */
 				_, actualErr := objectUnderTest.StartOp(
