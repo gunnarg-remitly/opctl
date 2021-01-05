@@ -63,6 +63,7 @@ func (this _core) StartOp(
 	}
 
 	go func() {
+		// TODO: handle errors from this call
 		this.caller.Call(
 			ctx,
 			callID,
