@@ -122,7 +122,7 @@ func (this _cliOutput) Event(event *model.Event) {
 
 func (this _cliOutput) error(event *model.Event) {
 	io.WriteString(
-		this.stdWriter,
+		this.errWriter,
 		fmt.Sprintf(
 			"%s%s\n",
 			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Ref),
@@ -133,13 +133,17 @@ func (this _cliOutput) error(event *model.Event) {
 
 func (this _cliOutput) containerExited(event *model.Event) {
 	var color func(s string) string
+	var writer io.Writer
 	switch event.CallEnded.Outcome {
 	case model.OpOutcomeSucceeded:
 		color = this.cliColorer.Success
+		writer = this.stdWriter
 	case model.OpOutcomeKilled:
 		color = this.cliColorer.Info
+		writer = this.stdWriter
 	default:
 		color = this.cliColorer.Error
+		writer = this.errWriter
 	}
 
 	message := "exited"
@@ -155,7 +159,7 @@ func (this _cliOutput) containerExited(event *model.Event) {
 	}
 
 	io.WriteString(
-		this.stdWriter,
+		writer,
 		fmt.Sprintf(
 			"%s%s\n",
 			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Ref),
@@ -237,13 +241,17 @@ func (this _cliOutput) containerStdOutWrittenTo(event *model.ContainerStdOutWrit
 
 func (this _cliOutput) opEnded(event *model.Event) {
 	var color func(s string) string
+	var writer io.Writer
 	switch event.CallEnded.Outcome {
 	case model.OpOutcomeSucceeded:
 		color = this.cliColorer.Success
+		writer = this.stdWriter
 	case model.OpOutcomeKilled:
 		color = this.cliColorer.Info
+		writer = this.stdWriter
 	default:
 		color = this.cliColorer.Error
+		writer = this.errWriter
 	}
 
 	message := "ended"
@@ -256,7 +264,7 @@ func (this _cliOutput) opEnded(event *model.Event) {
 	}
 
 	io.WriteString(
-		this.stdWriter,
+		writer,
 		fmt.Sprintf(
 			"%s%s\n",
 			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Call.Op.OpPath),
