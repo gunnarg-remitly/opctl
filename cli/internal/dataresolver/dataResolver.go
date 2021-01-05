@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/golang-interfaces/ios"
-	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/sdks/go/data"
 	"github.com/opctl/opctl/sdks/go/data/fs"
@@ -28,12 +27,10 @@ type DataResolver interface {
 }
 
 func New(
-	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	core core.Core,
 ) DataResolver {
 	return _dataResolver{
-		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
 		core:              core,
 		os:                ios.New(),
@@ -41,7 +38,6 @@ func New(
 }
 
 type _dataResolver struct {
-	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	core              core.Core
 	os                ios.IOS
@@ -83,7 +79,7 @@ func (dtr _dataResolver) Resolve(
 			return opDirHandle, err
 		case isAuthError:
 			// auth errors can be fixed by supplying correct creds so don't give up; prompt
-			cliPromptInputSrc := dtr.cliParamSatisfier.NewCliPromptInputSrc(dtr.cliOutput, credsPromptInputs)
+			cliPromptInputSrc := dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs)
 
 			argMap, err := dtr.cliParamSatisfier.Satisfy(
 				cliparamsatisfier.NewInputSourcer(cliPromptInputSrc),

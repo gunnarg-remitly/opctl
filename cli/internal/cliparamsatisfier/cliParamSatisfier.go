@@ -35,7 +35,7 @@ func New(
 
 	return &_CLIParamSatisfier{
 		cliOutput:       cliOutput,
-		InputSrcFactory: newInputSrcFactory(),
+		InputSrcFactory: newInputSrcFactory(cliOutput),
 	}
 }
 

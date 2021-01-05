@@ -4,18 +4,16 @@ package fakes
 import (
 	"sync"
 
-	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier/inputsrc"
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
 type FakeCLIParamSatisfier struct {
-	NewCliPromptInputSrcStub        func(clioutput.CliOutput, map[string]*model.Param) inputsrc.InputSrc
+	NewCliPromptInputSrcStub        func(map[string]*model.Param) inputsrc.InputSrc
 	newCliPromptInputSrcMutex       sync.RWMutex
 	newCliPromptInputSrcArgsForCall []struct {
-		arg1 clioutput.CliOutput
-		arg2 map[string]*model.Param
+		arg1 map[string]*model.Param
 	}
 	newCliPromptInputSrcReturns struct {
 		result1 inputsrc.InputSrc
@@ -87,17 +85,16 @@ type FakeCLIParamSatisfier struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrc(arg1 clioutput.CliOutput, arg2 map[string]*model.Param) inputsrc.InputSrc {
+func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrc(arg1 map[string]*model.Param) inputsrc.InputSrc {
 	fake.newCliPromptInputSrcMutex.Lock()
 	ret, specificReturn := fake.newCliPromptInputSrcReturnsOnCall[len(fake.newCliPromptInputSrcArgsForCall)]
 	fake.newCliPromptInputSrcArgsForCall = append(fake.newCliPromptInputSrcArgsForCall, struct {
-		arg1 clioutput.CliOutput
-		arg2 map[string]*model.Param
-	}{arg1, arg2})
-	fake.recordInvocation("NewCliPromptInputSrc", []interface{}{arg1, arg2})
+		arg1 map[string]*model.Param
+	}{arg1})
+	fake.recordInvocation("NewCliPromptInputSrc", []interface{}{arg1})
 	fake.newCliPromptInputSrcMutex.Unlock()
 	if fake.NewCliPromptInputSrcStub != nil {
-		return fake.NewCliPromptInputSrcStub(arg1, arg2)
+		return fake.NewCliPromptInputSrcStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
@@ -112,17 +109,17 @@ func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcCallCount() int {
 	return len(fake.newCliPromptInputSrcArgsForCall)
 }
 
-func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcCalls(stub func(clioutput.CliOutput, map[string]*model.Param) inputsrc.InputSrc) {
+func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcCalls(stub func(map[string]*model.Param) inputsrc.InputSrc) {
 	fake.newCliPromptInputSrcMutex.Lock()
 	defer fake.newCliPromptInputSrcMutex.Unlock()
 	fake.NewCliPromptInputSrcStub = stub
 }
 
-func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcArgsForCall(i int) (clioutput.CliOutput, map[string]*model.Param) {
+func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcArgsForCall(i int) map[string]*model.Param {
 	fake.newCliPromptInputSrcMutex.RLock()
 	defer fake.newCliPromptInputSrcMutex.RUnlock()
 	argsForCall := fake.newCliPromptInputSrcArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1
 }
 
 func (fake *FakeCLIParamSatisfier) NewCliPromptInputSrcReturns(result1 inputsrc.InputSrc) {
