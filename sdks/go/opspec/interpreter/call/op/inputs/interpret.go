@@ -38,18 +38,11 @@ func Interpret(
 
 	if len(paramErrMap) > 0 {
 		// return error w/ fancy formatted msg
-		messageBuffer := bytes.NewBufferString("")
+		messageBuffer := bytes.NewBufferString("validation error(s):")
 		for paramName, err := range paramErrMap {
-			messageBuffer.WriteString(fmt.Sprintf(`
-		- %v: %v`, paramName, err.Error()))
+			messageBuffer.WriteString(fmt.Sprintf("\n- %v: %v", paramName, err.Error()))
 		}
-		messageBuffer.WriteString(`
-`)
-		return nil, fmt.Errorf(`
--
-  validation error(s):
-%v
--`, messageBuffer.String())
+		return nil, fmt.Errorf(messageBuffer.String())
 	}
 
 	// 2) apply defaults

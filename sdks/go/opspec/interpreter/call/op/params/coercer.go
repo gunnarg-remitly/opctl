@@ -59,18 +59,11 @@ paramLoop:
 
 	if len(paramErrMap) > 0 {
 		// return error w/ fancy formatted msg
-		messageBuffer := bytes.NewBufferString("")
+		messageBuffer := bytes.NewBufferString("validation error(s):\n")
 		for outputName, err := range paramErrMap {
-			messageBuffer.WriteString(fmt.Sprintf(`
-    	- %v: %v`, outputName, err))
+			messageBuffer.WriteString(fmt.Sprintf("\n- %v: %v", outputName, err))
 		}
-		messageBuffer.WriteString(`
-`)
-		return coercedValues, fmt.Errorf(`
--
-  validation error(s):
-%v
--`, messageBuffer.String())
+		return coercedValues, fmt.Errorf(messageBuffer.String())
 	}
 
 	return coercedValues, nil
