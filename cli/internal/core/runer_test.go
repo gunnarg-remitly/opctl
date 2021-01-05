@@ -58,7 +58,6 @@ var _ = Context("Runer", func() {
 		newRuner(
 			new(clioutputFakes.FakeCliOutput),
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-			"/datadir",
 			new(dataresolver.FakeDataResolver),
 			make(chan model.Event),
 			new(coreFakes.FakeCore),

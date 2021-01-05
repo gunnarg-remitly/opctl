@@ -73,7 +73,6 @@ func New(
 		Runer: newRuner(
 			cliOutput,
 			cliParamSatisfier,
-			datadirPath,
 			dataResolver,
 			eventChannel,
 			c,

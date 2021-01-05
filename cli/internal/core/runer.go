@@ -32,7 +32,6 @@ type Runer interface {
 func newRuner(
 	cliOutput clioutput.CliOutput,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
-	datadirPath string,
 	dataResolver dataresolver.DataResolver,
 	eventChannel chan model.Event,
 	core core.Core,
@@ -40,7 +39,6 @@ func newRuner(
 	return _runer{
 		cliOutput:         cliOutput,
 		cliParamSatisfier: cliParamSatisfier,
-		datadirPath:       datadirPath,
 		dataResolver:      dataResolver,
 		eventChannel:      eventChannel,
 		core:              core,
@@ -49,7 +47,6 @@ func newRuner(
 
 type _runer struct {
 	dataResolver      dataresolver.DataResolver
-	datadirPath       string
 	cliOutput         clioutput.CliOutput
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	eventChannel      chan model.Event
