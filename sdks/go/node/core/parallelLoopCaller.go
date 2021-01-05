@@ -136,6 +136,10 @@ func (plpr _parallelLoopCaller) Call(
 				return nil, result.Err
 			}
 
+			if childCallIndex, isChildCallEnded := childCallIndexByID[result.CallID]; isChildCallEnded {
+				childCallOutputsByIndex[childCallIndex] = result.Outputs
+			}
+
 			if len(childCallOutputsByIndex) == len(childCallIndexByID) {
 				// all calls have ended
 

@@ -74,7 +74,7 @@ var _ = Context("parallelLoopCaller", func() {
 			providedRootCallID := "providedRootCallID"
 
 			expectedScope := map[string]*model.Value{
-				index: &model.Value{Number: new(float64)},
+				index: {Number: new(float64)},
 			}
 
 			callID := "callID"
