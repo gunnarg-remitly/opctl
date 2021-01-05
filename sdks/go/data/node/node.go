@@ -10,6 +10,8 @@ import (
 )
 
 // New returns a data provider which sources pkgs from a node
+// A node now represents a local installation of opctl, where pkgs can be
+// installed into opctl's data directory.
 func New(
 	core core.Core,
 	pullCreds *model.Creds,

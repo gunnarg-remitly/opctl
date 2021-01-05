@@ -20,7 +20,6 @@ var _ = Context("caller", func() {
 				newCaller(
 					new(FakeContainerCaller),
 					"dummyDataDir",
-					new(FakeStateStore),
 					make(chan model.Event),
 				),
 			).To(Not(BeNil()))

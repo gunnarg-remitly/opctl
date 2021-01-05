@@ -29,7 +29,6 @@ type caller interface {
 func newCaller(
 	containerCaller containerCaller,
 	dataDirPath string,
-	stateStore stateStore,
 	eventChannel chan model.Event,
 ) caller {
 	instance := &_caller{
@@ -37,11 +36,7 @@ func newCaller(
 		dataDirPath:     dataDirPath,
 		eventChannel:    eventChannel,
 	}
-	instance.opCaller = newOpCaller(
-		stateStore,
-		instance,
-		dataDirPath,
-	)
+	instance.opCaller = newOpCaller(instance, dataDirPath)
 	instance.parallelCaller = newParallelCaller(instance)
 	instance.parallelLoopCaller = newParallelLoopCaller(instance)
 	instance.serialCaller = newSerialCaller(instance)

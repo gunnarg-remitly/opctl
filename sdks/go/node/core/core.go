@@ -98,18 +98,12 @@ func New(
 			stateStore,
 		),
 		dataDirPath,
-		stateStore,
 		eventChannel,
 	)
 
 	return _core{
-		caller:        caller,
-		dataCachePath: filepath.Join(dataDirPath, "ops"),
-		opCaller: newOpCaller(
-			stateStore,
-			caller,
-			dataDirPath,
-		),
+		caller:              caller,
+		dataCachePath:       filepath.Join(dataDirPath, "ops"),
 		stateStore:          stateStore,
 		uniqueStringFactory: uniqueStringFactory,
 	}, nil
@@ -118,7 +112,6 @@ func New(
 type _core struct {
 	caller              caller
 	dataCachePath       string
-	opCaller            opCaller
 	stateStore          stateStore
 	uniqueStringFactory uniquestring.UniqueStringFactory
 }
