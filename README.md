@@ -1,9 +1,11 @@
 # Branch notes
 
+## purpose
+
 This branch (mini-opctl) is an exploration into fixing some of my main concerns
 with opctl.
 
-## reliability/complexity
+### reliability/complexity
 
 I find opctl quite unreliable. The major issues are issues connecting to port
 42224 and opctl not properly cleaning up after itself, resulting in docker
@@ -27,7 +29,7 @@ Opctl also uses a custom publisher/subscriber event bus internally, which
 becomes pretty unnecessary once the centralized API is gone. I've replaced this
 with a standard go channel that the events can be passed back through.
 
-## line count
+### line count
 
 This project is _huge_ and can be difficult to work in. This ~removes checked-in
 vendored code,~ the web UI for opctl, the JS sdk, and the react SDK.
@@ -36,11 +38,26 @@ The project also has many layers of abstraction, that I feel could be reduced
 to make changes easier. I also think the code could be refactored to be more
 idiomatic to the go language.
 
-## usability
+### usability
 
 For complex ops, opctl makes it difficult to understand what's going on. I hope
 to improve the output of the CLI tool to allow me to identify what produces
 what output.
+
+## features
+
+This is a list of features from this branch that I'd like to attempt to
+incrementally migrate into the main branch.
+
+- Better CLI output (better = more readable, understandable, and transformable)
+  - Label where output comes from (involves piping more context in events)
+  - Clean up formatting (remove extraneous newlines, remove unnecessary formatting separators)
+- Better error propagation and cleanup behavior
+  - Ensure parallel call goroutines are waited on
+  - Return and handle errors within the "Call" call stack
+  - Ensure container cleanup won't happen with a cancelled context
+- Move `ListDescendants` and `GetData` implementation to sdk core, instead of the api client
+- Remove custom pubsub?
 
 ---
 
