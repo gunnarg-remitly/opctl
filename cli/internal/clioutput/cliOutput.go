@@ -134,29 +134,28 @@ func (this _cliOutput) error(event *model.Event) {
 func (this _cliOutput) containerExited(event *model.Event) {
 	var color func(s string) string
 	var writer io.Writer
+	var message string
 	switch event.CallEnded.Outcome {
 	case model.OpOutcomeSucceeded:
+		message = "exited"
 		color = this.cliColorer.Success
 		writer = this.stdWriter
 	case model.OpOutcomeKilled:
+		message = "killed"
 		color = this.cliColorer.Info
 		writer = this.stdWriter
 	default:
+		message = "crashed"
 		color = this.cliColorer.Error
 		writer = this.errWriter
 	}
 
-	message := "exited"
-	if nil != event.CallEnded.Error {
-		message += fmt.Sprintf(" with error")
+	if nil != event.CallEnded.Call.Container.Image.Ref {
+		message = fmt.Sprintf("%s ", *event.CallEnded.Call.Container.Image.Ref) + message
+	} else {
+		message += "unknown container " + message
 	}
 	message = color(message)
-	if nil != event.CallEnded.Call.Container.Image.Ref {
-		message += fmt.Sprintf(" %s", *event.CallEnded.Call.Container.Image.Ref)
-	}
-	if nil != event.CallEnded.Error {
-		message += fmt.Sprintf("\n%v", event.CallEnded.Error.Message)
-	}
 
 	io.WriteString(
 		writer,
@@ -169,9 +168,11 @@ func (this _cliOutput) containerExited(event *model.Event) {
 }
 
 func (this _cliOutput) containerStarted(event *model.Event) {
-	message := this.cliColorer.Info("started container")
+	message := "started "
 	if nil != event.CallStarted.Call.Container.Image.Ref {
-		message += fmt.Sprintf(" %s", *event.CallStarted.Call.Container.Image.Ref)
+		message += *event.CallStarted.Call.Container.Image.Ref
+	} else {
+		message += "unknown container"
 	}
 
 	io.WriteString(
@@ -179,7 +180,7 @@ func (this _cliOutput) containerStarted(event *model.Event) {
 		fmt.Sprintf(
 			"%s%s\n",
 			this.outputPrefix(event.CallStarted.Call.ID, event.CallStarted.Ref),
-			message,
+			this.cliColorer.Info(message),
 		),
 	)
 }
@@ -242,25 +243,25 @@ func (this _cliOutput) containerStdOutWrittenTo(event *model.ContainerStdOutWrit
 func (this _cliOutput) opEnded(event *model.Event) {
 	var color func(s string) string
 	var writer io.Writer
+	var message string
 	switch event.CallEnded.Outcome {
 	case model.OpOutcomeSucceeded:
+		message = "succeeded"
 		color = this.cliColorer.Success
 		writer = this.stdWriter
 	case model.OpOutcomeKilled:
+		message = "killed"
 		color = this.cliColorer.Info
 		writer = this.stdWriter
 	default:
+		message = "failed"
 		color = this.cliColorer.Error
 		writer = this.errWriter
 	}
 
-	message := "ended"
+	message = color(fmt.Sprintf("op %s", message))
 	if nil != event.CallEnded.Error {
-		message += fmt.Sprintf(" with error")
-	}
-	message = color(message)
-	if nil != event.CallEnded.Error {
-		message += fmt.Sprintf("\n%v", event.CallEnded.Error.Message)
+		message += color(":") + " " + event.CallEnded.Error.Message
 	}
 
 	io.WriteString(
