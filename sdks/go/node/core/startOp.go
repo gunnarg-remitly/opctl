@@ -62,20 +62,16 @@ func (this _core) StartOp(
 		opCallSpec.Outputs[name] = ""
 	}
 
-	go func() {
-		// TODO: handle errors from this call
-		this.caller.Call(
-			ctx,
-			callID,
-			req.Args,
-			&model.CallSpec{
-				Op: opCallSpec,
-			},
-			*opHandle.Path(),
-			nil,
-			callID,
-		)
-	}()
-
-	return callID, nil
+	_, err = this.caller.Call(
+		ctx,
+		callID,
+		req.Args,
+		&model.CallSpec{
+			Op: opCallSpec,
+		},
+		*opHandle.Path(),
+		nil,
+		callID,
+	)
+	return callID, err
 }

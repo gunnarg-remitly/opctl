@@ -114,7 +114,7 @@ func (ivkr _runer) Run(
 		return err
 	}
 
-	// init signal channel
+	// listen for SIGINT on a channel
 	aSigIntWasReceivedAlready := false
 	sigIntChannel := make(chan os.Signal, 1)
 	defer close(sigIntChannel)
@@ -123,6 +123,7 @@ func (ivkr _runer) Run(
 		syscall.SIGINT,
 	)
 
+	// listen for SIGTERM on a channel
 	sigTermChannel := make(chan os.Signal, 1)
 	defer close(sigTermChannel)
 	signal.Notify(
@@ -130,19 +131,20 @@ func (ivkr _runer) Run(
 		syscall.SIGTERM,
 	)
 
-	// start op
-	rootCallID, err := ivkr.core.StartOp(
-		ctx,
-		model.StartOpReq{
-			Args: argsMap,
-			Op: model.StartOpReqOp{
-				Ref: opHandle.Ref(),
+	// listen for op end on a channel
+	done := make(chan error, 1)
+	go func() {
+		_, err := ivkr.core.StartOp(
+			ctx,
+			model.StartOpReq{
+				Args: argsMap,
+				Op: model.StartOpReqOp{
+					Ref: opHandle.Ref(),
+				},
 			},
-		},
-	)
-	if nil != err {
-		return err
-	}
+		)
+		done <- err
+	}()
 
 	for {
 		select {
@@ -162,27 +164,17 @@ func (ivkr _runer) Run(
 			ivkr.cliOutput.Error("Gracefully stopping...")
 			cancel()
 
+		case err := <-done:
+			if !errors.Is(err, context.Canceled) {
+				return err
+			}
+			return nil
+
 		case event, isEventChannelOpen := <-ivkr.eventChannel:
 			if !isEventChannelOpen {
 				return errors.New("Event channel closed unexpectedly")
 			}
-
-			if ctx.Err() != context.Canceled {
-				ivkr.cliOutput.Event(&event)
-			}
-
-			if nil != event.CallEnded {
-				if event.CallEnded.Call.ID == rootCallID {
-					switch event.CallEnded.Outcome {
-					case model.OpOutcomeSucceeded:
-						return nil
-					case model.OpOutcomeKilled:
-						return &RunError{ExitCode: 137}
-					default:
-						return &RunError{ExitCode: 1}
-					}
-				}
-			}
+			ivkr.cliOutput.Event(&event)
 		}
 	}
 }

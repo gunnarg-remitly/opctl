@@ -91,12 +91,6 @@ func (this _cliOutput) Error(s string) {
 func (this _cliOutput) Event(event *model.Event) {
 	switch {
 	case nil != event.CallEnded &&
-		nil == event.CallEnded.Call.Op &&
-		nil == event.CallEnded.Call.Container &&
-		nil != event.CallEnded.Error:
-		this.error(event)
-
-	case nil != event.CallEnded &&
 		nil != event.CallEnded.Call.Container:
 		this.containerExited(event)
 
@@ -118,17 +112,6 @@ func (this _cliOutput) Event(event *model.Event) {
 		nil != event.CallStarted.Call.Op:
 		this.opStarted(event.CallStarted)
 	}
-}
-
-func (this _cliOutput) error(event *model.Event) {
-	io.WriteString(
-		this.errWriter,
-		fmt.Sprintf(
-			"%s%s\n",
-			this.outputPrefix(event.CallEnded.Call.ID, event.CallEnded.Ref),
-			this.cliColorer.Error(event.CallEnded.Error.Message),
-		),
-	)
 }
 
 func (this _cliOutput) containerExited(event *model.Event) {
