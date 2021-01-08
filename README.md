@@ -46,8 +46,9 @@ what output.
 
 ## features
 
-This is a list of features from this branch that I'd like to attempt to
-incrementally migrate into the main branch.
+This is a list of smaller features from this branch that I'd like to attempt to
+incrementally migrate into the main branch, decoupled from the larger architecutre
+changes.
 
 - Better CLI output (better = more readable, understandable, and transformable)
   - Label where output comes from (involves piping more context in events)
