@@ -2,9 +2,10 @@ package docker
 
 import (
 	"context"
+	"io"
+
 	"github.com/docker/docker/api/types"
 	dockerClientPkg "github.com/docker/docker/client"
-	"io"
 )
 
 func newContainerStdOutStreamer(

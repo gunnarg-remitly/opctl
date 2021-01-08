@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
@@ -74,6 +75,10 @@ func (pc _parallelCaller) Call(
 	}
 	childResults := make(chan childResult, len(callSpecParallelCall))
 
+	// This waitgroup ensures all child goroutines are allowed to clean up
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	// perform calls in parallel w/ cancellation
 	for childCallIndex, childCall := range callSpecParallelCall {
 		childCallID, err := pc.uniqueStringFactory.Construct()
@@ -91,7 +96,9 @@ func (pc _parallelCaller) Call(
 			childCtx = parallelCtx
 		}
 
+		wg.Add(1)
 		go func(childCall *model.CallSpec) {
+			defer wg.Done()
 			outputs, err := pc.caller.Call(
 				childCtx,
 				childCallID,

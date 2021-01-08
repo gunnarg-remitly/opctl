@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"sync"
 
 	"github.com/opctl/opctl/sdks/go/opspec/interpreter/call/loop"
 	"github.com/opctl/opctl/sdks/go/opspec/interpreter/call/loop/iteration"
@@ -66,6 +67,10 @@ func (plpr _parallelLoopCaller) Call(
 	}
 	childResults := make(chan childResult)
 
+	// This waitgroup ensures all child goroutines are allowed to clean up
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	for {
 		childCallID, err := plpr.uniqueStringFactory.Construct()
 		if nil != err {
@@ -98,7 +103,9 @@ func (plpr _parallelLoopCaller) Call(
 
 		childCallIndexByID[childCallID] = childCallIndex
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			outputs, err := plpr.caller.Call(
 				parallelLoopCtx,
 				childCallID,

@@ -80,11 +80,12 @@ func (cr _runContainer) RunContainer(
 	// for docker, we prefix name with opctl_ in order to allow external tools to know it's an opctl managed container
 	// do not change this prefix as it might break external consumers
 	containerName := fmt.Sprintf("opctl_%s", req.ContainerID)
-	// it would be nice if this wasn't duplicated with deleteContainerIfExists
+
 	defer func() {
 		// ensure container always cleaned up
+		// Use a fresh context in case the current one is cancelled
 		cr.dockerClient.ContainerRemove(
-			ctx,
+			context.Background(),
 			containerName,
 			types.ContainerRemoveOptions{
 				RemoveVolumes: true,
