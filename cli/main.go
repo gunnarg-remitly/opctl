@@ -23,7 +23,7 @@ func main() {
 	defer func() {
 		if panicArg := recover(); panicArg != nil {
 			clicolorer.New().Error(fmt.Sprintf("panic: %v", panicArg))
-			fmt.Println(panicArg, debug.Stack())
+			fmt.Printf("%s\n%s\n", panicArg, debug.Stack())
 		}
 	}()
 
