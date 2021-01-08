@@ -78,4 +78,4 @@ To debug
 
 `go run github.com/go-delve/delve/cmd/dlv --check-go-version=false --listen=127.0.0.1:40000 --headless=true --api-version=2 exec /PATH/TO/OPCTL/opctl-beta run dev`
 
-This will suspend execution until a client connects on port 40000. If using VSCode, you can use the saved run configuration to connect.
+This will suspend execution until a client connects on port 40000. If using VSCode, you can use the saved run configuration to connect. On macOS, you can debug exit signal handling by sending an interrupt to the underlying PID. When the debugger connects, it will give you the with a message like: `Got a connection, launched process ../opctl/opctl-beta (pid = 79924).` (path to process and PID will be different). Kill with `kill -SIGINT 72958`.
