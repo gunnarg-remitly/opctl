@@ -64,13 +64,29 @@ func (n *callGraphNode) find(call *model.Call) (*callGraphNode, error) {
 	return nil, errNotFoundInGraph
 }
 
+func (n *callGraphNode) isLeaf() bool {
+	return len(n.children) == 0
+}
+
+func (n *callGraphNode) countChildren() int {
+	count := 0
+	for _, child := range n.children {
+		if child.isLeaf() {
+			count++
+		} else {
+			count += child.countChildren()
+		}
+	}
+	return count
+}
+
 var muted = color.New(color.Faint)
 var highlighted = color.New(color.Bold)
 var success = color.New(color.FgGreen)
 var failed = color.New(color.FgRed)
 var warning = color.New(color.FgYellow)
 
-func (n callGraphNode) String(cliOutput clioutput.CliOutput) string {
+func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
 	childLen := len(n.children)
 	var desc string
 	if n.call.Container != nil {
@@ -104,7 +120,7 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput) string {
 		str += "️☒ "
 	case "":
 		// only display loading spinner on leaf nodes
-		if len(n.children) == 0 {
+		if n.isLeaf() {
 			str += n.loader.String() + " "
 		}
 	default:
@@ -114,8 +130,18 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput) string {
 		str += highlighted.Sprint(*n.call.Name) + " "
 	}
 	str += desc
+	if n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted {
+		str += " "
+		childCount := n.countChildren()
+		if childCount == 1 {
+			str += muted.Sprint("(1 child)")
+		} else {
+			str += muted.Sprintf("(%d children)", childCount)
+		}
+		return str
+	}
 	for i, child := range n.children {
-		childLines := strings.Split(child.String(cliOutput), "\n")
+		childLines := strings.Split(child.String(cliOutput, collapseCompleted), "\n")
 		for j, part := range childLines {
 			if j == 0 {
 				if i < childLen-1 {
@@ -134,8 +160,8 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput) string {
 }
 
 // String returns a visual representation of the current state of the call graph
-func (g CallGraph) String(cliOutput clioutput.CliOutput) string {
-	str := g.rootNode.String(cliOutput)
+func (g CallGraph) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
+	str := g.rootNode.String(cliOutput, collapseCompleted)
 	for _, err := range g.errors {
 		str += "\n" + warning.Sprint("⚠️  ") + err.Error()
 	}

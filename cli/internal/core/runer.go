@@ -166,7 +166,7 @@ func (ivkr _runer) Run(
 			if !aSigIntWasReceivedAlready {
 				output.Clear()
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
-				output.Print(state.String(ivkr.cliOutput))
+				output.Print(state.String(ivkr.cliOutput, false))
 				aSigIntWasReceivedAlready = true
 				cancel()
 			} else {
@@ -179,12 +179,12 @@ func (ivkr _runer) Run(
 		case <-sigTermChannel:
 			output.Clear()
 			ivkr.cliOutput.Error("Gracefully stopping...")
-			output.Print(state.String(ivkr.cliOutput))
+			output.Print(state.String(ivkr.cliOutput, false))
 			cancel()
 
 		case err := <-done:
 			output.Clear()
-			output.Print(state.String(ivkr.cliOutput))
+			output.Print(state.String(ivkr.cliOutput, false))
 			fmt.Println()
 			if !errors.Is(err, context.Canceled) {
 				return err
@@ -203,11 +203,11 @@ func (ivkr _runer) Run(
 
 			output.Clear()
 			ivkr.cliOutput.Event(&event)
-			output.Print(state.String(ivkr.cliOutput))
+			output.Print(state.String(ivkr.cliOutput, true))
 
 		case <-animationFrame:
 			output.Clear()
-			output.Print(state.String(ivkr.cliOutput))
+			output.Print(state.String(ivkr.cliOutput, true))
 		}
 	}
 }
