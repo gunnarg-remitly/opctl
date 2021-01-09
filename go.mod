@@ -20,17 +20,13 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-delve/delve v1.3.2
 	github.com/go-git/go-git/v5 v5.2.0
-	github.com/golang-interfaces/github.com-gorilla-websocket v0.0.0-20190604222234-f7c71d63fecb
 	github.com/golang-interfaces/iio v0.0.0-20170731143437-c90328b79385
 	github.com/golang-interfaces/iioutil v0.0.0-20170803194630-7d1c0886acdc
 	github.com/golang-interfaces/ios v0.0.0-20170803194714-da59acb78efc
 	github.com/golang-interfaces/satori-go.uuid v0.0.0-20180127202525-399ef31ed58a
 	github.com/golang-utils/dircopier v0.0.0-20170803194507-75bc9e581ed2
 	github.com/golang-utils/filecopier v0.0.0-20170803193939-16f96e9dcff4
-	github.com/golang-utils/lockfile v0.0.0-20170803195317-342df9650a96
-	github.com/golang-utils/pscanary v0.0.0-20170803195345-167b86ee2e7e // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
-	github.com/gorilla/websocket v1.4.0
 	github.com/jawher/mow.cli v1.1.0
 	github.com/klauspost/compress v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.2 // indirect
@@ -48,6 +44,7 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	golang.org/x/tools v0.0.0-20200528171350-af9456bb6365 // indirect
 	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/api v0.19.1
