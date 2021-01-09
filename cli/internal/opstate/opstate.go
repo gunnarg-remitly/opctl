@@ -87,7 +87,34 @@ var failed = color.New(color.FgRed)
 var warning = color.New(color.FgYellow)
 
 func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
-	childLen := len(n.children)
+	// Graph node indicator
+	str := "◉ "
+
+	// Leading "status"
+	switch n.state {
+	case model.OpOutcomeSucceeded:
+		str += success.Sprint("☑ ")
+	case model.OpOutcomeFailed:
+		str += failed.Sprint("⚠ ")
+	case model.OpOutcomeKilled:
+		str += "️☒ "
+	case model.OpOutcomeSkipped:
+		str += "☐ "
+	case "":
+		// only display loading spinner on leaf nodes
+		if n.isLeaf() {
+			str += n.loader.String() + " "
+		}
+	default:
+		str += n.state + " "
+	}
+
+	// "Named" ops
+	if n.call.Name != nil {
+		str += highlighted.Sprint(*n.call.Name) + " "
+	}
+
+	// Main node description
 	var desc string
 	if n.call.Container != nil {
 		desc = muted.Sprint(n.call.Container.ContainerID[:8]) + " "
@@ -112,28 +139,9 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 	} else if n.call.If != nil {
 		desc = "skipped if"
 	}
-	str := "◉ "
-	switch n.state {
-	case model.OpOutcomeSucceeded:
-		str += success.Sprint("☑ ")
-	case model.OpOutcomeFailed:
-		str += failed.Sprint("⚠ ")
-	case model.OpOutcomeKilled:
-		str += "️☒ "
-	case model.OpOutcomeSkipped:
-		str += "☐ "
-	case "":
-		// only display loading spinner on leaf nodes
-		if n.isLeaf() {
-			str += n.loader.String() + " "
-		}
-	default:
-		str += n.state + " "
-	}
-	if n.call.Name != nil {
-		str += highlighted.Sprint(*n.call.Name) + " "
-	}
 	str += desc
+
+	// Collapsed nodes
 	if n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted {
 		str += " "
 		childCount := n.countChildren()
@@ -144,6 +152,9 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 		}
 		return str
 	}
+
+	// Children
+	childLen := len(n.children)
 	for i, child := range n.children {
 		childLines := strings.Split(child.String(cliOutput, collapseCompleted), "\n")
 		for j, part := range childLines {
@@ -160,6 +171,7 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 			}
 		}
 	}
+
 	return str
 }
 
