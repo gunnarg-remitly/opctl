@@ -9,11 +9,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	cliModel "github.com/opctl/opctl/cli/internal/model"
+	"github.com/opctl/opctl/cli/internal/opstate"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
@@ -146,11 +148,25 @@ func (ivkr _runer) Run(
 		done <- err
 	}()
 
+	// "request animation frame" like loop to force refresh of display loading spinners
+	animationFrame := make(chan bool)
+	go func() {
+		for {
+			time.Sleep(time.Second / 10)
+			animationFrame <- true
+		}
+	}()
+
+	state := opstate.CallGraph{}
+	output := opstate.OutputManager{}
+
 	for {
 		select {
 		case <-sigIntChannel:
 			if !aSigIntWasReceivedAlready {
+				output.Clear()
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
+				output.Print(state.String(ivkr.cliOutput))
 				aSigIntWasReceivedAlready = true
 				cancel()
 			} else {
@@ -161,10 +177,15 @@ func (ivkr _runer) Run(
 			}
 
 		case <-sigTermChannel:
+			output.Clear()
 			ivkr.cliOutput.Error("Gracefully stopping...")
+			output.Print(state.String(ivkr.cliOutput))
 			cancel()
 
 		case err := <-done:
+			output.Clear()
+			output.Print(state.String(ivkr.cliOutput))
+			fmt.Println()
 			if !errors.Is(err, context.Canceled) {
 				return err
 			}
@@ -174,7 +195,19 @@ func (ivkr _runer) Run(
 			if !isEventChannelOpen {
 				return errors.New("Event channel closed unexpectedly")
 			}
+
+			err := state.HandleEvent(&event)
+			if err != nil {
+				ivkr.cliOutput.Error(fmt.Sprintf("%v", err))
+			}
+
+			output.Clear()
 			ivkr.cliOutput.Event(&event)
+			output.Print(state.String(ivkr.cliOutput))
+
+		case <-animationFrame:
+			output.Clear()
+			output.Print(state.String(ivkr.cliOutput))
 		}
 	}
 }

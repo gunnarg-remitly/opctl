@@ -16,6 +16,9 @@ import (
 //CliOutput allows mocking/faking output
 //counterfeiter:generate -o fakes/cliOutput.go . CliOutput
 type CliOutput interface {
+	// TODO: this doesn't belong in this interface
+	FormatOpRef(opRef string) string
+
 	// silently disables coloring
 	DisableColor()
 
@@ -168,7 +171,7 @@ func (this _cliOutput) containerStarted(event *model.Event) {
 	)
 }
 
-func (this _cliOutput) formatOpRef(opRef string) string {
+func (this _cliOutput) FormatOpRef(opRef string) string {
 	if path.IsAbs(opRef) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -194,7 +197,7 @@ func (this _cliOutput) formatOpRef(opRef string) string {
 
 func (this _cliOutput) outputPrefix(id, opRef string) string {
 	parts := []string{id[:8]}
-	opRef = this.formatOpRef(opRef)
+	opRef = this.FormatOpRef(opRef)
 	if opRef != "" {
 		parts = append(parts, opRef)
 	}
