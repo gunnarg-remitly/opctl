@@ -87,8 +87,14 @@ var failed = color.New(color.FgRed)
 var warning = color.New(color.FgYellow)
 
 func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
+	var str string
+
 	// Graph node indicator
-	str := "◉ "
+	if n.isLeaf() {
+		str = "◉ "
+	} else {
+		str = "◎ "
+	}
 
 	// Leading "status"
 	switch n.state {
@@ -109,40 +115,58 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 		str += n.state + " "
 	}
 
+	call := *n.call
+
 	// "Named" ops
-	if n.call.Name != nil {
-		str += highlighted.Sprint(*n.call.Name) + " "
+	if call.Name != nil {
+		str += highlighted.Sprint(*call.Name) + " "
 	}
 
 	// Main node description
 	var desc string
-	if n.call.Container != nil {
-		desc = muted.Sprint(n.call.Container.ContainerID[:8]) + " "
-		if n.call.Container.Name != nil {
-			desc += highlighted.Sprint(*n.call.Container.Name)
+	if call.Container != nil {
+		desc = muted.Sprint(call.Container.ContainerID[:8]) + " "
+		if call.Container.Name != nil {
+			desc += highlighted.Sprint(*call.Container.Name)
 		} else {
-			desc += *n.call.Container.Image.Ref
-			if len(n.call.Container.Cmd) > 0 {
-				desc += " " + muted.Sprint(strings.ReplaceAll(strings.Join(n.call.Container.Cmd, " "), "\n", "\\n"))
+			desc += *call.Container.Image.Ref
+			if len(call.Container.Cmd) > 0 {
+				desc += " " + muted.Sprint(strings.ReplaceAll(strings.Join(call.Container.Cmd, " "), "\n", "\\n"))
 			}
 		}
-	} else if n.call.Op != nil {
-		desc = highlighted.Sprint(cliOutput.FormatOpRef(n.call.Op.OpPath))
-	} else if n.call.Parallel != nil {
+	} else if call.Op != nil {
+		desc = highlighted.Sprint(cliOutput.FormatOpRef(call.Op.OpPath))
+	} else if call.Parallel != nil {
 		desc = "parallel"
-	} else if n.call.ParallelLoop != nil {
+	} else if call.ParallelLoop != nil {
 		desc = "parallel loop"
-	} else if n.call.Serial != nil {
+	} else if call.Serial != nil {
 		desc = "serial"
-	} else if n.call.SerialLoop != nil {
+	} else if call.SerialLoop != nil {
 		desc = "serial loop"
-	} else if n.call.If != nil {
-		desc = "skipped if"
 	}
+
+	collapsed := n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted
+
+	if call.If != nil {
+		str += "if"
+		// this means it was skipped
+		if desc == "" {
+			str += " " + muted.Sprint("skipped")
+		} else {
+			str += "\n"
+			if n.isLeaf() || collapsed {
+				str += "  "
+			} else {
+				str += "│ "
+			}
+		}
+	}
+
 	str += desc
 
 	// Collapsed nodes
-	if n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted {
+	if collapsed {
 		str += " "
 		childCount := n.countChildren()
 		if childCount == 1 {
