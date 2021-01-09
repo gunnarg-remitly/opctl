@@ -80,6 +80,27 @@ func (clr _caller) Call(
 		return nil, nil
 	}
 
+	if nil == callSpec {
+		// NOOP
+		return outputs, err
+	}
+
+	call, err = callpkg.Interpret(
+		ctx,
+		scope,
+		callSpec,
+		id,
+		opPath,
+		parentCallID,
+		rootCallID,
+		clr.dataDirPath,
+	)
+	if nil != err {
+		return nil, err
+	}
+
+	outcome := model.OpOutcomeSucceeded
+
 	// emit a call ended event after this call is complete
 	defer func() {
 		// defer must be defined before conditional return statements so it always runs
@@ -112,41 +133,25 @@ func (clr _caller) Call(
 				Message: err.Error(),
 			}
 		} else {
-			event.CallEnded.Outcome = model.OpOutcomeSucceeded
+			event.CallEnded.Outcome = outcome
 		}
 
 		clr.eventChannel <- event
 	}()
 
-	if nil == callSpec {
-		// NOOP
-		return outputs, err
-	}
-
-	call, err = callpkg.Interpret(
-		ctx,
-		scope,
-		callSpec,
-		id,
-		opPath,
-		parentCallID,
-		rootCallID,
-		clr.dataDirPath,
-	)
-	if nil != err {
-		return nil, err
-	}
-
-	if nil != call.If && !*call.If {
-		return outputs, err
-	}
-
+	// Ensure this is emitted just after the deferred operation to emit the end
+	// event is set up, so we always have a matching start and end event
 	clr.eventChannel <- model.Event{
 		Timestamp: callStartTime,
 		CallStarted: &model.CallStarted{
 			Call: *call,
 			Ref:  opPath,
 		},
+	}
+
+	if nil != call.If && !*call.If {
+		outcome = model.OpOutcomeSkipped
+		return outputs, err
 	}
 
 	switch {

@@ -12,6 +12,7 @@ type Event struct {
 }
 
 const (
+	OpOutcomeSkipped   = "SKIPPED"
 	OpOutcomeSucceeded = "SUCCEEDED"
 	OpOutcomeFailed    = "FAILED"
 	OpOutcomeKilled    = "KILLED"

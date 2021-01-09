@@ -109,6 +109,8 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 		desc = "serial"
 	} else if n.call.SerialLoop != nil {
 		desc = "serial loop"
+	} else if n.call.If != nil {
+		desc = "skipped if"
 	}
 	str := "◉ "
 	switch n.state {
@@ -118,6 +120,8 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 		str += failed.Sprint("⚠ ")
 	case model.OpOutcomeKilled:
 		str += "️☒ "
+	case model.OpOutcomeSkipped:
+		str += "☐ "
 	case "":
 		// only display loading spinner on leaf nodes
 		if n.isLeaf() {
