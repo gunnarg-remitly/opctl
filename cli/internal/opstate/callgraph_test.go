@@ -13,12 +13,6 @@ func (noopOpFormatter) FormatOpRef(opRef string) string {
 	return opRef
 }
 
-type staticLoadingSpinner struct{}
-
-func (staticLoadingSpinner) String() string {
-	return "⋰"
-}
-
 func TestCallGraph(t *testing.T) {
 	timestamp, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Feb 4, 2014 at 6:05pm (PST)")
 	if err != nil {
@@ -130,7 +124,7 @@ func TestCallGraph(t *testing.T) {
 
 	str := "\n" + graph.String(
 		noopOpFormatter{},
-		staticLoadingSpinner{},
+		StaticLoadingSpinner{},
 		timestamp.Add(time.Second*6),
 		false,
 	)

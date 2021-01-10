@@ -121,7 +121,6 @@ func (ivkr _runer) Run(
 		return err
 	}
 
-	// listen for SIGINT on a channel
 	aSigIntWasReceivedAlready := false
 	sigIntChannel := make(chan os.Signal, 1)
 	defer close(sigIntChannel)
@@ -130,12 +129,18 @@ func (ivkr _runer) Run(
 		syscall.SIGINT,
 	)
 
-	// listen for SIGTERM on a channel
 	sigTermChannel := make(chan os.Signal, 1)
 	defer close(sigTermChannel)
 	signal.Notify(
 		sigTermChannel,
 		syscall.SIGTERM,
+	)
+
+	sigInfoChannel := make(chan os.Signal, 1)
+	defer close(sigInfoChannel)
+	signal.Notify(
+		sigInfoChannel,
+		syscall.SIGINFO,
 	)
 
 	// listen for op end on a channel
@@ -201,6 +206,13 @@ func (ivkr _runer) Run(
 					message:  "Terminated by Control-C",
 				}
 			}
+
+		case <-sigInfoChannel:
+			clearGraph()
+			// clear two more lines
+			fmt.Print("\033[1A\033[K\033[1A\033[K")
+			fmt.Println(state.String(ivkr.opFormatter, opstate.StaticLoadingSpinner{}, time.Now(), false))
+			displayGraph()
 
 		case <-sigTermChannel:
 			clearGraph()
