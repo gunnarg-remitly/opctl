@@ -47,3 +47,11 @@ func (of CliOpFormatter) FormatOpRef(opRef string) string {
 	}
 	return opRef
 }
+
+// SimpleOpFormatter just mirrors the op ref as is
+type SimpleOpFormatter struct{}
+
+// FormatOpRef returns the op ref
+func (SimpleOpFormatter) FormatOpRef(opRef string) string {
+	return opRef
+}

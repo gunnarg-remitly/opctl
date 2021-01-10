@@ -140,7 +140,7 @@ func (ivkr _runer) Run(
 	defer close(sigInfoChannel)
 	signal.Notify(
 		sigInfoChannel,
-		syscall.SIGINFO,
+		syscall.Signal(0x1d), // portable version of syscall.SIGINFO
 	)
 
 	// listen for op end on a channel

@@ -10,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/opctl/opctl/cli/internal/clioutput"
 	clioutputFakes "github.com/opctl/opctl/cli/internal/clioutput/fakes"
 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
 	dataresolver "github.com/opctl/opctl/cli/internal/dataresolver/fakes"
@@ -54,9 +55,11 @@ func (mockReadSeekCloser) Close() error {
 }
 
 var _ = Context("Runer", func() {
+	var opFormatter clioutput.SimpleOpFormatter
 	It("can be constructed", func() {
 		newRuner(
 			new(clioutputFakes.FakeCliOutput),
+			opFormatter,
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
 			new(dataresolver.FakeDataResolver),
 			make(chan model.Event),
@@ -84,7 +87,7 @@ var _ = Context("Runer", func() {
 			}
 
 			/* act */
-			err := objectUnderTest.Run(providedCtx, providedOpRef, &cliModel.RunOpts{})
+			err := objectUnderTest.Run(providedCtx, providedOpRef, &cliModel.RunOpts{}, false)
 
 			/* assert */
 			Expect(err).To(MatchError(expected))
@@ -109,7 +112,7 @@ var _ = Context("Runer", func() {
 			}
 
 			/* act */
-			err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+			err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 
 			/* assert */
 			Expect(err).To(MatchError(""))
@@ -131,7 +134,7 @@ var _ = Context("Runer", func() {
 				}
 
 				/* act */
-				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 
 				/* assert */
 				Expect(err).To(MatchError(expectedError))
@@ -151,7 +154,7 @@ var _ = Context("Runer", func() {
 				}
 
 				/* act */
-				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 
 				/* assert */
 				Expect(err).NotTo(BeNil())
@@ -171,7 +174,7 @@ var _ = Context("Runer", func() {
 				}
 
 				/* act */
-				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"})
+				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"}, false)
 
 				/* assert */
 				Expect(err).To(MatchError(fmt.Errorf("unable to load arg file at '%v'; error was: %v", "argfile", expectedError)))
@@ -191,7 +194,7 @@ var _ = Context("Runer", func() {
 				}
 
 				/* act */
-				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"})
+				err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{ArgFile: "argfile"}, false)
 
 				/* assert */
 				Expect(err).To(MatchError(expectedError))
@@ -237,7 +240,7 @@ var _ = Context("Runer", func() {
 				}
 
 				/* act */
-				objectUnderTest.Run(providedContext, "", &cliModel.RunOpts{})
+				objectUnderTest.Run(providedContext, "", &cliModel.RunOpts{}, false)
 
 				/* assert */
 				actualCtx, actualArgs := fakeCore.StartOpArgsForCall(0)
@@ -266,7 +269,7 @@ var _ = Context("Runer", func() {
 					}
 
 					/* act */
-					err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+					err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 
 					/* assert */
 					Expect(err).To(MatchError(returnedError))
@@ -293,7 +296,7 @@ var _ = Context("Runer", func() {
 						}
 
 						/* act */
-						err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+						err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 
 						/* assert */
 						Expect(err).To(MatchError("Event channel closed unexpectedly"))
@@ -336,7 +339,7 @@ var _ = Context("Runer", func() {
 									}
 
 									/* act/assert */
-									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 									Expect(err).To(BeNil())
 								})
 							})
@@ -373,7 +376,7 @@ var _ = Context("Runer", func() {
 									}
 
 									/* act/assert */
-									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 									Expect(err).To(MatchError(&RunError{ExitCode: 137}))
 								})
 
@@ -411,7 +414,7 @@ var _ = Context("Runer", func() {
 									}
 
 									/* act/assert */
-									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 									Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 								})
 							})
@@ -448,7 +451,7 @@ var _ = Context("Runer", func() {
 									}
 
 									/* act/assert */
-									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{})
+									err := objectUnderTest.Run(context.TODO(), "", &cliModel.RunOpts{}, false)
 									Expect(err).To(MatchError(&RunError{ExitCode: 1}))
 								})
 							})

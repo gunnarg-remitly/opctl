@@ -2,7 +2,6 @@ package clioutput
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -13,12 +12,13 @@ import (
 )
 
 var _ = Context("output", func() {
+	var opFormatter SimpleOpFormatter
 	Context("newOutput", func() {
 		It("should return output", func() {
 			/* arrange/act/assert */
 			Expect(New(
 				new(clicolorerFakes.FakeCliColorer),
-				os.TempDir(),
+				opFormatter,
 				new(fakeWriter),
 				new(fakeWriter),
 			)).To(Not(BeNil()))
@@ -34,7 +34,7 @@ var _ = Context("output", func() {
 			fakeStdWriter := new(fakeWriter)
 			objectUnderTest, err := New(
 				_cliColorer,
-				"/dataDirPath",
+				opFormatter,
 				new(fakeWriter),
 				fakeStdWriter,
 			)
@@ -57,7 +57,7 @@ var _ = Context("output", func() {
 			fakeErrWriter := new(fakeWriter)
 			objectUnderTest, err := New(
 				_cliColorer,
-				"/dataDirPath",
+				opFormatter,
 				new(fakeWriter),
 				fakeErrWriter,
 			)
@@ -80,7 +80,7 @@ var _ = Context("output", func() {
 			fakeErrWriter := new(fakeWriter)
 			objectUnderTest, err := New(
 				_cliColorer,
-				"/dataDirPath",
+				opFormatter,
 				fakeErrWriter,
 				new(fakeWriter),
 			)
@@ -110,7 +110,7 @@ var _ = Context("output", func() {
 				fakeErrWriter := new(fakeWriter)
 				objectUnderTest, err := New(
 					_cliColorer,
-					"/dataDirPath",
+					opFormatter,
 					fakeErrWriter,
 					new(fakeWriter),
 				)
@@ -139,7 +139,7 @@ var _ = Context("output", func() {
 				fakeStdWriter := new(fakeWriter)
 				objectUnderTest, err := New(
 					_cliColorer,
-					"/dataDirPath",
+					opFormatter,
 					new(fakeWriter),
 					fakeStdWriter,
 				)
@@ -178,7 +178,7 @@ var _ = Context("output", func() {
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(
 						_cliColorer,
-						"/dataDirPath",
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -220,7 +220,7 @@ var _ = Context("output", func() {
 						fakeErrWriter := new(fakeWriter)
 						objectUnderTest, err := New(
 							_cliColorer,
-							"/dataDirPath",
+							opFormatter,
 							fakeErrWriter,
 							new(fakeWriter),
 						)
@@ -257,7 +257,7 @@ var _ = Context("output", func() {
 						fakeStdWriter := new(fakeWriter)
 						objectUnderTest, err := New(
 							_cliColorer,
-							"/dataDirPath",
+							opFormatter,
 							new(fakeWriter),
 							fakeStdWriter,
 						)
@@ -294,7 +294,7 @@ var _ = Context("output", func() {
 						fakeStdWriter := new(fakeWriter)
 						objectUnderTest, err := New(
 							_cliColorer,
-							"/dataDirPath",
+							opFormatter,
 							new(fakeWriter),
 							fakeStdWriter,
 						)
@@ -329,7 +329,7 @@ var _ = Context("output", func() {
 					fakeErrWriter := new(fakeWriter)
 					objectUnderTest, err := New(
 						_cliColorer,
-						"/dataDirPath",
+						opFormatter,
 						fakeErrWriter,
 						new(fakeWriter),
 					)
@@ -368,7 +368,7 @@ var _ = Context("output", func() {
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(
 						_cliColorer,
-						"/dataDirPath",
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -404,7 +404,7 @@ var _ = Context("output", func() {
 					fakeStdWriter := new(fakeWriter)
 					objectUnderTest, err := New(
 						_cliColorer,
-						"/dataDirPath",
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
@@ -429,7 +429,7 @@ var _ = Context("output", func() {
 			fakeStdWriter := new(fakeWriter)
 			objectUnderTest, err := New(
 				_cliColorer,
-				"/dataDirPath",
+				opFormatter,
 				new(fakeWriter),
 				fakeStdWriter,
 			)
@@ -450,7 +450,7 @@ var _ = Context("output", func() {
 
 			objectUnderTest, err := New(
 				fakeCliColorer,
-				"/dataDirPath",
+				opFormatter,
 				new(fakeWriter),
 				new(fakeWriter),
 			)
