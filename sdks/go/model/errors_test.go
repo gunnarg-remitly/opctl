@@ -38,19 +38,3 @@ var _ = Context("ErrDataProviderAuthorization", func() {
 		})
 	})
 })
-var _ = Context("ErrDataRefResolution", func() {
-	Context("Error", func() {
-		It("should return expected result", func() {
-			/* arrange */
-			expectedResult := "Provider failed to resolve the requested data"
-			objectUnderTest := ErrDataRefResolution{}
-
-			/* act */
-			actualResult := objectUnderTest.Error()
-
-			/* assert */
-			Expect(actualResult).To(Equal(expectedResult))
-
-		})
-	})
-})

@@ -18,7 +18,6 @@ type DataProvider interface {
 	// expected errs:
 	//  - ErrDataProviderAuthentication on authentication failure
 	//  - ErrDataProviderAuthorization on authorization failure
-	//  - ErrDataRefResolution on resolution failure
 	TryResolve(
 		ctx context.Context,
 		dataRef string,

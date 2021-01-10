@@ -33,7 +33,6 @@ type Core interface {
 	// expected errs:
 	//  - ErrDataProviderAuthentication on authentication failure
 	//  - ErrDataProviderAuthorization on authorization failure
-	//  - ErrDataRefResolution on resolution failure
 	ResolveData(
 		ctx context.Context,
 		dataRef string,
@@ -48,7 +47,6 @@ type Core interface {
 	// expected errs:
 	//  - ErrDataProviderAuthentication on authentication failure
 	//  - ErrDataProviderAuthorization on authorization failure
-	//  - ErrDataRefResolution on resolution failure
 	ListDescendants(
 		ctx context.Context,
 		req model.ListDescendantsReq,
@@ -62,7 +60,6 @@ type Core interface {
 	// expected errs:
 	//  - ErrDataProviderAuthentication on authentication failure
 	//  - ErrDataProviderAuthorization on authorization failure
-	//  - ErrDataRefResolution on resolution failure
 	GetData(
 		ctx context.Context,
 		req model.GetDataReq,

@@ -27,7 +27,7 @@ var _ = Context("Resolve", func() {
 			)
 
 			/* assert */
-			Expect(actualErr).To(Equal(model.ErrDataRefResolution{}))
+			Expect(actualErr).To(MatchError(`unable to resolve op \"\\not/exist\":\n- filesystem: not found`))
 		})
 	})
 	Context("providers[0].TryResolve doesn't err", func() {

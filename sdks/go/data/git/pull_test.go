@@ -23,7 +23,7 @@ var _ = Context("Pull", func() {
 			)
 
 			/* assert */
-			Expect(actualError.Error()).To(Equal(`parse "\\///%%&": invalid URL escape "%%&"`))
+			Expect(actualError).To(MatchError(`parse \"\\\\///%%&\": invalid URL escape \"%%&\"`))
 		})
 	})
 	Context("parseRef doesn't err", func() {
