@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/sdks/go/model"
@@ -16,29 +17,32 @@ type CallGraph struct {
 }
 
 type callGraphNode struct {
-	call     *model.Call
-	state    string
-	loader   *Loading
-	children []*callGraphNode
+	call      *model.Call
+	startTime *time.Time
+	endTime   *time.Time
+	state     string
+	loader    *Loading
+	children  []*callGraphNode
 }
 
-func newCallGraphNode(call *model.Call) *callGraphNode {
+func newCallGraphNode(call *model.Call, timestamp time.Time) *callGraphNode {
 	return &callGraphNode{
-		call:     call,
-		children: []*callGraphNode{},
-		loader:   &Loading{},
+		call:      call,
+		startTime: &timestamp,
+		children:  []*callGraphNode{},
+		loader:    &Loading{},
 	}
 }
 
 var errNotFoundInGraph = errors.New("not found in graph")
 
-func (n *callGraphNode) insert(call *model.Call) error {
+func (n *callGraphNode) insert(call *model.Call, startTime time.Time) error {
 	if n.call.ID == *call.ParentID {
-		n.children = append(n.children, newCallGraphNode(call))
+		n.children = append(n.children, newCallGraphNode(call, startTime))
 		return nil
 	}
 	for _, child := range n.children {
-		err := child.insert(call)
+		err := child.insert(call, startTime)
 		if err == nil {
 			return nil
 		}
@@ -119,9 +123,6 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 			desc += highlighted.Sprint(*call.Container.Name)
 		} else {
 			desc += *call.Container.Image.Ref
-			if len(call.Container.Cmd) > 0 {
-				desc += " " + muted.Sprint(strings.ReplaceAll(strings.Join(call.Container.Cmd, " "), "\n", "\\n"))
-			}
 		}
 	} else if call.Op != nil {
 		desc = highlighted.Sprint(opFormatter.FormatOpRef(call.Op.OpPath))
@@ -153,6 +154,16 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 	}
 
 	str.WriteString(desc)
+
+	// Time elapsed (if done)
+	if n.startTime != nil && n.endTime != nil {
+		str.WriteString(" " + n.endTime.Sub(*n.startTime).String())
+	}
+
+	// Add the command invoked by a container if it's not named
+	if call.Container != nil && call.Container.Name == nil && len(call.Container.Cmd) > 0 {
+		str.WriteString(" " + muted.Sprint(strings.ReplaceAll(strings.Join(call.Container.Cmd, " "), "\n", "\\n")))
+	}
 
 	// Collapsed nodes
 	if collapsed {
@@ -203,12 +214,12 @@ func (g *CallGraph) HandleEvent(event *model.Event) error {
 	if event.CallStarted != nil {
 		if event.CallStarted.Call.ParentID == nil {
 			if g.rootNode == nil {
-				g.rootNode = newCallGraphNode(&event.CallStarted.Call)
+				g.rootNode = newCallGraphNode(&event.CallStarted.Call, event.Timestamp)
 				return nil
 			}
 			return errors.New("parent node already set")
 		}
-		return g.rootNode.insert(&event.CallStarted.Call)
+		return g.rootNode.insert(&event.CallStarted.Call, event.Timestamp)
 	} else if event.CallEnded != nil {
 		node, err := g.rootNode.find(&event.CallEnded.Call)
 		if err != nil {
@@ -216,6 +227,7 @@ func (g *CallGraph) HandleEvent(event *model.Event) error {
 			g.errors = append(g.errors, err)
 			return err
 		}
+		node.endTime = &event.Timestamp
 		node.state = event.CallEnded.Outcome
 	}
 	return nil
