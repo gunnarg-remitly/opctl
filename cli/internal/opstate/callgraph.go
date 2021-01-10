@@ -52,17 +52,16 @@ func (n *callGraphNode) insert(call *model.Call, startTime time.Time, initialSta
 	return errNotFoundInGraph
 }
 
-func (n *callGraphNode) find(call *model.Call) (*callGraphNode, error) {
+func (n *callGraphNode) find(call *model.Call) *callGraphNode {
 	if call.ID == n.call.ID {
-		return n, nil
+		return n
 	}
 	for _, child := range n.children {
-		c, _ := child.find(call)
-		if c != nil {
-			return c, nil
+		if c := child.find(call); c != nil {
+			return c
 		}
 	}
-	return nil, errNotFoundInGraph
+	return nil
 }
 
 func (n *callGraphNode) isLeaf() bool {
@@ -160,7 +159,7 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingS
 	}
 
 	// Time elapsed
-	if n.startTime != nil {
+	if n.startTime != nil && n.state != skippedState {
 		if n.endTime != nil { // if done
 			str.WriteString(" " + n.endTime.Sub(*n.startTime).String())
 		} else if n.isLeaf() { // only display live time for leaf nodes, like loading spinner
@@ -232,21 +231,10 @@ func (g *CallGraph) HandleEvent(event *model.Event) error {
 			return errors.New("parent node already set")
 		}
 		return g.rootNode.insert(&event.CallStarted.Call, event.Timestamp, "")
-	} else if event.CallSkipped != nil {
-		if event.CallSkipped.Call.ParentID == nil {
-			if g.rootNode == nil {
-				g.rootNode = newCallGraphNode(&event.CallSkipped.Call, event.Timestamp)
-				return nil
-			}
-			return errors.New("parent node already set")
-		}
-		return g.rootNode.insert(&event.CallSkipped.Call, event.Timestamp, skippedState)
 	} else if event.CallEnded != nil {
-		node, err := g.rootNode.find(&event.CallEnded.Call)
-		if err != nil {
-			err = fmt.Errorf("bad ended event %s, %v: %v", event.CallEnded.Call.ID, event.CallEnded.Ref, err)
-			g.errors = append(g.errors, err)
-			return err
+		node := g.rootNode.find(&event.CallEnded.Call)
+		if node == nil {
+			return g.rootNode.insert(&event.CallEnded.Call, event.Timestamp, skippedState)
 		}
 		node.endTime = &event.Timestamp
 		node.state = event.CallEnded.Outcome

@@ -99,17 +99,6 @@ func (clr _caller) Call(
 		return nil, err
 	}
 
-	if nil != call.If && !*call.If {
-		clr.eventChannel <- model.Event{
-			Timestamp: callStartTime,
-			CallSkipped: &model.CallSkipped{
-				Call: *call,
-				Ref:  opPath,
-			},
-		}
-		return outputs, err
-	}
-
 	// emit a call ended event after this call is complete
 	defer func() {
 		// defer must be defined before conditional return statements so it always runs
@@ -147,6 +136,10 @@ func (clr _caller) Call(
 
 		clr.eventChannel <- event
 	}()
+
+	if nil != call.If && !*call.If {
+		return outputs, err
+	}
 
 	// Ensure this is emitted just after the deferred operation to emit the end
 	// event is set up, so we always have a matching start and end event
