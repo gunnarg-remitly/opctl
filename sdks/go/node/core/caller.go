@@ -99,7 +99,16 @@ func (clr _caller) Call(
 		return nil, err
 	}
 
-	outcome := model.OpOutcomeSucceeded
+	if nil != call.If && !*call.If {
+		clr.eventChannel <- model.Event{
+			Timestamp: callStartTime,
+			CallSkipped: &model.CallSkipped{
+				Call: *call,
+				Ref:  opPath,
+			},
+		}
+		return outputs, err
+	}
 
 	// emit a call ended event after this call is complete
 	defer func() {
@@ -133,7 +142,7 @@ func (clr _caller) Call(
 				Message: err.Error(),
 			}
 		} else {
-			event.CallEnded.Outcome = outcome
+			event.CallEnded.Outcome = model.OpOutcomeSucceeded
 		}
 
 		clr.eventChannel <- event
@@ -147,11 +156,6 @@ func (clr _caller) Call(
 			Call: *call,
 			Ref:  opPath,
 		},
-	}
-
-	if nil != call.If && !*call.If {
-		outcome = model.OpOutcomeSkipped
-		return outputs, err
 	}
 
 	switch {

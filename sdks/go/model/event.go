@@ -6,13 +6,13 @@ import "time"
 type Event struct {
 	CallEnded                *CallEnded                `json:"callEnded,omitempty"`
 	CallStarted              *CallStarted              `json:"callStarted,omitempty"`
+	CallSkipped              *CallSkipped              `json:"callSkipped,omitempty"`
 	ContainerStdErrWrittenTo *ContainerStdErrWrittenTo `json:"containerStdErrWrittenTo,omitempty"`
 	ContainerStdOutWrittenTo *ContainerStdOutWrittenTo `json:"containerStdOutWrittenTo,omitempty"`
 	Timestamp                time.Time                 `json:"timestamp"`
 }
 
 const (
-	OpOutcomeSkipped   = "SKIPPED"
 	OpOutcomeSucceeded = "SUCCEEDED"
 	OpOutcomeFailed    = "FAILED"
 	OpOutcomeKilled    = "KILLED"
@@ -42,6 +42,9 @@ type CallStarted struct {
 type CallEndedError struct {
 	Message string `json:"message"`
 }
+
+// CallSkipped represents an op that was skipped because of a failed if condition
+type CallSkipped = CallStarted
 
 // ContainerStdErrWrittenTo represents a single write to a containers std err.
 type ContainerStdErrWrittenTo struct {
