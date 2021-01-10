@@ -21,7 +21,6 @@ type callGraphNode struct {
 	startTime *time.Time
 	endTime   *time.Time
 	state     string
-	loader    *Loading
 	children  []*callGraphNode
 }
 
@@ -30,7 +29,6 @@ func newCallGraphNode(call *model.Call, timestamp time.Time) *callGraphNode {
 		call:      call,
 		startTime: &timestamp,
 		children:  []*callGraphNode{},
-		loader:    &Loading{},
 	}
 }
 
@@ -79,7 +77,7 @@ func (n *callGraphNode) countChildren() int {
 	return count
 }
 
-func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
+func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, collapseCompleted bool) string {
 	var str strings.Builder
 
 	// Graph node indicator
@@ -102,7 +100,7 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 	case "":
 		// only display loading spinner on leaf nodes
 		if n.isLeaf() {
-			str.WriteString(n.loader.String() + " ")
+			str.WriteString(loader.String() + " ")
 		}
 	default:
 		str.WriteString(n.state + " ")
@@ -180,7 +178,7 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 	// Children
 	childLen := len(n.children)
 	for i, child := range n.children {
-		childLines := strings.Split(child.String(opFormatter, collapseCompleted), "\n")
+		childLines := strings.Split(child.String(opFormatter, loader, collapseCompleted), "\n")
 		for j, part := range childLines {
 			if j == 0 {
 				if i < childLen-1 {
@@ -200,9 +198,9 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 }
 
 // String returns a visual representation of the current state of the call graph
-func (g CallGraph) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
+func (g CallGraph) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, collapseCompleted bool) string {
 	var str strings.Builder
-	str.WriteString(g.rootNode.String(opFormatter, collapseCompleted))
+	str.WriteString(g.rootNode.String(opFormatter, loader, collapseCompleted))
 	for _, err := range g.errors {
 		str.WriteString("\n" + warning.Sprint("⚠️  ") + err.Error())
 	}

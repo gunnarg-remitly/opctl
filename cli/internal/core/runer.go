@@ -160,11 +160,12 @@ func (ivkr _runer) Run(
 		}
 	}()
 
-	state := opstate.CallGraph{}
+	var state opstate.CallGraph
+	var loadingSpinner opstate.DotLoadingSpinner
 	output := opstate.NewOutputManager()
 
 	defer func() {
-		output.Print(state.String(ivkr.opFormatter, false))
+		output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
 		fmt.Println()
 	}()
 
@@ -175,7 +176,7 @@ func (ivkr _runer) Run(
 			if !aSigIntWasReceivedAlready {
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
 				aSigIntWasReceivedAlready = true
-				output.Print(state.String(ivkr.opFormatter, false))
+				output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
 				cancel()
 			} else {
 				return &RunError{
@@ -187,7 +188,7 @@ func (ivkr _runer) Run(
 		case <-sigTermChannel:
 			output.Clear()
 			ivkr.cliOutput.Error("Gracefully stopping...")
-			output.Print(state.String(ivkr.opFormatter, false))
+			output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
 			cancel()
 
 		case err := <-done:
@@ -209,10 +210,10 @@ func (ivkr _runer) Run(
 			}
 
 			ivkr.cliOutput.Event(&event)
-			output.Print(state.String(ivkr.opFormatter, true))
+			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
 		case <-animationFrame:
 			output.Clear()
-			output.Print(state.String(ivkr.opFormatter, true))
+			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
 		}
 	}
 }
