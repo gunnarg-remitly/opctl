@@ -160,15 +160,19 @@ func (ivkr _runer) Run(
 	state := opstate.CallGraph{}
 	output := opstate.OutputManager{}
 
+	defer func() {
+		output.Print(state.String(ivkr.cliOutput, false))
+	}()
+
 	for {
 		select {
 		case <-sigIntChannel:
+			output.Clear()
 			if !aSigIntWasReceivedAlready {
-				output.Clear()
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
-				output.Print(state.String(ivkr.cliOutput, false))
 				aSigIntWasReceivedAlready = true
 				cancel()
+				output.Print(state.String(ivkr.cliOutput, false))
 			} else {
 				return &RunError{
 					ExitCode: 130,
@@ -184,7 +188,6 @@ func (ivkr _runer) Run(
 
 		case err := <-done:
 			output.Clear()
-			output.Print(state.String(ivkr.cliOutput, false))
 			fmt.Println()
 			if !errors.Is(err, context.Canceled) {
 				return err
@@ -192,6 +195,7 @@ func (ivkr _runer) Run(
 			return nil
 
 		case event, isEventChannelOpen := <-ivkr.eventChannel:
+			output.Clear()
 			if !isEventChannelOpen {
 				return errors.New("Event channel closed unexpectedly")
 			}
@@ -201,10 +205,8 @@ func (ivkr _runer) Run(
 				ivkr.cliOutput.Error(fmt.Sprintf("%v", err))
 			}
 
-			output.Clear()
 			ivkr.cliOutput.Event(&event)
 			output.Print(state.String(ivkr.cliOutput, true))
-
 		case <-animationFrame:
 			output.Clear()
 			output.Print(state.String(ivkr.cliOutput, true))
