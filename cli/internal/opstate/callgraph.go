@@ -211,6 +211,9 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingS
 // String returns a visual representation of the current state of the call graph
 func (g CallGraph) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, now time.Time, collapseCompleted bool) string {
 	var str strings.Builder
+	if g.rootNode == nil {
+		return "Empty call graph"
+	}
 	str.WriteString(g.rootNode.String(opFormatter, loader, now, collapseCompleted))
 	for _, err := range g.errors {
 		str.WriteString("\n" + warning.Sprint("⚠️  ") + err.Error())
