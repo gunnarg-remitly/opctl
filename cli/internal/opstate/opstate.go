@@ -57,8 +57,11 @@ func (o *OutputManager) Print(str string) error {
 	for i, line := range lines {
 		withoutAnsi := stripAnsi(line)
 		if countChars(withoutAnsi) > w {
-			// TODO: use original line with ansi codes stripped appropriately
-			fmt.Print(withoutAnsi[:w-1] + "…")
+			// - append an ellipsis to make it more obvious the line's being truncated
+			// - remove _two_ chars, not just one for the ellipsis, because the cursor
+			//   will take up an additional space and cause output issues
+			// - append a "reset" code to prevent color wrapping to next line
+			fmt.Print(stripAnsiToLength(line, w-2) + "…\033[0m")
 		} else {
 			fmt.Print(line)
 		}

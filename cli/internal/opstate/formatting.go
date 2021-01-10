@@ -19,6 +19,14 @@ func stripAnsi(str string) string {
 	return ansiRegex.ReplaceAllString(str, "")
 }
 
+func stripAnsiToLength(str string, length int) string {
+	for countChars(stripAnsi(str)) > length {
+		_, size := utf8.DecodeLastRuneInString(str)
+		str = str[:len(str)-size]
+	}
+	return str
+}
+
 func countChars(str string) int {
 	count := 0
 	for len(str) > 0 {
