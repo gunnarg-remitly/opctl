@@ -76,39 +76,39 @@ func (n *callGraphNode) countChildren() int {
 }
 
 func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
-	var str string
+	var str strings.Builder
 
 	// Graph node indicator
 	if n.isLeaf() {
-		str = "◉ "
+		str.WriteString("◉ ")
 	} else {
-		str = "◎ "
+		str.WriteString("◎ ")
 	}
 
 	// Leading "status"
 	switch n.state {
 	case model.OpOutcomeSucceeded:
-		str += success.Sprint("☑ ")
+		str.WriteString(success.Sprint("☑ "))
 	case model.OpOutcomeFailed:
-		str += failed.Sprint("⚠ ")
+		str.WriteString(failed.Sprint("⚠ "))
 	case model.OpOutcomeKilled:
-		str += "️☒ "
+		str.WriteString("️☒ ")
 	case model.OpOutcomeSkipped:
-		str += "☐ "
+		str.WriteString("☐ ")
 	case "":
 		// only display loading spinner on leaf nodes
 		if n.isLeaf() {
-			str += n.loader.String() + " "
+			str.WriteString(n.loader.String() + " ")
 		}
 	default:
-		str += n.state + " "
+		str.WriteString(n.state + " ")
 	}
 
 	call := *n.call
 
 	// "Named" ops
 	if call.Name != nil {
-		str += highlighted.Sprint(*call.Name) + " "
+		str.WriteString(highlighted.Sprint(*call.Name) + " ")
 	}
 
 	// Main node description
@@ -138,32 +138,32 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 	collapsed := n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted
 
 	if call.If != nil {
-		str += "if"
+		str.WriteString("if")
 		// this means it was skipped
 		if desc == "" {
-			str += " " + muted.Sprint("skipped")
+			str.WriteString(" " + muted.Sprint("skipped"))
 		} else {
-			str += "\n"
+			str.WriteString("\n")
 			if n.isLeaf() || collapsed {
-				str += "  "
+				str.WriteString("  ")
 			} else {
-				str += "│ "
+				str.WriteString("│ ")
 			}
 		}
 	}
 
-	str += desc
+	str.WriteString(desc)
 
 	// Collapsed nodes
 	if collapsed {
-		str += " "
+		str.WriteString(" ")
 		childCount := n.countChildren()
 		if childCount == 1 {
-			str += muted.Sprint("(1 child)")
+			str.WriteString(muted.Sprint("(1 child)"))
 		} else {
-			str += muted.Sprintf("(%d children)", childCount)
+			str.WriteString(muted.Sprintf("(%d children)", childCount))
 		}
-		return str
+		return str.String()
 	}
 
 	// Children
@@ -173,28 +173,29 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseComplet
 		for j, part := range childLines {
 			if j == 0 {
 				if i < childLen-1 {
-					str += fmt.Sprintf("\n├─%s", part)
+					str.WriteString(fmt.Sprintf("\n├─%s", part))
 				} else {
-					str += fmt.Sprintf("\n└─%s", part)
+					str.WriteString(fmt.Sprintf("\n└─%s", part))
 				}
 			} else if i < childLen-1 {
-				str += fmt.Sprintf("\n│ %s", part)
+				str.WriteString(fmt.Sprintf("\n│ %s", part))
 			} else {
-				str += fmt.Sprintf("\n  %s", part)
+				str.WriteString(fmt.Sprintf("\n  %s", part))
 			}
 		}
 	}
 
-	return str
+	return str.String()
 }
 
 // String returns a visual representation of the current state of the call graph
 func (g CallGraph) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
-	str := g.rootNode.String(opFormatter, collapseCompleted)
+	var str strings.Builder
+	str.WriteString(g.rootNode.String(opFormatter, collapseCompleted))
 	for _, err := range g.errors {
-		str += "\n" + warning.Sprint("⚠️  ") + err.Error()
+		str.WriteString("\n" + warning.Sprint("⚠️  ") + err.Error())
 	}
-	return str
+	return str.String()
 }
 
 // HandleEvent accepts an opctl event and updates the call graph appropriately
