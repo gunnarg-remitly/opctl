@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/appdataspec/sdk-golang/appdatapath"
 	mow "github.com/jawher/mow.cli"
@@ -15,6 +16,7 @@ import (
 	corePkg "github.com/opctl/opctl/cli/internal/core"
 	"github.com/opctl/opctl/cli/internal/model"
 	op "github.com/opctl/opctl/sdks/go/opspec"
+	"golang.org/x/term"
 )
 
 //counterfeiter:generate -o internal/fakes/cli.go . cli
@@ -163,9 +165,10 @@ func newCli(
 	cli.Command("run", "Start and wait on an op", func(runCmd *mow.Cmd) {
 		args := runCmd.StringsOpt("a", []string{}, "Explicitly pass args to op in format `-a NAME1=VALUE1 -a NAME2=VALUE2`")
 		argFile := runCmd.StringOpt("arg-file", filepath.Join(op.DotOpspecDirName, "args.yml"), "Read in a file of args in yml format")
+		defaultDisplayLiveGraph := term.IsTerminal(syscall.Stdout)
 		displayLiveGraph := runCmd.BoolOpt(
 			"live-graph",
-			true,
+			defaultDisplayLiveGraph,
 			"Display a live call graph for the op",
 		)
 		opRef := runCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
