@@ -26,6 +26,7 @@ type cli interface {
 type newCorer func(
 	ctx context.Context,
 	cliOutput clioutput.CliOutput,
+	opFormatter clioutput.CliOpFormatter,
 	containerRuntime,
 	datadirPath string,
 ) (corePkg.Core, error)
@@ -54,7 +55,9 @@ func newCli(
 		},
 	)
 
-	cliOutput, err := clioutput.New(clicolorer.New(), *datadirPath, os.Stderr, os.Stdout)
+	opFormatter := clioutput.NewCliOpFormatter(*datadirPath)
+
+	cliOutput, err := clioutput.New(clicolorer.New(), opFormatter, os.Stderr, os.Stdout)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +71,7 @@ func newCli(
 		},
 	)
 
-	core, err := newCorer(ctx, cliOutput, *containerRuntime, *datadirPath)
+	core, err := newCorer(ctx, cliOutput, opFormatter, *containerRuntime, *datadirPath)
 	if err != nil {
 		return nil, err
 	}

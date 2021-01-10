@@ -33,6 +33,7 @@ type Runer interface {
 // newRuner returns an initialized "run" command
 func newRuner(
 	cliOutput clioutput.CliOutput,
+	opFormatter clioutput.OpFormatter,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
 	eventChannel chan model.Event,
@@ -40,6 +41,7 @@ func newRuner(
 ) Runer {
 	return _runer{
 		cliOutput:         cliOutput,
+		opFormatter:       opFormatter,
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
 		eventChannel:      eventChannel,
@@ -50,6 +52,7 @@ func newRuner(
 type _runer struct {
 	dataResolver      dataresolver.DataResolver
 	cliOutput         clioutput.CliOutput
+	opFormatter       clioutput.OpFormatter
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	eventChannel      chan model.Event
 	core              core.Core
@@ -158,10 +161,11 @@ func (ivkr _runer) Run(
 	}()
 
 	state := opstate.CallGraph{}
-	output := opstate.OutputManager{}
+	output := opstate.NewOutputManager()
 
 	defer func() {
-		output.Print(state.String(ivkr.cliOutput, false))
+		output.Print(state.String(ivkr.opFormatter, false))
+		fmt.Println()
 	}()
 
 	for {
@@ -171,8 +175,8 @@ func (ivkr _runer) Run(
 			if !aSigIntWasReceivedAlready {
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
 				aSigIntWasReceivedAlready = true
+				output.Print(state.String(ivkr.opFormatter, false))
 				cancel()
-				output.Print(state.String(ivkr.cliOutput, false))
 			} else {
 				return &RunError{
 					ExitCode: 130,
@@ -183,12 +187,11 @@ func (ivkr _runer) Run(
 		case <-sigTermChannel:
 			output.Clear()
 			ivkr.cliOutput.Error("Gracefully stopping...")
-			output.Print(state.String(ivkr.cliOutput, false))
+			output.Print(state.String(ivkr.opFormatter, false))
 			cancel()
 
 		case err := <-done:
 			output.Clear()
-			fmt.Println()
 			if !errors.Is(err, context.Canceled) {
 				return err
 			}
@@ -206,10 +209,10 @@ func (ivkr _runer) Run(
 			}
 
 			ivkr.cliOutput.Event(&event)
-			output.Print(state.String(ivkr.cliOutput, true))
+			output.Print(state.String(ivkr.opFormatter, true))
 		case <-animationFrame:
 			output.Clear()
-			output.Print(state.String(ivkr.cliOutput, true))
+			output.Print(state.String(ivkr.opFormatter, true))
 		}
 	}
 }

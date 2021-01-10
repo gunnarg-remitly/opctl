@@ -29,6 +29,7 @@ type Core interface {
 func New(
 	ctx context.Context,
 	cliOutput clioutput.CliOutput,
+	opFormatter clioutput.CliOpFormatter,
 	containerRuntime string,
 	datadirPath string,
 ) (Core, error) {
@@ -71,6 +72,7 @@ func New(
 		),
 		Runer: newRuner(
 			cliOutput,
+			opFormatter,
 			cliParamSatisfier,
 			dataResolver,
 			eventChannel,

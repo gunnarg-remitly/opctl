@@ -5,8 +5,6 @@ package clioutput
 import (
 	"fmt"
 	"io"
-	"os"
-	"path"
 	"strings"
 
 	"github.com/opctl/opctl/cli/internal/clicolorer"
@@ -16,9 +14,6 @@ import (
 //CliOutput allows mocking/faking output
 //counterfeiter:generate -o fakes/cliOutput.go . CliOutput
 type CliOutput interface {
-	// TODO: this doesn't belong in this interface
-	FormatOpRef(opRef string) string
-
 	// silently disables coloring
 	DisableColor()
 
@@ -41,13 +36,13 @@ type CliOutput interface {
 
 func New(
 	cliColorer clicolorer.CliColorer,
-	datadirPath string,
+	opFormatter OpFormatter,
 	errWriter io.Writer,
 	stdWriter io.Writer,
 ) (CliOutput, error) {
 	return _cliOutput{
 		cliColorer:  cliColorer,
-		datadirPath: datadirPath,
+		opFormatter: opFormatter,
 		errWriter:   errWriter,
 		stdWriter:   stdWriter,
 	}, nil
@@ -55,7 +50,7 @@ func New(
 
 type _cliOutput struct {
 	cliColorer  clicolorer.CliColorer
-	datadirPath string
+	opFormatter OpFormatter
 	errWriter   io.Writer
 	stdWriter   io.Writer
 }
@@ -171,33 +166,9 @@ func (this _cliOutput) containerStarted(event *model.Event) {
 	)
 }
 
-func (this _cliOutput) FormatOpRef(opRef string) string {
-	if path.IsAbs(opRef) {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return opRef
-		}
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return opRef
-		}
-		dataDirPath := this.datadirPath
-		if strings.HasPrefix(opRef, dataDirPath) {
-			return opRef[len(dataDirPath+string(os.PathListSeparator)+"ops"+string(os.PathListSeparator)):]
-		}
-		if strings.HasPrefix(opRef, cwd) {
-			return "." + opRef[len(cwd):]
-		}
-		if strings.HasPrefix(opRef, home) {
-			return "~" + opRef[len(home):]
-		}
-	}
-	return opRef
-}
-
 func (this _cliOutput) outputPrefix(id, opRef string) string {
 	parts := []string{id[:8]}
-	opRef = this.FormatOpRef(opRef)
+	opRef = this.opFormatter.FormatOpRef(opRef)
 	if opRef != "" {
 		parts = append(parts, opRef)
 	}

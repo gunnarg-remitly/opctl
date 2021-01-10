@@ -86,7 +86,7 @@ var success = color.New(color.FgGreen)
 var failed = color.New(color.FgRed)
 var warning = color.New(color.FgYellow)
 
-func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
+func (n callGraphNode) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
 	var str string
 
 	// Graph node indicator
@@ -135,7 +135,7 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 			}
 		}
 	} else if call.Op != nil {
-		desc = highlighted.Sprint(cliOutput.FormatOpRef(call.Op.OpPath))
+		desc = highlighted.Sprint(opFormatter.FormatOpRef(call.Op.OpPath))
 	} else if call.Parallel != nil {
 		desc = "parallel"
 	} else if call.ParallelLoop != nil {
@@ -180,7 +180,7 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 	// Children
 	childLen := len(n.children)
 	for i, child := range n.children {
-		childLines := strings.Split(child.String(cliOutput, collapseCompleted), "\n")
+		childLines := strings.Split(child.String(opFormatter, collapseCompleted), "\n")
 		for j, part := range childLines {
 			if j == 0 {
 				if i < childLen-1 {
@@ -200,8 +200,8 @@ func (n callGraphNode) String(cliOutput clioutput.CliOutput, collapseCompleted b
 }
 
 // String returns a visual representation of the current state of the call graph
-func (g CallGraph) String(cliOutput clioutput.CliOutput, collapseCompleted bool) string {
-	str := g.rootNode.String(cliOutput, collapseCompleted)
+func (g CallGraph) String(opFormatter clioutput.OpFormatter, collapseCompleted bool) string {
+	str := g.rootNode.String(opFormatter, collapseCompleted)
 	for _, err := range g.errors {
 		str += "\n" + warning.Sprint("⚠️  ") + err.Error()
 	}
@@ -235,6 +235,11 @@ func (g *CallGraph) HandleEvent(event *model.Event) error {
 // of terminal output, when a tty is used
 type OutputManager struct {
 	lastHeight int
+}
+
+// NewOutputManager returns a new OutputManager
+func NewOutputManager() OutputManager {
+	return OutputManager{}
 }
 
 // Clear clears the last thing printed by this object
