@@ -2,6 +2,7 @@ package opstate
 
 import (
 	"testing"
+	"time"
 
 	"github.com/opctl/opctl/sdks/go/model"
 )
@@ -19,6 +20,10 @@ func (staticLoadingSpinner) String() string {
 }
 
 func TestCallGraph(t *testing.T) {
+	timestamp, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Feb 4, 2014 at 6:05pm (PST)")
+	if err != nil {
+		t.Fatal(err)
+	}
 	graph := CallGraph{}
 	parentID := "id1"
 	graph.HandleEvent(&model.Event{
@@ -33,6 +38,7 @@ func TestCallGraph(t *testing.T) {
 				},
 			},
 		},
+		Timestamp: timestamp,
 	})
 	child1ID := "id2"
 	graph.HandleEvent(&model.Event{
@@ -48,6 +54,7 @@ func TestCallGraph(t *testing.T) {
 				},
 			},
 		},
+		Timestamp: timestamp.Add(time.Second * 1),
 	})
 	containerRef := "containerRef"
 	child1child1ID := "child1child1Id"
@@ -64,6 +71,7 @@ func TestCallGraph(t *testing.T) {
 				},
 			},
 		},
+		Timestamp: timestamp.Add(time.Second * 2),
 	})
 	graph.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
@@ -78,6 +86,7 @@ func TestCallGraph(t *testing.T) {
 				},
 			},
 		},
+		Timestamp: timestamp.Add(time.Second * 3),
 	})
 	graph.HandleEvent(&model.Event{
 		CallEnded: &model.CallEnded{
@@ -93,6 +102,7 @@ func TestCallGraph(t *testing.T) {
 			},
 			Outcome: model.OpOutcomeSucceeded,
 		},
+		Timestamp: timestamp.Add(time.Second * 4),
 	})
 	child2If := false
 	graph.HandleEvent(&model.Event{
@@ -103,6 +113,7 @@ func TestCallGraph(t *testing.T) {
 				If:       &child2If,
 			},
 		},
+		Timestamp: timestamp.Add(time.Second * 5),
 	})
 	child3If := true
 	graph.HandleEvent(&model.Event{
@@ -114,17 +125,23 @@ func TestCallGraph(t *testing.T) {
 				Serial:   []*model.CallSpec{},
 			},
 		},
+		Timestamp: timestamp.Add(time.Second * 6),
 	})
 
-	str := "\n" + graph.String(noopOpFormatter{}, staticLoadingSpinner{}, false)
+	str := "\n" + graph.String(
+		noopOpFormatter{},
+		staticLoadingSpinner{},
+		timestamp.Add(time.Second*6),
+		false,
+	)
 	expected := `
 ◎ oppath
 ├─◎ oppath2
-│ ├─◉ ⋰ containe containerRef
-│ └─◉ ☑ containe containerRef 0s
-├─◉ ⋰ if skipped
+│ ├─◉ ⋰ containe containerRef 4s
+│ └─◉ ☑ containe containerRef 1s
+├─◉ ⋰ if skipped 1s
 └─◉ ⋰ if
-    serial`
+    serial 0s`
 	if str != expected {
 		t.Errorf("call graph string not correct: expected\n```\n%s\n```\nactual\n```\n%s\n```", expected, str)
 	}

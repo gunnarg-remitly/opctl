@@ -77,40 +77,40 @@ func (n *callGraphNode) countChildren() int {
 	return count
 }
 
-func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, collapseCompleted bool) string {
+func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, now time.Time, collapseCompleted bool) string {
 	var str strings.Builder
 
 	// Graph node indicator
 	if n.isLeaf() {
-		str.WriteString("◉ ")
+		str.WriteString("◉")
 	} else {
-		str.WriteString("◎ ")
+		str.WriteString("◎")
 	}
 
 	// Leading "status"
 	switch n.state {
 	case model.OpOutcomeSucceeded:
-		str.WriteString(success.Sprint("☑ "))
+		str.WriteString(success.Sprint(" ☑"))
 	case model.OpOutcomeFailed:
-		str.WriteString(failed.Sprint("⚠ "))
+		str.WriteString(failed.Sprint(" ⚠"))
 	case model.OpOutcomeKilled:
-		str.WriteString("️☒ ")
+		str.WriteString("️ ☒")
 	case model.OpOutcomeSkipped:
-		str.WriteString("☐ ")
+		str.WriteString(" ☐")
 	case "":
 		// only display loading spinner on leaf nodes
 		if n.isLeaf() {
-			str.WriteString(loader.String() + " ")
+			str.WriteString(" " + loader.String())
 		}
 	default:
-		str.WriteString(n.state + " ")
+		str.WriteString(n.state)
 	}
 
 	call := *n.call
 
 	// "Named" ops
 	if call.Name != nil {
-		str.WriteString(highlighted.Sprint(*call.Name) + " ")
+		str.WriteString(" " + highlighted.Sprint(*call.Name))
 	}
 
 	// Main node description
@@ -137,25 +137,32 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingS
 	collapsed := n.state == model.OpOutcomeSucceeded && !n.isLeaf() && collapseCompleted
 
 	if call.If != nil {
-		str.WriteString("if")
+		str.WriteString(" if")
 		// this means it was skipped
 		if desc == "" {
 			str.WriteString(" " + muted.Sprint("skipped"))
 		} else {
 			str.WriteString("\n")
 			if n.isLeaf() || collapsed {
-				str.WriteString("  ")
+				str.WriteString(" ")
 			} else {
-				str.WriteString("│ ")
+				str.WriteString("│")
 			}
 		}
 	}
 
-	str.WriteString(desc)
+	if desc != "" {
+		str.WriteString(" " + desc)
+	}
 
-	// Time elapsed (if done)
-	if n.startTime != nil && n.endTime != nil {
-		str.WriteString(" " + n.endTime.Sub(*n.startTime).String())
+	// Time elapsed
+	if n.startTime != nil {
+		if n.endTime != nil { // if done
+			str.WriteString(" " + n.endTime.Sub(*n.startTime).String())
+		} else if n.isLeaf() { // only display live time for leaf nodes, like loading spinner
+			// don't show milliseconds - they're not really understandable
+			str.WriteString(" " + now.Sub(*n.startTime).Round(time.Second).String())
+		}
 	}
 
 	// Add the command invoked by a container if it's not named
@@ -178,7 +185,7 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingS
 	// Children
 	childLen := len(n.children)
 	for i, child := range n.children {
-		childLines := strings.Split(child.String(opFormatter, loader, collapseCompleted), "\n")
+		childLines := strings.Split(child.String(opFormatter, loader, now, collapseCompleted), "\n")
 		for j, part := range childLines {
 			if j == 0 {
 				if i < childLen-1 {
@@ -198,9 +205,9 @@ func (n callGraphNode) String(opFormatter clioutput.OpFormatter, loader LoadingS
 }
 
 // String returns a visual representation of the current state of the call graph
-func (g CallGraph) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, collapseCompleted bool) string {
+func (g CallGraph) String(opFormatter clioutput.OpFormatter, loader LoadingSpinner, now time.Time, collapseCompleted bool) string {
 	var str strings.Builder
-	str.WriteString(g.rootNode.String(opFormatter, loader, collapseCompleted))
+	str.WriteString(g.rootNode.String(opFormatter, loader, now, collapseCompleted))
 	for _, err := range g.errors {
 		str.WriteString("\n" + warning.Sprint("⚠️  ") + err.Error())
 	}

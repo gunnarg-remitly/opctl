@@ -169,7 +169,7 @@ func (ivkr _runer) Run(
 	output := opstate.NewOutputManager()
 
 	defer func() {
-		output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
+		output.Print(state.String(ivkr.opFormatter, loadingSpinner, time.Now(), false))
 		fmt.Println()
 	}()
 
@@ -181,7 +181,7 @@ func (ivkr _runer) Run(
 
 	displayGraph := func() {
 		if displayLiveGraph {
-			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
+			output.Print(state.String(ivkr.opFormatter, loadingSpinner, time.Now(), true))
 		}
 	}
 
