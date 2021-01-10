@@ -163,10 +163,23 @@ func newCli(
 	cli.Command("run", "Start and wait on an op", func(runCmd *mow.Cmd) {
 		args := runCmd.StringsOpt("a", []string{}, "Explicitly pass args to op in format `-a NAME1=VALUE1 -a NAME2=VALUE2`")
 		argFile := runCmd.StringOpt("arg-file", filepath.Join(op.DotOpspecDirName, "args.yml"), "Read in a file of args in yml format")
+		displayLiveGraph := runCmd.BoolOpt(
+			"live-graph",
+			true,
+			"Display a live call graph for the op",
+		)
 		opRef := runCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 		runCmd.Action = func() {
-			exitWith("", core.Run(ctx, *opRef, &model.RunOpts{Args: *args, ArgFile: *argFile}))
+			exitWith(
+				"",
+				core.Run(
+					ctx,
+					*opRef,
+					&model.RunOpts{Args: *args, ArgFile: *argFile},
+					*displayLiveGraph,
+				),
+			)
 		}
 	})
 

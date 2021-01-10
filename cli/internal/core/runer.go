@@ -27,6 +27,7 @@ type Runer interface {
 		ctx context.Context,
 		opRef string,
 		opts *cliModel.RunOpts,
+		displayLiveGraph bool,
 	) error
 }
 
@@ -62,6 +63,7 @@ func (ivkr _runer) Run(
 	ctx context.Context,
 	opRef string,
 	opts *cliModel.RunOpts,
+	displayLiveGraph bool,
 ) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -153,12 +155,14 @@ func (ivkr _runer) Run(
 
 	// "request animation frame" like loop to force refresh of display loading spinners
 	animationFrame := make(chan bool)
-	go func() {
-		for {
-			time.Sleep(time.Second / 10)
-			animationFrame <- true
-		}
-	}()
+	if displayLiveGraph {
+		go func() {
+			for {
+				time.Sleep(time.Second / 10)
+				animationFrame <- true
+			}
+		}()
+	}
 
 	var state opstate.CallGraph
 	var loadingSpinner opstate.DotLoadingSpinner
@@ -169,14 +173,27 @@ func (ivkr _runer) Run(
 		fmt.Println()
 	}()
 
+	clearGraph := func() {
+		if displayLiveGraph {
+			output.Clear()
+		}
+	}
+
+	displayGraph := func() {
+		if displayLiveGraph {
+			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
+		}
+	}
+
 	for {
 		select {
 		case <-sigIntChannel:
-			output.Clear()
+			clearGraph()
 			if !aSigIntWasReceivedAlready {
 				ivkr.cliOutput.Warning("Gracefully stopping... (signal Control-C again to force)")
 				aSigIntWasReceivedAlready = true
-				output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
+				// events will continue to stream in, make sure we continue to display the graph while this happens
+				displayGraph()
 				cancel()
 			} else {
 				return &RunError{
@@ -186,20 +203,20 @@ func (ivkr _runer) Run(
 			}
 
 		case <-sigTermChannel:
-			output.Clear()
+			clearGraph()
 			ivkr.cliOutput.Error("Gracefully stopping...")
-			output.Print(state.String(ivkr.opFormatter, loadingSpinner, false))
+			displayGraph()
 			cancel()
 
 		case err := <-done:
-			output.Clear()
+			clearGraph()
 			if !errors.Is(err, context.Canceled) {
 				return err
 			}
 			return nil
 
 		case event, isEventChannelOpen := <-ivkr.eventChannel:
-			output.Clear()
+			clearGraph()
 			if !isEventChannelOpen {
 				return errors.New("Event channel closed unexpectedly")
 			}
@@ -210,10 +227,10 @@ func (ivkr _runer) Run(
 			}
 
 			ivkr.cliOutput.Event(&event)
-			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
+			displayGraph()
 		case <-animationFrame:
-			output.Clear()
-			output.Print(state.String(ivkr.opFormatter, loadingSpinner, true))
+			clearGraph()
+			displayGraph()
 		}
 	}
 }
