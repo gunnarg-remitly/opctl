@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"syscall"
 
 	"github.com/appdataspec/sdk-golang/appdatapath"
 	mow "github.com/jawher/mow.cli"
@@ -165,7 +164,7 @@ func newCli(
 	cli.Command("run", "Start and wait on an op", func(runCmd *mow.Cmd) {
 		args := runCmd.StringsOpt("a", []string{}, "Explicitly pass args to op in format `-a NAME1=VALUE1 -a NAME2=VALUE2`")
 		argFile := runCmd.StringOpt("arg-file", filepath.Join(op.DotOpspecDirName, "args.yml"), "Read in a file of args in yml format")
-		defaultDisplayLiveGraph := term.IsTerminal(syscall.Stdout)
+		defaultDisplayLiveGraph := term.IsTerminal(int(os.Stdout.Fd()))
 		displayLiveGraph := runCmd.BoolOpt(
 			"live-graph",
 			defaultDisplayLiveGraph,
