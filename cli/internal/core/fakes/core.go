@@ -44,12 +44,13 @@ type FakeCore struct {
 	opReturnsOnCall map[int]struct {
 		result1 op.Op
 	}
-	RunStub        func(context.Context, string, *model.RunOpts) error
+	RunStub        func(context.Context, string, *model.RunOpts, bool) error
 	runMutex       sync.RWMutex
 	runArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 		arg3 *model.RunOpts
+		arg4 bool
 	}
 	runReturns struct {
 		result1 error
@@ -239,18 +240,19 @@ func (fake *FakeCore) OpReturnsOnCall(i int, result1 op.Op) {
 	}{result1}
 }
 
-func (fake *FakeCore) Run(arg1 context.Context, arg2 string, arg3 *model.RunOpts) error {
+func (fake *FakeCore) Run(arg1 context.Context, arg2 string, arg3 *model.RunOpts, arg4 bool) error {
 	fake.runMutex.Lock()
 	ret, specificReturn := fake.runReturnsOnCall[len(fake.runArgsForCall)]
 	fake.runArgsForCall = append(fake.runArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
 		arg3 *model.RunOpts
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("Run", []interface{}{arg1, arg2, arg3})
+		arg4 bool
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("Run", []interface{}{arg1, arg2, arg3, arg4})
 	fake.runMutex.Unlock()
 	if fake.RunStub != nil {
-		return fake.RunStub(arg1, arg2, arg3)
+		return fake.RunStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -265,17 +267,17 @@ func (fake *FakeCore) RunCallCount() int {
 	return len(fake.runArgsForCall)
 }
 
-func (fake *FakeCore) RunCalls(stub func(context.Context, string, *model.RunOpts) error) {
+func (fake *FakeCore) RunCalls(stub func(context.Context, string, *model.RunOpts, bool) error) {
 	fake.runMutex.Lock()
 	defer fake.runMutex.Unlock()
 	fake.RunStub = stub
 }
 
-func (fake *FakeCore) RunArgsForCall(i int) (context.Context, string, *model.RunOpts) {
+func (fake *FakeCore) RunArgsForCall(i int) (context.Context, string, *model.RunOpts, bool) {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	argsForCall := fake.runArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeCore) RunReturns(result1 error) {
