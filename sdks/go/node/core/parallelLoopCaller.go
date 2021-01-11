@@ -115,6 +115,10 @@ func (plpr _parallelLoopCaller) Call(
 				parentCallID,
 				rootCallID,
 			)
+			if parallelLoopCtx.Err() != nil {
+				// context has been cancelled, so skip reporting results
+				return
+			}
 			childResults <- childResult{
 				CallID:  childCallID,
 				Err:     err,
@@ -140,6 +144,7 @@ func (plpr _parallelLoopCaller) Call(
 		case result := <-childResults:
 			if result.Err != nil {
 				cancelParallelLoop()
+				close(childResults)
 				return nil, result.Err
 			}
 

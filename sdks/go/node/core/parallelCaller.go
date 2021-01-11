@@ -108,6 +108,10 @@ func (pc _parallelCaller) Call(
 				&callID,
 				rootCallID,
 			)
+			if childCtx.Err() != nil {
+				// context has been cancelled, so skip reporting results
+				return
+			}
 			childResults <- childResult{
 				CallID:  childCallID,
 				Err:     err,
@@ -127,6 +131,7 @@ func (pc _parallelCaller) Call(
 			if result.Err != nil {
 				// cancel all children on any error
 				cancelParallel()
+				close(childResults)
 				return nil, result.Err
 			}
 
