@@ -47,7 +47,7 @@ what output.
 ## features
 
 This is a list of smaller features from this branch that I'd like to attempt to
-incrementally migrate into the main branch, decoupled from the larger architecutre
+incrementally migrate into the main branch, decoupled from the larger architecture
 changes.
 
 - Better CLI output (better = more readable, understandable, and transformable)
@@ -60,6 +60,18 @@ changes.
 - Move `ListDescendants` and `GetData` implementation to sdk core, instead of the api client
 - Emit CallStarted events for skipped conditional branches [#859](https://github.com/opctl/opctl/pull/859)
 - Remove custom pubsub?
+
+## back to main
+
+Long term, if the current "remote node" architecture is maintained, I'd like to
+make it an opt-in feature to avoid needing a persistent process for day-to-day
+local only use. This could be done by making the ApiClient and Core objects use
+the same interface, which would also probably improve understandability of the
+codebase, and would force better error propagation.
+
+If the project focuses on a CLI runner model like this branch uses, we can still
+support a persistent UI server by streaming events from the CLI to that server,
+instead of the current model of round-tripping everything.
 
 ---
 
