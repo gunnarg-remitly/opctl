@@ -86,8 +86,9 @@ func (clr _caller) Call(
 
 		if nil == call {
 			call = &model.Call{
-				ID:     id,
-				RootID: rootCallID,
+				ID:       id,
+				RootID:   rootCallID,
+				ParentID: parentCallID,
 			}
 		}
 
