@@ -80,25 +80,6 @@ func (clr _caller) Call(
 		return nil, nil
 	}
 
-	if nil == callSpec {
-		// NOOP
-		return outputs, err
-	}
-
-	call, err = callpkg.Interpret(
-		ctx,
-		scope,
-		callSpec,
-		id,
-		opPath,
-		parentCallID,
-		rootCallID,
-		clr.dataDirPath,
-	)
-	if nil != err {
-		return nil, err
-	}
-
 	// emit a call ended event after this call is complete
 	defer func() {
 		// defer must be defined before conditional return statements so it always runs
@@ -136,6 +117,25 @@ func (clr _caller) Call(
 
 		clr.eventChannel <- event
 	}()
+
+	if nil == callSpec {
+		// NOOP
+		return outputs, err
+	}
+
+	call, err = callpkg.Interpret(
+		ctx,
+		scope,
+		callSpec,
+		id,
+		opPath,
+		parentCallID,
+		rootCallID,
+		clr.dataDirPath,
+	)
+	if nil != err {
+		return nil, err
+	}
 
 	if nil != call.If && !*call.If {
 		return outputs, err
