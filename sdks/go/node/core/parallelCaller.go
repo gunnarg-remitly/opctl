@@ -57,15 +57,16 @@ func (pc _parallelCaller) Call(
 	defer cancelParallel()
 
 	childCallNeededCountByName := map[string]int{}
-	for _, callSpecChildCall := range callSpecParallelCall {
+	for _, childCall := range callSpecParallelCall {
 		// increment needed by counts for any needs
-		for _, neededCallRef := range callSpecChildCall.Needs {
+		for _, neededCallRef := range childCall.Needs {
 			childCallNeededCountByName[refToName(neededCallRef)]++
 		}
 	}
 
 	childCallIndexByID := map[string]int{}
-	childCallCancellationByName := map[string]context.CancelFunc{}
+	childCallIndexByName := map[string]int{}
+	childCallCancellationByIndex := map[int]context.CancelFunc{}
 	childCallOutputsByIndex := map[int]map[string]*model.Value{}
 
 	type childResult struct {
@@ -91,7 +92,8 @@ func (pc _parallelCaller) Call(
 
 		var childCtx context.Context
 		if nil != childCall.Name {
-			childCtx, childCallCancellationByName[*childCall.Name] = context.WithCancel(parallelCtx)
+			childCallIndexByName[*childCall.Name] = childCallIndex
+			childCtx, childCallCancellationByIndex[childCallIndex] = context.WithCancel(parallelCtx)
 		} else {
 			childCtx = parallelCtx
 		}
@@ -145,8 +147,12 @@ func (pc _parallelCaller) Call(
 
 				for neededCallName, neededCount := range childCallNeededCountByName {
 					if 1 > neededCount {
-						if cancel, ok := childCallCancellationByName[neededCallName]; ok {
+						neededCallIndex := childCallIndexByName[neededCallName]
+						if cancel, ok := childCallCancellationByIndex[neededCallIndex]; ok {
 							cancel()
+							// cancelled "needed" calls do not produce outputs, but need need to
+							// record outputs to allow final call ended count to pass
+							childCallOutputsByIndex[neededCallIndex] = map[string]*model.Value{}
 						}
 					}
 				}
