@@ -7,7 +7,11 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/cli/internal/lazylocalnode"
+	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
+	"github.com/opctl/opctl/cli/internal/runtime"
+	"github.com/opctl/opctl/sdks/go/node"
+	"github.com/opctl/opctl/sdks/go/node/core"
 )
 
 // Core exposes all cli commands
@@ -26,13 +30,23 @@ type Core interface {
 // New returns initialized cli core
 func New(
 	cliOutput clioutput.CliOutput,
-	nodeProviderOpts local.NodeCreateOpts,
+	nodeProviderOpts nodeprovider.NodeOpts,
 ) Core {
 	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
 
-	nodeProvider := local.New(nodeProviderOpts)
+	var nodeProvider nodeprovider.NodeProvider
+	var opNode node.OpNode
 
-	opNode := lazylocalnode.New(nodeProvider)
+	if nodeProviderOpts.DisableNode {
+		containerRuntime, _ := runtime.New(nodeProviderOpts.ContainerRuntime)
+		opNode = core.New(
+			containerRuntime,
+			nodeProviderOpts.DataDir,
+		)
+	} else {
+		nodeProvider = local.New(nodeProviderOpts)
+		opNode = lazylocalnode.New(nodeProvider)
+	}
 
 	dataResolver := dataresolver.New(
 		cliParamSatisfier,

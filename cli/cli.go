@@ -11,7 +11,7 @@ import (
 	mow "github.com/jawher/mow.cli"
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	corePkg "github.com/opctl/opctl/cli/internal/core"
-	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
+	"github.com/opctl/opctl/cli/internal/nodeprovider"
 	"github.com/opctl/opctl/sdks/go/opspec"
 )
 
@@ -23,7 +23,7 @@ type cli interface {
 // newCorer allows swapping out corePkg.New for unit tests
 type newCorer func(
 	clioutput.CliOutput,
-	local.NodeCreateOpts,
+	nodeprovider.NodeOpts,
 ) corePkg.Core
 
 func newCli(
@@ -68,10 +68,21 @@ func newCli(
 			Value:  "127.0.0.1:42224",
 		},
 	)
-	nodeCreateOpts := local.NodeCreateOpts{
+
+	disableNode := cli.Bool(
+		mow.BoolOpt{
+			Desc:   "Disable using an opctl node and run ops directly through the CLI.",
+			EnvVar: "OPCTL_DISABLE_NODE",
+			Name:   "disable-node",
+			Value:  false,
+		},
+	)
+
+	nodeCreateOpts := nodeprovider.NodeOpts{
 		ContainerRuntime: *containerRuntime,
 		DataDir:          *dataDir,
 		ListenAddress:    *listenAddress,
+		DisableNode:      *disableNode,
 	}
 
 	core := newCorer(

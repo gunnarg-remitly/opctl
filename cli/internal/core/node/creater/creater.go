@@ -6,18 +6,16 @@ import (
 	"context"
 
 	"github.com/opctl/opctl/cli/internal/datadir"
-	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
+	"github.com/opctl/opctl/cli/internal/nodeprovider"
+	"github.com/opctl/opctl/cli/internal/runtime"
 	"github.com/opctl/opctl/sdks/go/node/core"
-	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
-	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker"
-	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/k8s"
 )
 
 // Creater exposes the "node create" sub command
 //counterfeiter:generate -o fakes/creater.go . Creater
 type Creater interface {
 	Create(
-		opts local.NodeCreateOpts,
+		opts nodeprovider.NodeOpts,
 	) error
 }
 
@@ -29,7 +27,7 @@ func New() Creater {
 type _creater struct{}
 
 func (ivkr _creater) Create(
-	opts local.NodeCreateOpts,
+	opts nodeprovider.NodeOpts,
 ) error {
 	dataDir, err := datadir.New(opts.DataDir)
 	if nil != err {
@@ -40,18 +38,7 @@ func (ivkr _creater) Create(
 		return err
 	}
 
-	var containerRuntime containerruntime.ContainerRuntime
-	if "k8s" == opts.ContainerRuntime {
-		containerRuntime, err = k8s.New()
-		if nil != err {
-			return err
-		}
-	} else {
-		containerRuntime, err = docker.New()
-		if nil != err {
-			return err
-		}
-	}
+	containerRuntime, err := runtime.New(opts.ContainerRuntime)
 
 	err = newHTTPListener(
 		core.New(

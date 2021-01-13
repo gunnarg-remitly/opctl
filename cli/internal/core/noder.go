@@ -12,9 +12,12 @@ type Noder interface {
 
 // newNoder returns an initialized "node" sub command
 func newNoder(nodeProvider nodeprovider.NodeProvider) Noder {
-	return _noder{
-		node: node.New(nodeProvider),
+	if nodeProvider != nil {
+		return _noder{
+			node: node.New(nodeProvider),
+		}
 	}
+	return node.DisabledNoder{}
 }
 
 type _noder struct {
