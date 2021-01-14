@@ -9,7 +9,7 @@ inputs:
     string:
       constraints: { minLength: 1 }
       description: git branch the coverage should be associated with
-      default: master
+      default: main
   version:
     string:
       default: 0.0.0
@@ -27,18 +27,6 @@ run:
               version:
         - op:
             ref: ../../cli/.opspec/test/system/opspec
-    # webapp tests
-    - op:
-        ref: ../../webapp/.opspec/test
-    # js SDK tests
-    - op:
-        ref: ../../sdks/js/.opspec/test
-    # react SDK tests
-    - op:
-        ref: ../../sdks/react/.opspec/test
-    # api validation
-    - op:
-        ref: ../../api/.opspec/test
     # go unit tests with coverage reporting (includes CLI and Go SDK)
     - serial:
         - container:
