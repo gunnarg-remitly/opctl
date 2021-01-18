@@ -15,7 +15,7 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	cliModel "github.com/opctl/opctl/cli/internal/model"
-	"github.com/opctl/opctl/cli/internal/opstate"
+	"github.com/opctl/opctl/cli/internal/opgraph"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
@@ -169,9 +169,9 @@ func (ivkr _runer) Run(
 		}()
 	}
 
-	var state opstate.CallGraph
-	var loadingSpinner opstate.DotLoadingSpinner
-	output := opstate.NewOutputManager()
+	var state opgraph.CallGraph
+	var loadingSpinner opgraph.DotLoadingSpinner
+	output := opgraph.NewOutputManager()
 
 	defer func() {
 		output.Print(state.String(ivkr.opFormatter, loadingSpinner, time.Now(), false))
@@ -211,7 +211,7 @@ func (ivkr _runer) Run(
 			clearGraph()
 			// clear two more lines
 			fmt.Print("\033[1A\033[K\033[1A\033[K")
-			fmt.Println(state.String(ivkr.opFormatter, opstate.StaticLoadingSpinner{}, time.Now(), false))
+			fmt.Println(state.String(ivkr.opFormatter, opgraph.StaticLoadingSpinner{}, time.Now(), false))
 			displayGraph()
 
 		case <-sigTermChannel:

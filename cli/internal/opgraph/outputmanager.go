@@ -1,4 +1,4 @@
-package opstate
+package opgraph
 
 import (
 	"fmt"
