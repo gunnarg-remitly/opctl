@@ -7,22 +7,25 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
 )
 
 func TestNewOutputManager(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	objectUnderTest := NewOutputManager()
 
-	assert.NotNil(t, objectUnderTest)
-	w, err := objectUnderTest.getWidth()
-	assert.Error(t, err, "in tests, terminal width isn't available")
-	assert.Equal(t, -1, w)
+	g.Expect(objectUnderTest).NotTo(BeNil())
+	_, err := objectUnderTest.getWidth()
+	g.Expect(err).NotTo(BeNil(), "in tests, terminal width isn't available")
 
-	assert.Error(t, objectUnderTest.Print(""))
+	g.Expect(objectUnderTest.Print("")).NotTo(BeNil())
 	objectUnderTest.Clear()
 }
 
 func TestOutputManagerShortLines(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	// arrange
 	var buff bytes.Buffer
 	objectUnderTest := OutputManager{
@@ -36,16 +39,18 @@ the drinks should just be like a glass of water
 inspired by space jam and who knows`)
 
 	// assert
-	assert.Nil(t, err)
+	g.Expect(err).To(BeNil())
 	expected := `┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
 testing
 the drinks should just be like a glass of water
 inspired by space jam and who knows`
-	assert.Equal(t, expected, buff.String())
-	assert.Equal(t, 4, objectUnderTest.lastHeight)
+	g.Expect(buff.String()).To(Equal(expected))
+	g.Expect(objectUnderTest.lastHeight).To(Equal(4))
 }
 
 func TestOutputManagerLongLines(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	// arrange
 	var buff bytes.Buffer
 	objectUnderTest := OutputManager{
@@ -62,17 +67,19 @@ func TestOutputManagerLongLines(t *testing.T) {
 testing3`, longLine, longerLine))
 
 	// assert
-	assert.Nil(t, err)
+	g.Expect(err).To(BeNil())
 	expected := fmt.Sprintf(`┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
 testing
 --------------------------------------------------------------------------------
 ------------------------------------------------------------------------------…%s
 testing3`, "\033[0m")
-	assert.Equal(t, expected, buff.String())
-	assert.Equal(t, 5, objectUnderTest.lastHeight)
+	g.Expect(buff.String()).To(Equal(expected))
+	g.Expect(objectUnderTest.lastHeight).To(Equal(5))
 }
 
 func TestOutputManagerClearing(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	// arrange
 	var buff bytes.Buffer
 	objectUnderTest := OutputManager{
@@ -89,6 +96,6 @@ inspired by space jam and who knows`)
 
 	// assert
 	expected := "\x1b[80D\x1b[K\x1b[1A\x1b[K\x1b[1A\x1b[K\x1b[1A\x1b[K"
-	assert.Equal(t, expected, buff.String())
-	assert.Equal(t, 4, objectUnderTest.lastHeight)
+	g.Expect(buff.String()).To(Equal(expected))
+	g.Expect(objectUnderTest.lastHeight).To(Equal(4))
 }

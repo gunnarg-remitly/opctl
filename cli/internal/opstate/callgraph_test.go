@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/stretchr/testify/assert"
 )
 
 type noopOpFormatter struct{}
@@ -16,6 +16,8 @@ func (noopOpFormatter) FormatOpRef(opRef string) string {
 }
 
 func TestCallGraph(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	/* arrange */
 	timestamp, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Feb 4, 2014 at 6:05pm (PST)")
 	if err != nil {
@@ -31,12 +33,12 @@ func TestCallGraph(t *testing.T) {
 	child2If := false
 	child3If := true
 
-	assert.Equal(t, "Empty call graph", objectUnderTest.String(
+	g.Expect(objectUnderTest.String(
 		noopOpFormatter{},
 		StaticLoadingSpinner{},
 		timestamp.Add(time.Second*60),
 		true,
-	))
+	)).To(Equal("Empty call graph"))
 
 	/* act */
 	// this is the root event
@@ -398,7 +400,7 @@ func TestCallGraph(t *testing.T) {
 ├─◉ ⋰ serial 51s
 └─◉ ⋰ serial loop 51s
 ⚠️  this should show up as a warning`
-	assert.Equal(t, expectedCollapsedStr, collapsedStr)
+	g.Expect(collapsedStr).To(Equal(expectedCollapsedStr))
 
 	// the newline is here just for better test code readability
 	expandedStr := "\n" + objectUnderTest.String(
@@ -428,5 +430,5 @@ func TestCallGraph(t *testing.T) {
 ├─◉ ⋰ serial 51s
 └─◉ ⋰ serial loop 51s
 ⚠️  this should show up as a warning`
-	assert.Equal(t, expandedCollapsedStr, expandedStr)
+	g.Expect(expandedStr).To(Equal(expandedCollapsedStr))
 }

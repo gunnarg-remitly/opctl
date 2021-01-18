@@ -4,10 +4,12 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/gomega"
 )
 
 func TestDotLoadingSpinner(t *testing.T) {
+	g := NewGomegaWithT(t)
+
 	// arrange
 	var objectUnderTest DotLoadingSpinner
 
@@ -16,6 +18,6 @@ func TestDotLoadingSpinner(t *testing.T) {
 
 	// assert
 	_, size := utf8.DecodeRuneInString(l)
-	assert.Equal(t, 3, size)
-	assert.Equal(t, size, len(l))
+	g.Expect(size).To(Equal(3))
+	g.Expect(len(l)).To(Equal(size))
 }
