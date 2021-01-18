@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/stretchr/testify/assert"
 )
 
 type noopOpFormatter struct{}
@@ -14,13 +15,21 @@ func (noopOpFormatter) FormatOpRef(opRef string) string {
 }
 
 func TestCallGraph(t *testing.T) {
+	// arrange
 	timestamp, err := time.Parse("Jan 2, 2006 at 3:04pm (MST)", "Feb 4, 2014 at 6:05pm (PST)")
 	if err != nil {
 		t.Fatal(err)
 	}
-	graph := CallGraph{}
+	objectUnderTest := CallGraph{}
 	parentID := "id1"
-	graph.HandleEvent(&model.Event{
+	child1ID := "id2"
+	containerRef := "containerRef"
+	child1child1ID := "child1child1Id"
+	child2If := false
+	child3If := true
+
+	// act
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID: parentID,
@@ -34,8 +43,7 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp,
 	})
-	child1ID := "id2"
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID:       child1ID,
@@ -50,15 +58,13 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 1),
 	})
-	containerRef := "containerRef"
-	child1child1ID := "child1child1Id"
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID:       child1child1ID,
 				ParentID: &child1ID,
 				Container: &model.ContainerCall{
-					ContainerID: "container1id",
+					ContainerID: "id1234567890",
 					Image: &model.ContainerCallImage{
 						Ref: &containerRef,
 					},
@@ -67,13 +73,13 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 2),
 	})
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID:       "child1Child2Id",
 				ParentID: &child1ID,
 				Container: &model.ContainerCall{
-					ContainerID: "container1id",
+					ContainerID: "id0987654321",
 					Image: &model.ContainerCallImage{
 						Ref: &containerRef,
 					},
@@ -82,13 +88,13 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 3),
 	})
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallEnded: &model.CallEnded{
 			Call: model.Call{
 				ID:       "child1Child2Id",
 				ParentID: &child1ID,
 				Container: &model.ContainerCall{
-					ContainerID: "container1id",
+					ContainerID: "id0987654321",
 					Image: &model.ContainerCallImage{
 						Ref: &containerRef,
 					},
@@ -98,8 +104,7 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 4),
 	})
-	child2If := false
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID:       "child2ID",
@@ -109,8 +114,7 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 5),
 	})
-	child3If := true
-	graph.HandleEvent(&model.Event{
+	objectUnderTest.HandleEvent(&model.Event{
 		CallStarted: &model.CallStarted{
 			Call: model.Call{
 				ID:       "child3ID",
@@ -121,22 +125,21 @@ func TestCallGraph(t *testing.T) {
 		},
 		Timestamp: timestamp.Add(time.Second * 6),
 	})
-
-	str := "\n" + graph.String(
+	str := "\n" + objectUnderTest.String(
 		noopOpFormatter{},
 		StaticLoadingSpinner{},
 		timestamp.Add(time.Second*6),
 		false,
 	)
+
+	// assert
 	expected := `
 ◎ oppath
 ├─◎ oppath2
-│ ├─◉ ⋰ containe containerRef 4s
-│ └─◉ ☑ containe containerRef 1s
+│ ├─◉ ⋰ id123456 containerRef 4s
+│ └─◉ ☑ id098765 containerRef 1s
 ├─◉ ⋰ if skipped 1s
 └─◉ ⋰ if
     serial 0s`
-	if str != expected {
-		t.Errorf("call graph string not correct: expected\n```\n%s\n```\nactual\n```\n%s\n```", expected, str)
-	}
+	assert.Equal(t, expected, str)
 }

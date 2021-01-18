@@ -3,15 +3,19 @@ package opstate
 import (
 	"testing"
 	"unicode/utf8"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDotLoadingSpinner(t *testing.T) {
-	var loader DotLoadingSpinner
-	l := loader.String()
-	if _, size := utf8.DecodeRuneInString(l); size != 3 {
-		t.Error("loading spinner didn't behave as expected")
-	}
-	if len(l) != 3 {
-		t.Error("loading spinner didn't behave as expected")
-	}
+	// arrange
+	var objectUnderTest DotLoadingSpinner
+
+	// act
+	l := objectUnderTest.String()
+
+	// assert
+	_, size := utf8.DecodeRuneInString(l)
+	assert.Equal(t, 3, size)
+	assert.Equal(t, size, len(l))
 }

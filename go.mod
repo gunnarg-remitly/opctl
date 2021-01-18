@@ -40,6 +40,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7-0.20191104211043-6b2f3ee522b6
 	github.com/satori/go.uuid v0.0.0-20181028125025-b2ce2384e17b
+	github.com/stretchr/testify v1.4.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381

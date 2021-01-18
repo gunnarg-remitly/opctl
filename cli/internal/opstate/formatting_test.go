@@ -2,6 +2,8 @@ package opstate
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestStripAnsi(t *testing.T) {
@@ -9,42 +11,37 @@ func TestStripAnsi(t *testing.T) {
 	ansiStr := "\033[1Atest"
 	withoutAnsi := stripAnsi(ansiStr)
 
-	if str != withoutAnsi {
-		t.Error("stripped string is not equal to original")
-	}
+	assert.Equal(t, str, withoutAnsi, "stripped string is not equal to original")
+}
 
-	str = "◉ ⠴ ./test"
-	ansiStr = "◉ ⠴ [1m./test[0m"
-	withoutAnsi = stripAnsi(ansiStr)
+func TestStripAnsi_noAnsi(t *testing.T) {
+	str := "◉ ⠴ ./test"
+	ansiStr := "◉ ⠴ [1m./test[0m"
+	withoutAnsi := stripAnsi(ansiStr)
 
-	if str != withoutAnsi {
-		t.Error("stripped string is not equal to original")
-	}
+	assert.Equal(t, str, withoutAnsi, "stripped string is not equal to original")
 }
 
 func TestStripAnsiToLength(t *testing.T) {
 	ansiStr := "\033[1Atesting a string"
 	stripped := stripAnsiToLength(ansiStr, 9)
 	expected := "\033[1Atesting a"
-	if stripped != expected {
-		t.Errorf("stripped string isn't correct: expected `%s`, actual `%s`", expected, stripped)
-	}
+
+	assert.Equal(t, expected, stripped)
 }
 
 func TestStripAnsiToLength_escapeCodeInMid(t *testing.T) {
 	ansiStr := "\033[1Atesting\033[0m a\033[1A string"
 	stripped := stripAnsiToLength(ansiStr, 9)
 	expected := "\033[1Atesting\033[0m a\033[1A"
-	if stripped != expected {
-		t.Errorf("stripped string isn't correct: expected `%s`, actual `%s`", expected, stripped)
-	}
+
+	assert.Equal(t, expected, stripped)
 }
 
 func TestStripAnsiToLength_noAnsi(t *testing.T) {
 	ansiStr := "testing a string"
 	stripped := stripAnsiToLength(ansiStr, 9)
 	expected := "testing a"
-	if stripped != expected {
-		t.Errorf("stripped string isn't correct: expected `%s`, actual `%s`", expected, stripped)
-	}
+
+	assert.Equal(t, expected, stripped)
 }
