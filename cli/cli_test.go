@@ -10,7 +10,7 @@ import (
 	authFakes "github.com/opctl/opctl/cli/internal/core/auth/fakes"
 	coreFakes "github.com/opctl/opctl/cli/internal/core/fakes"
 	opFakes "github.com/opctl/opctl/cli/internal/core/op/fakes"
-	"github.com/opctl/opctl/cli/internal/model"
+	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
 )
 
 var _ = Context("cli", func() {
@@ -25,10 +25,10 @@ var _ = Context("cli", func() {
 				objectUnderTest, _ := newCli(
 					context.Background(),
 					func(
-						ctx context.Context,
-						_cliOutput clioutput.CliOutput,
-						containerRuntime,
-						datadirPath string,
+						context.Context,
+						clioutput.CliOutput,
+						clioutput.OpFormatter,
+						local.NodeCreateOpts,
 					) (corePkg.Core, error) {
 						// cliOutput = _cliOutput
 						return new(coreFakes.FakeCore), nil
@@ -60,10 +60,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -98,10 +98,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -128,10 +128,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -167,10 +167,10 @@ var _ = Context("cli", func() {
 						objectUnderTest, _ := newCli(
 							context.Background(),
 							func(
-								ctx context.Context,
-								cliOutput clioutput.CliOutput,
-								containerRuntime,
-								datadirPath string,
+								context.Context,
+								clioutput.CliOutput,
+								clioutput.OpFormatter,
+								local.NodeCreateOpts,
 							) (corePkg.Core, error) {
 								return fakeCore, nil
 							},
@@ -201,10 +201,10 @@ var _ = Context("cli", func() {
 						objectUnderTest, _ := newCli(
 							context.Background(),
 							func(
-								ctx context.Context,
-								cliOutput clioutput.CliOutput,
-								containerRuntime,
-								datadirPath string,
+								context.Context,
+								clioutput.CliOutput,
+								clioutput.OpFormatter,
+								local.NodeCreateOpts,
 							) (corePkg.Core, error) {
 								return fakeCore, nil
 							},
@@ -235,10 +235,10 @@ var _ = Context("cli", func() {
 						objectUnderTest, _ := newCli(
 							context.Background(),
 							func(
-								ctx context.Context,
-								cliOutput clioutput.CliOutput,
-								containerRuntime,
-								datadirPath string,
+								context.Context,
+								clioutput.CliOutput,
+								clioutput.OpFormatter,
+								local.NodeCreateOpts,
 							) (corePkg.Core, error) {
 								return fakeCore, nil
 							},
@@ -269,10 +269,10 @@ var _ = Context("cli", func() {
 						objectUnderTest, _ := newCli(
 							context.Background(),
 							func(
-								ctx context.Context,
-								cliOutput clioutput.CliOutput,
-								containerRuntime,
-								datadirPath string,
+								context.Context,
+								clioutput.CliOutput,
+								clioutput.OpFormatter,
+								local.NodeCreateOpts,
 							) (corePkg.Core, error) {
 								return fakeCore, nil
 							},
@@ -306,10 +306,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -358,10 +358,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -388,7 +388,7 @@ var _ = Context("cli", func() {
 					/* arrange */
 					fakeCore := new(coreFakes.FakeCore)
 
-					expectedRunOpts := &model.RunOpts{
+					expectedRunOpts := &corePkg.RunOpts{
 						Args:    []string{"arg1Name=arg1Value", "arg2Name=arg2Value"},
 						ArgFile: "dummyArgFile",
 					}
@@ -397,10 +397,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -422,7 +422,7 @@ var _ = Context("cli", func() {
 					/* assert */
 					actualCtx,
 						actualOpUrl,
-						actualRunOpts := fakeCore.RunArgsForCall(0)
+						actualRunOpts, _ := fakeCore.RunArgsForCall(0)
 
 					Expect(actualCtx).To(Equal(context.TODO()))
 					Expect(actualOpUrl).To(Equal(expectedOpRef))
@@ -440,10 +440,10 @@ var _ = Context("cli", func() {
 					objectUnderTest, _ := newCli(
 						context.Background(),
 						func(
-							ctx context.Context,
-							cliOutput clioutput.CliOutput,
-							containerRuntime,
-							datadirPath string,
+							context.Context,
+							clioutput.CliOutput,
+							clioutput.OpFormatter,
+							local.NodeCreateOpts,
 						) (corePkg.Core, error) {
 							return fakeCore, nil
 						},
@@ -455,7 +455,7 @@ var _ = Context("cli", func() {
 					/* assert */
 					actualCtx,
 						actualOpRef,
-						actualRunOpts := fakeCore.RunArgsForCall(0)
+						actualRunOpts, _ := fakeCore.RunArgsForCall(0)
 
 					Expect(actualCtx).To(Equal(context.TODO()))
 					Expect(actualOpRef).To(Equal(expectedOpRef))
@@ -478,10 +478,10 @@ var _ = Context("cli", func() {
 				objectUnderTest, _ := newCli(
 					context.Background(),
 					func(
-						ctx context.Context,
-						cliOutput clioutput.CliOutput,
-						containerRuntime,
-						datadirPath string,
+						context.Context,
+						clioutput.CliOutput,
+						clioutput.OpFormatter,
+						local.NodeCreateOpts,
 					) (corePkg.Core, error) {
 						return fakeCore, nil
 					},
@@ -508,10 +508,10 @@ var _ = Context("cli", func() {
 				objectUnderTest, _ := newCli(
 					context.Background(),
 					func(
-						ctx context.Context,
-						cliOutput clioutput.CliOutput,
-						containerRuntime,
-						datadirPath string,
+						context.Context,
+						clioutput.CliOutput,
+						clioutput.OpFormatter,
+						local.NodeCreateOpts,
 					) (corePkg.Core, error) {
 						return fakeCore, nil
 					},

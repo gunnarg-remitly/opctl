@@ -6,7 +6,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
-func (c _core) ListDescendants(
+func (c core) ListDescendants(
 	ctx context.Context,
 	req model.ListDescendantsReq,
 ) (
@@ -22,6 +22,5 @@ func (c _core) ListDescendants(
 		return nil, err
 	}
 
-	// this might not be right
 	return dataHandle.ListDescendants(ctx)
 }

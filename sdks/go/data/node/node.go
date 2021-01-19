@@ -6,24 +6,24 @@ import (
 	"context"
 
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node"
 )
 
 // New returns a data provider which sources pkgs from a node
 // A node now represents a local installation of opctl, where pkgs can be
 // installed into opctl's data directory.
 func New(
-	core core.Core,
+	opNode node.OpNode,
 	pullCreds *model.Creds,
 ) model.DataProvider {
 	return _node{
-		core:      core,
+		opNode:    opNode,
 		pullCreds: pullCreds,
 	}
 }
 
 type _node struct {
-	core      core.Core
+	opNode    node.OpNode
 	pullCreds *model.Creds
 }
 
@@ -37,7 +37,7 @@ func (np _node) TryResolve(
 ) (model.DataHandle, error) {
 
 	// ensure resolvable by listing contents w/out err
-	if _, err := np.core.ListDescendants(
+	if _, err := np.opNode.ListDescendants(
 		ctx,
 		model.ListDescendantsReq{
 			PkgRef:    dataRef,
@@ -47,5 +47,5 @@ func (np _node) TryResolve(
 		return nil, err
 	}
 
-	return newHandle(np.core, dataRef, np.pullCreds), nil
+	return newHandle(np.opNode, dataRef, np.pullCreds), nil
 }

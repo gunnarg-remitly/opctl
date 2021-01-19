@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
@@ -13,7 +15,7 @@ var _ = Context("core", func() {
 
 			/* arrange */
 			fakeStore := new(fakes.FakeStateStore)
-			objectUnderTest := _core{stateStore: fakeStore}
+			objectUnderTest := core{stateStore: fakeStore}
 			providedReq := model.AddAuthReq{
 				Creds: model.Creds{
 					Username: "username",
@@ -23,7 +25,10 @@ var _ = Context("core", func() {
 			}
 
 			/* act */
-			result := objectUnderTest.AddAuth(providedReq)
+			result := objectUnderTest.AddAuth(
+				context.Background(),
+				providedReq,
+			)
 
 			/* assert */
 			Expect(result).To(BeNil())

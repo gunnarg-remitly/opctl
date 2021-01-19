@@ -7,14 +7,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
+	nodeFakes "github.com/opctl/opctl/sdks/go/node/fakes"
 )
 
 var _ = Context("Adder", func() {
-	Context("Invoke", func() {
-		It("should call apiClient.Invoke w/ expected args", func() {
+	Context("AddAuth", func() {
+		It("should call core.AddAuth w/ expected args", func() {
 			/* arrange */
-			fakeCore := new(coreFakes.FakeCore)
+			fakeCore := new(nodeFakes.FakeOpNode)
 
 			providedCtx := context.TODO()
 
@@ -27,7 +27,9 @@ var _ = Context("Adder", func() {
 				},
 			}
 
-			objectUnderTest := _adder{core: fakeCore}
+			objectUnderTest := _adder{
+				opNode: fakeCore,
+			}
 
 			/* act */
 			err := objectUnderTest.Add(
@@ -38,18 +40,21 @@ var _ = Context("Adder", func() {
 			)
 
 			/* assert */
-			actualReq := fakeCore.AddAuthArgsForCall(0)
+			actualCtx, actualReq := fakeCore.AddAuthArgsForCall(0)
 			Expect(err).To(BeNil())
+			Expect(actualCtx).To(Equal(expectedCtx))
 			Expect(actualReq).To(BeEquivalentTo(expectedReq))
 		})
-		Context("apiClient.Invoke errors", func() {
+		Context("core.AddAuth errors", func() {
 			It("should return expected error", func() {
 				/* arrange */
-				fakeCore := new(coreFakes.FakeCore)
+				fakeCore := new(nodeFakes.FakeOpNode)
 				expectedError := errors.New("dummyError")
 				fakeCore.AddAuthReturns(expectedError)
 
-				objectUnderTest := _adder{core: fakeCore}
+				objectUnderTest := _adder{
+					opNode: fakeCore,
+				}
 
 				/* act */
 				err := objectUnderTest.Add(context.TODO(), "", "", "")

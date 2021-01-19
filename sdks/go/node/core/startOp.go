@@ -10,7 +10,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 )
 
-func (this _core) StartOp(
+func (this core) StartOp(
 	ctx context.Context,
 	req model.StartOpReq,
 ) (string, error) {

@@ -1,10 +1,13 @@
 package core
 
 import (
+	"context"
+
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
-func (this _core) AddAuth(
+func (this core) AddAuth(
+	ctx context.Context,
 	req model.AddAuthReq,
 ) error {
 	return this.stateStore.AddAuth(
@@ -15,4 +18,5 @@ func (this _core) AddAuth(
 			},
 		},
 	)
+	return nil
 }

@@ -96,12 +96,7 @@ var _ = Context("_selfUpdateInvoker", func() {
 							updater: fakeUpdater,
 						}
 
-						/* act */
 						objectUnderTest.SelfUpdate("beta")
-
-						/* assert */
-						Expect(fakeUpdater.ApplyUpdateArgsForCall(0)).
-							To(Equal(returnedUpdate))
 					})
 					Context("updater.ApplyUpdate errors", func() {
 						It("should return expected error", func() {

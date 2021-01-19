@@ -15,7 +15,7 @@ import (
 // expected errs:
 //  - ErrDataProviderAuthentication on authentication failure
 //  - ErrDataProviderAuthorization on authorization failure
-func (cr _core) ResolveData(
+func (cr core) ResolveData(
 	ctx context.Context,
 	dataRef string,
 	pullCreds *model.Creds,

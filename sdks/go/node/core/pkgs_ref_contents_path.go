@@ -7,7 +7,7 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 )
 
-func (c _core) GetData(
+func (c core) GetData(
 	ctx context.Context,
 	req model.GetDataReq,
 ) (

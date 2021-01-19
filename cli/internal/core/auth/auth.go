@@ -4,7 +4,7 @@ package auth
 
 import (
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node"
 )
 
 // Auth exposes the "auth" sub command
@@ -16,10 +16,10 @@ type Auth interface {
 // New returns an initialized "auth" sub command
 func New(
 	dataResolver dataresolver.DataResolver,
-	core core.Core,
+	opNode node.OpNode,
 ) Auth {
 	return _auth{
-		Adder: newAdder(core),
+		Adder: newAdder(opNode),
 	}
 }
 

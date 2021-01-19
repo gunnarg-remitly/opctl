@@ -11,9 +11,9 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/sdks/go/data"
 	"github.com/opctl/opctl/sdks/go/data/fs"
-	"github.com/opctl/opctl/sdks/go/data/node"
+	dataNode "github.com/opctl/opctl/sdks/go/data/node"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node"
 )
 
 // DataResolver resolves packages
@@ -28,18 +28,18 @@ type DataResolver interface {
 
 func New(
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
-	core core.Core,
+	opNode node.OpNode,
 ) DataResolver {
 	return _dataResolver{
 		cliParamSatisfier: cliParamSatisfier,
-		core:              core,
+		opNode:            opNode,
 		os:                ios.New(),
 	}
 }
 
 type _dataResolver struct {
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
-	core              core.Core
+	opNode            node.OpNode
 	os                ios.IOS
 }
 
@@ -63,7 +63,10 @@ func (dtr _dataResolver) Resolve(
 			ctx,
 			dataRef,
 			fsProvider,
-			node.New(dtr.core, pullCreds),
+			dataNode.New(
+				dtr.opNode,
+				pullCreds,
+			),
 		)
 
 		var isAuthError bool

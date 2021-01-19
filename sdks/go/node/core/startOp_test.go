@@ -26,7 +26,7 @@ var _ = Context("core", func() {
 					},
 				}
 
-				objectUnderTest := _core{
+				objectUnderTest := core{
 					uniqueStringFactory: new(uniquestringFakes.FakeUniqueStringFactory),
 				}
 
@@ -94,7 +94,7 @@ var _ = Context("core", func() {
 					fakeCaller := new(FakeCaller)
 					dataCachePath := os.TempDir()
 
-					objectUnderTest := _core{
+					objectUnderTest := core{
 						caller:              fakeCaller,
 						dataCachePath:       dataCachePath,
 						uniqueStringFactory: fakeUniqueStringFactory,

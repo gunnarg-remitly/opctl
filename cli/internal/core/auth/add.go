@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node"
 )
 
 // Adder exposes the "auth add" sub command
@@ -18,14 +18,16 @@ type Adder interface {
 }
 
 // newAdder returns an initialized "auth add" sub command
-func newAdder(core core.Core) Adder {
+func newAdder(
+	opNode node.OpNode,
+) Adder {
 	return _adder{
-		core: core,
+		opNode: opNode,
 	}
 }
 
 type _adder struct {
-	core core.Core
+	opNode node.OpNode
 }
 
 func (ivkr _adder) Add(
@@ -34,7 +36,8 @@ func (ivkr _adder) Add(
 	username string,
 	password string,
 ) error {
-	return ivkr.core.AddAuth(
+	return ivkr.opNode.AddAuth(
+		ctx,
 		model.AddAuthReq{
 			Resources: resources,
 			Creds: model.Creds{

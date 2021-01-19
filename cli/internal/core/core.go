@@ -8,6 +8,7 @@ import (
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
+	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
@@ -29,15 +30,14 @@ type Core interface {
 func New(
 	ctx context.Context,
 	cliOutput clioutput.CliOutput,
-	opFormatter clioutput.CliOpFormatter,
-	containerRuntime string,
-	datadirPath string,
+	opFormatter clioutput.OpFormatter,
+	nodeProviderOpts local.NodeCreateOpts,
 ) (Core, error) {
 	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
 
 	var cr containerruntime.ContainerRuntime
 	var err error
-	if "k8s" == containerRuntime {
+	if "k8s" == nodeProviderOpts.ContainerRuntime {
 		cr, err = k8s.New()
 	} else {
 		cr, err = docker.New(ctx)
@@ -48,20 +48,20 @@ func New(
 
 	eventChannel := make(chan model.Event)
 
-	c, err := core.New(ctx, cr, datadirPath, eventChannel)
+	opNode, err := core.New(ctx, cr, nodeProviderOpts.DataDir, eventChannel)
 	if err != nil {
 		return nil, err
 	}
 
 	dataResolver := dataresolver.New(
 		cliParamSatisfier,
-		c,
+		opNode,
 	)
 
 	return _core{
 		Auther: newAuther(
 			dataResolver,
-			c,
+			opNode,
 		),
 		Lser: newLser(
 			cliOutput,
@@ -76,7 +76,7 @@ func New(
 			cliParamSatisfier,
 			dataResolver,
 			eventChannel,
-			c,
+			opNode,
 		),
 		SelfUpdater: newSelfUpdater(),
 	}, nil

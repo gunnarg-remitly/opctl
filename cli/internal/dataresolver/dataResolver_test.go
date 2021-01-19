@@ -10,14 +10,14 @@ import (
 	. "github.com/onsi/gomega"
 	cliparamsatisfierFakes "github.com/opctl/opctl/cli/internal/cliparamsatisfier/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
-	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
+	nodeFakes "github.com/opctl/opctl/sdks/go/node/fakes"
 )
 
 var _ = Context("dataResolver", func() {
 	It("Can be constructed", func() {
 		Expect(New(
 			new(cliparamsatisfierFakes.FakeCLIParamSatisfier),
-			new(coreFakes.FakeCore),
+			new(nodeFakes.FakeOpNode),
 		)).NotTo(BeNil())
 	})
 	Context("Resolve", func() {
@@ -25,7 +25,7 @@ var _ = Context("dataResolver", func() {
 			Context("data.ErrDataProviderAuthorization", func() {
 				It("should call cliParamSatisfier.Satisfy w/ expected args", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
+					fakeCore := new(nodeFakes.FakeOpNode)
 
 					fakeCore.ListDescendantsReturnsOnCall(0, nil, model.ErrDataProviderAuthorization{})
 					fakeCore.ListDescendantsReturnsOnCall(1, nil, errors.New(""))
@@ -43,9 +43,9 @@ var _ = Context("dataResolver", func() {
 					)
 
 					objectUnderTest := _dataResolver{
-						core:              fakeCore,
 						cliParamSatisfier: fakeCliParamSatisfier,
 						os:                new(ios.Fake),
+						opNode:            fakeCore,
 					}
 
 					/* act */
@@ -62,12 +62,12 @@ var _ = Context("dataResolver", func() {
 					providedDataRef := "dummyDataRef"
 
 					expectedErr := "expectedErr"
-					fakeCore := new(coreFakes.FakeCore)
+					fakeCore := new(nodeFakes.FakeOpNode)
 					fakeCore.ListDescendantsReturns(nil, errors.New(expectedErr))
 
 					objectUnderTest := _dataResolver{
-						core: fakeCore,
-						os:   new(ios.Fake),
+						os:     new(ios.Fake),
+						opNode: fakeCore,
 					}
 
 					/* act */
@@ -82,11 +82,11 @@ var _ = Context("dataResolver", func() {
 		Context("data.Resolve doesn't err", func() {
 			It("should return expected result", func() {
 				/* arrange */
-				fakeCore := new(coreFakes.FakeCore)
+				fakeCore := new(nodeFakes.FakeOpNode)
 
 				objectUnderTest := _dataResolver{
-					core: fakeCore,
-					os:   new(ios.Fake),
+					os:     new(ios.Fake),
+					opNode: fakeCore,
 				}
 
 				/* act */

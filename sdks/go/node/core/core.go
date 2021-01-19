@@ -10,65 +10,11 @@ import (
 
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/node"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
 )
 
-//counterfeiter:generate -o fakes/core.go . Core
-type Core interface {
-	AddAuth(
-		req model.AddAuthReq,
-	) error
-
-	StartOp(
-		ctx context.Context,
-		req model.StartOpReq,
-	) (
-		callID string,
-		err error,
-	)
-
-	// Resolve attempts to resolve an op via local filesystem or git
-	// nil pullCreds will be ignored
-	//
-	// expected errs:
-	//  - ErrDataProviderAuthentication on authentication failure
-	//  - ErrDataProviderAuthorization on authorization failure
-	ResolveData(
-		ctx context.Context,
-		dataRef string,
-		pullCreds *model.Creds,
-	) (
-		model.DataHandle,
-		error,
-	)
-
-	// ListDescendants lists file system entries
-	//
-	// expected errs:
-	//  - ErrDataProviderAuthentication on authentication failure
-	//  - ErrDataProviderAuthorization on authorization failure
-	ListDescendants(
-		ctx context.Context,
-		req model.ListDescendantsReq,
-	) (
-		[]*model.DirEntry,
-		error,
-	)
-
-	// GetData gets data
-	//
-	// expected errs:
-	//  - ErrDataProviderAuthentication on authentication failure
-	//  - ErrDataProviderAuthorization on authorization failure
-	GetData(
-		ctx context.Context,
-		req model.GetDataReq,
-	) (
-		model.ReadSeekCloser,
-		error,
-	)
-}
-
+// New returns a new LocalCore initialized with the given options
 func New(
 	ctx context.Context,
 	containerRuntime containerruntime.ContainerRuntime,
@@ -98,7 +44,7 @@ func New(
 		eventChannel,
 	)
 
-	return _core{
+	return core{
 		caller:              caller,
 		dataCachePath:       filepath.Join(dataDirPath, "ops"),
 		stateStore:          stateStore,
@@ -106,9 +52,33 @@ func New(
 	}, nil
 }
 
-type _core struct {
+// core is an OpNode that supports running ops directly on the host
+type core struct {
 	caller              caller
 	dataCachePath       string
 	stateStore          stateStore
 	uniqueStringFactory uniquestring.UniqueStringFactory
+}
+
+//counterfeiter:generate -o fakes/core.go . Core
+
+// Core is an OpNode that supports running ops directly on the current machine
+type Core interface {
+	node.OpNode
+
+	// Resolve attempts to resolve data via local filesystem or git
+	// nil pullCreds will be ignored
+	//
+	// expected errs:
+	//  - ErrDataProviderAuthentication on authentication failure
+	//  - ErrDataProviderAuthorization on authorization failure
+	//  - ErrDataRefResolution on resolution failure
+	ResolveData(
+		ctx context.Context,
+		dataRef string,
+		pullCreds *model.Creds,
+	) (
+		model.DataHandle,
+		error,
+	)
 }

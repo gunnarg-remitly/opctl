@@ -8,7 +8,6 @@ import (
 	"github.com/opctl/opctl/cli/internal/core"
 	"github.com/opctl/opctl/cli/internal/core/auth"
 	"github.com/opctl/opctl/cli/internal/core/op"
-	"github.com/opctl/opctl/cli/internal/model"
 )
 
 type FakeCore struct {
@@ -44,12 +43,12 @@ type FakeCore struct {
 	opReturnsOnCall map[int]struct {
 		result1 op.Op
 	}
-	RunStub        func(context.Context, string, *model.RunOpts, bool) error
+	RunStub        func(context.Context, string, *core.RunOpts, bool) error
 	runMutex       sync.RWMutex
 	runArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
-		arg3 *model.RunOpts
+		arg3 *core.RunOpts
 		arg4 bool
 	}
 	runReturns struct {
@@ -240,13 +239,13 @@ func (fake *FakeCore) OpReturnsOnCall(i int, result1 op.Op) {
 	}{result1}
 }
 
-func (fake *FakeCore) Run(arg1 context.Context, arg2 string, arg3 *model.RunOpts, arg4 bool) error {
+func (fake *FakeCore) Run(arg1 context.Context, arg2 string, arg3 *core.RunOpts, arg4 bool) error {
 	fake.runMutex.Lock()
 	ret, specificReturn := fake.runReturnsOnCall[len(fake.runArgsForCall)]
 	fake.runArgsForCall = append(fake.runArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-		arg3 *model.RunOpts
+		arg3 *core.RunOpts
 		arg4 bool
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("Run", []interface{}{arg1, arg2, arg3, arg4})
@@ -267,13 +266,13 @@ func (fake *FakeCore) RunCallCount() int {
 	return len(fake.runArgsForCall)
 }
 
-func (fake *FakeCore) RunCalls(stub func(context.Context, string, *model.RunOpts, bool) error) {
+func (fake *FakeCore) RunCalls(stub func(context.Context, string, *core.RunOpts, bool) error) {
 	fake.runMutex.Lock()
 	defer fake.runMutex.Unlock()
 	fake.RunStub = stub
 }
 
-func (fake *FakeCore) RunArgsForCall(i int) (context.Context, string, *model.RunOpts, bool) {
+func (fake *FakeCore) RunArgsForCall(i int) (context.Context, string, *core.RunOpts, bool) {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	argsForCall := fake.runArgsForCall[i]

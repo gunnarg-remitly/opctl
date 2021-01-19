@@ -14,19 +14,24 @@ import (
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	cliModel "github.com/opctl/opctl/cli/internal/model"
 	"github.com/opctl/opctl/cli/internal/opgraph"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node"
 	"github.com/opctl/opctl/sdks/go/opspec/opfile"
 )
+
+// RunOpts are options to run a given op through the CLI
+type RunOpts struct {
+	ArgFile string
+	Args    []string
+}
 
 // Runer exposes the "run" command
 type Runer interface {
 	Run(
 		ctx context.Context,
 		opRef string,
-		opts *cliModel.RunOpts,
+		opts *RunOpts,
 		displayLiveGraph bool,
 	) error
 }
@@ -38,7 +43,7 @@ func newRuner(
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
 	dataResolver dataresolver.DataResolver,
 	eventChannel chan model.Event,
-	core core.Core,
+	opNode node.OpNode,
 ) Runer {
 	return _runer{
 		cliOutput:         cliOutput,
@@ -46,7 +51,7 @@ func newRuner(
 		cliParamSatisfier: cliParamSatisfier,
 		dataResolver:      dataResolver,
 		eventChannel:      eventChannel,
-		core:              core,
+		opNode:            opNode,
 	}
 }
 
@@ -56,13 +61,13 @@ type _runer struct {
 	opFormatter       clioutput.OpFormatter
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier
 	eventChannel      chan model.Event
-	core              core.Core
+	opNode            node.OpNode
 }
 
 func (ivkr _runer) Run(
 	ctx context.Context,
 	opRef string,
-	opts *cliModel.RunOpts,
+	opts *RunOpts,
 	displayLiveGraph bool,
 ) error {
 	ctx, cancel := context.WithCancel(ctx)
@@ -146,7 +151,7 @@ func (ivkr _runer) Run(
 	// listen for op end on a channel
 	done := make(chan error, 1)
 	go func() {
-		_, err := ivkr.core.StartOp(
+		_, err := ivkr.opNode.StartOp(
 			ctx,
 			model.StartOpReq{
 				Args: argsMap,

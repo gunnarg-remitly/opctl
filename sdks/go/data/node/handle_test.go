@@ -6,14 +6,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	coreFakes "github.com/opctl/opctl/sdks/go/node/core/fakes"
+	nodeFakes "github.com/opctl/opctl/sdks/go/node/fakes"
 )
 
 var _ = Context("handle", func() {
 
 	Context("GetContent", func() {
 
-		It("should call client.GetData w/ expected args", func() {
+		It("should call core.GetData w/ expected args", func() {
 			/* arrange */
 			providedCtx := context.TODO()
 			providedContentPath := "dummyContentPath"
@@ -21,10 +21,10 @@ var _ = Context("handle", func() {
 			dataRef := "dummyDataRef"
 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-			fakeCore := new(coreFakes.FakeCore)
+			fakeCore := new(nodeFakes.FakeOpNode)
 
 			objectUnderTest := handle{
-				core:      fakeCore,
+				opNode:    fakeCore,
 				dataRef:   dataRef,
 				pullCreds: pullCreds,
 			}
@@ -46,17 +46,17 @@ var _ = Context("handle", func() {
 	})
 
 	Context("ListDescendants", func() {
-		It("should call client.ListDescendants w/ expected args", func() {
+		It("should call core.ListDescendants w/ expected args", func() {
 			/* arrange */
 			providedCtx := context.TODO()
 
 			dataRef := "dummyDataRef"
 			pullCreds := &model.Creds{Username: "dummyUsername", Password: "dummyPassword"}
 
-			fakeCore := new(coreFakes.FakeCore)
+			fakeCore := new(nodeFakes.FakeOpNode)
 
 			objectUnderTest := handle{
-				core:      fakeCore,
+				opNode:    fakeCore,
 				dataRef:   dataRef,
 				pullCreds: pullCreds,
 			}
@@ -81,10 +81,10 @@ var _ = Context("handle", func() {
 			/* arrange */
 			dataRef := "dummyDataRef"
 
-			fakeCore := new(coreFakes.FakeCore)
+			fakeCore := new(nodeFakes.FakeOpNode)
 
 			objectUnderTest := handle{
-				core:    fakeCore,
+				opNode:  fakeCore,
 				dataRef: dataRef,
 			}
 
