@@ -59,10 +59,7 @@ func (cps _CLIParamSatisfier) Satisfy(
 
 			rawArg, ok := inputSourcer.Source(paramName)
 			if !ok {
-				return nil, fmt.Errorf(`
--
-  Prompt for "%v" failed; running in non-interactive terminal
--`, paramName)
+				return nil, fmt.Errorf(`failed to get input "%s"`, paramName)
 			}
 
 			switch {
@@ -176,15 +173,14 @@ func (this _CLIParamSatisfier) notifyOfArgErrors(
 ) {
 	messageBuffer := bytes.NewBufferString(
 		fmt.Sprintf(`
--
-  %v invalid; provide valid value to proceed.
-  Error(s):`, paramName),
+%v is invalid, provide valid value to proceed
+error:`, paramName),
 	)
 
 	for _, validationError := range errors {
 		messageBuffer.WriteString(
 			fmt.Sprintf(`
-	- %v`,
+- %v`,
 				validationError.Error(),
 			),
 		)
@@ -192,8 +188,7 @@ func (this _CLIParamSatisfier) notifyOfArgErrors(
 
 	messageBuffer.WriteString(
 		fmt.Sprintf(`
-%v
--`,
+%v`,
 			messageBuffer.String(),
 		),
 	)

@@ -12,11 +12,13 @@ import (
 )
 
 var _ = Context("output", func() {
+	var opFormatter SimpleOpFormatter
 	Context("newOutput", func() {
 		It("should return output", func() {
 			/* arrange/act/assert */
 			Expect(New(
 				new(clicolorerFakes.FakeCliColorer),
+				opFormatter,
 				new(fakeWriter),
 				new(fakeWriter),
 			)).To(Not(BeNil()))
@@ -27,24 +29,22 @@ var _ = Context("output", func() {
 		providedFormat := "dummyFormat %v %v"
 		It("should call stdWriter w/ expected args", func() {
 			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Attention(providedFormat),
-				),
-			)
+			expectedWriteArg := fmt.Sprintln(_cliColorer.Attention(providedFormat))
 
 			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, err := New(
 				_cliColorer,
+				opFormatter,
 				new(fakeWriter),
 				fakeStdWriter,
 			)
+			Expect(err).To(BeNil())
 
 			/* act */
 			objectUnderTest.Attention(providedFormat)
 
 			/* assert */
-			Expect(fakeStdWriter.WriteArgsForCall(0)).
+			Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 				To(Equal(expectedWriteArg))
 		})
 	})
@@ -52,24 +52,22 @@ var _ = Context("output", func() {
 		providedFormat := "dummyFormat %v %v"
 		It("should call stdWriter w/ expected args", func() {
 			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Error(providedFormat),
-				),
-			)
+			expectedWriteArg := fmt.Sprintln(_cliColorer.Error(providedFormat))
 
 			fakeErrWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, err := New(
 				_cliColorer,
+				opFormatter,
 				new(fakeWriter),
 				fakeErrWriter,
 			)
+			Expect(err).To(BeNil())
 
 			/* act */
 			objectUnderTest.Warning(providedFormat)
 
 			/* assert */
-			Expect(fakeErrWriter.WriteArgsForCall(0)).
+			Expect(string(fakeErrWriter.WriteArgsForCall(0))).
 				To(Equal(expectedWriteArg))
 		})
 	})
@@ -77,24 +75,22 @@ var _ = Context("output", func() {
 		providedFormat := "dummyFormat %v %v"
 		It("should call errWriter w/ expected args", func() {
 			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Error(providedFormat),
-				),
-			)
+			expectedWriteArg := fmt.Sprintln(_cliColorer.Error(providedFormat))
 
 			fakeErrWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, err := New(
 				_cliColorer,
+				opFormatter,
 				fakeErrWriter,
 				new(fakeWriter),
 			)
+			Expect(err).To(BeNil())
 
 			/* act */
 			objectUnderTest.Error(providedFormat)
 
 			/* assert */
-			Expect(fakeErrWriter.WriteArgsForCall(0)).
+			Expect(string(fakeErrWriter.WriteArgsForCall(0))).
 				To(Equal(expectedWriteArg))
 		})
 	})
@@ -104,24 +100,27 @@ var _ = Context("output", func() {
 				/* arrange */
 				providedEvent := &model.Event{
 					ContainerStdErrWrittenTo: &model.ContainerStdErrWrittenTo{
-						Data: []byte("dummyData"),
+						ContainerID: "acontainerid",
+						Data:        []byte("dummyData"),
 					},
 					Timestamp: time.Now(),
 				}
-				expectedWriteArg := []byte(string(providedEvent.ContainerStdErrWrittenTo.Data))
+				expectedWriteArg := "\x1b[2m[acontain]\x1b[0m " + string(providedEvent.ContainerStdErrWrittenTo.Data)
 
 				fakeErrWriter := new(fakeWriter)
-				objectUnderTest := New(
+				objectUnderTest, err := New(
 					_cliColorer,
+					opFormatter,
 					fakeErrWriter,
 					new(fakeWriter),
 				)
+				Expect(err).To(BeNil())
 
 				/* act */
 				objectUnderTest.Event(providedEvent)
 
 				/* assert */
-				Expect(fakeErrWriter.WriteArgsForCall(0)).
+				Expect(string(fakeErrWriter.WriteArgsForCall(0))).
 					To(Equal(expectedWriteArg))
 			})
 		})
@@ -130,24 +129,27 @@ var _ = Context("output", func() {
 				/* arrange */
 				providedEvent := &model.Event{
 					ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
-						Data: []byte("dummyData"),
+						ContainerID: "acontainerid",
+						Data:        []byte("dummyData"),
 					},
 					Timestamp: time.Now(),
 				}
-				expectedWriteArg := []byte(string(providedEvent.ContainerStdOutWrittenTo.Data))
+				expectedWriteArg := "\x1b[2m[acontain]\x1b[0m " + string(providedEvent.ContainerStdOutWrittenTo.Data)
 
 				fakeStdWriter := new(fakeWriter)
-				objectUnderTest := New(
+				objectUnderTest, err := New(
 					_cliColorer,
+					opFormatter,
 					new(fakeWriter),
 					fakeStdWriter,
 				)
+				Expect(err).To(BeNil())
 
 				/* act */
 				objectUnderTest.Event(providedEvent)
 
 				/* assert */
-				Expect(fakeStdWriter.WriteArgsForCall(0)).
+				Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 					To(Equal(expectedWriteArg))
 			})
 		})
@@ -164,40 +166,29 @@ var _ = Context("output", func() {
 										Ref: &imageRef,
 									},
 								},
-								ID: "ID",
+								ID: "acontainerID",
 							},
 							Outcome: model.OpOutcomeSucceeded,
 							Ref:     "ref",
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := []byte(
-						fmt.Sprintln(
-							_cliColorer.Success(
-								fmt.Sprintf(
-									"ContainerExited Id='%v'%v Outcome='%v'%v Timestamp='%v'\n",
-									providedEvent.CallEnded.Call.ID,
-									fmt.Sprintf(" ImageRef='%v'", imageRef),
-									providedEvent.CallEnded.Outcome,
-									"",
-									providedEvent.Timestamp.Format(time.RFC3339),
-								),
-							),
-						),
-					)
+					expectedWriteArg := "\x1b[2m[acontain ref]\x1b[0m \x1b[92;1mexited\x1b[0m imageRef\n"
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, err := New(
 						_cliColorer,
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
+					Expect(err).To(BeNil())
 
 					/* act */
 					objectUnderTest.Event(providedEvent)
 
 					/* assert */
-					Expect(fakeStdWriter.WriteArgsForCall(0)).
+					Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 						To(Equal(expectedWriteArg))
 				})
 			})
@@ -209,7 +200,7 @@ var _ = Context("output", func() {
 						providedEvent := &model.Event{
 							CallEnded: &model.CallEnded{
 								Call: model.Call{
-									ID: "ID",
+									ID: "thisisacallID",
 									Op: &model.OpCall{
 										BaseCall: model.BaseCall{
 											OpPath: "opPath",
@@ -224,33 +215,22 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := []byte(
-							fmt.Sprintln(
-								_cliColorer.Error(
-									fmt.Sprintf(
-										"OpEnded Id='%v' OpRef='%v' Outcome='%v'%v Timestamp='%v'\n",
-										providedEvent.CallEnded.Call.ID,
-										providedEvent.CallEnded.Call.Op.OpPath,
-										providedEvent.CallEnded.Outcome,
-										fmt.Sprintf(" Error='%v'", providedEvent.CallEnded.Error.Message),
-										providedEvent.Timestamp.Format(time.RFC3339),
-									),
-								),
-							),
-						)
+						expectedWriteArg := "[2m[thisisac opPath][0m [91;1mended with error[0m\nmessage\n"
 
 						fakeErrWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, err := New(
 							_cliColorer,
+							opFormatter,
 							fakeErrWriter,
 							new(fakeWriter),
 						)
+						Expect(err).To(BeNil())
 
 						/* act */
 						objectUnderTest.Event(providedEvent)
 
 						/* assert */
-						Expect(fakeErrWriter.WriteArgsForCall(0)).
+						Expect(string(fakeErrWriter.WriteArgsForCall(0))).
 							To(Equal(expectedWriteArg))
 					})
 				})
@@ -260,7 +240,7 @@ var _ = Context("output", func() {
 						providedEvent := &model.Event{
 							CallEnded: &model.CallEnded{
 								Call: model.Call{
-									ID: "ID",
+									ID: "thisisacallID",
 									Op: &model.OpCall{
 										BaseCall: model.BaseCall{
 											OpPath: "opPath",
@@ -272,32 +252,22 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := []byte(
-							fmt.Sprintln(
-								_cliColorer.Success(
-									fmt.Sprintf(
-										"OpEnded Id='%v' OpRef='%v' Outcome='%v' Timestamp='%v'\n",
-										providedEvent.CallEnded.Call.ID,
-										providedEvent.CallEnded.Call.Op.OpPath,
-										providedEvent.CallEnded.Outcome,
-										providedEvent.Timestamp.Format(time.RFC3339),
-									),
-								),
-							),
-						)
+						expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[92;1mended\x1b[0m\n"
 
 						fakeStdWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, err := New(
 							_cliColorer,
+							opFormatter,
 							new(fakeWriter),
 							fakeStdWriter,
 						)
+						Expect(err).To(BeNil())
 
 						/* act */
 						objectUnderTest.Event(providedEvent)
 
 						/* assert */
-						Expect(fakeStdWriter.WriteArgsForCall(0)).
+						Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 							To(Equal(expectedWriteArg))
 					})
 				})
@@ -307,7 +277,7 @@ var _ = Context("output", func() {
 						providedEvent := &model.Event{
 							CallEnded: &model.CallEnded{
 								Call: model.Call{
-									ID: "ID",
+									ID: "thisisacallID",
 									Op: &model.OpCall{
 										BaseCall: model.BaseCall{
 											OpPath: "opPath",
@@ -319,32 +289,22 @@ var _ = Context("output", func() {
 							},
 							Timestamp: time.Now(),
 						}
-						expectedWriteArg := []byte(
-							fmt.Sprintln(
-								_cliColorer.Info(
-									fmt.Sprintf(
-										"OpEnded Id='%v' OpRef='%v' Outcome='%v' Timestamp='%v'\n",
-										providedEvent.CallEnded.Call.ID,
-										providedEvent.CallEnded.Call.Op.OpPath,
-										providedEvent.CallEnded.Outcome,
-										providedEvent.Timestamp.Format(time.RFC3339),
-									),
-								),
-							),
-						)
+						expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[96;1mended\x1b[0m\n"
 
 						fakeStdWriter := new(fakeWriter)
-						objectUnderTest := New(
+						objectUnderTest, err := New(
 							_cliColorer,
+							opFormatter,
 							new(fakeWriter),
 							fakeStdWriter,
 						)
+						Expect(err).To(BeNil())
 
 						/* act */
 						objectUnderTest.Event(providedEvent)
 
 						/* assert */
-						Expect(fakeStdWriter.WriteArgsForCall(0)).
+						Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 							To(Equal(expectedWriteArg))
 					})
 				})
@@ -355,7 +315,7 @@ var _ = Context("output", func() {
 					providedEvent := &model.Event{
 						CallEnded: &model.CallEnded{
 							Call: model.Call{
-								ID: "ID",
+								ID: "thisisacallID",
 							},
 							Error: &model.CallEndedError{
 								Message: "message",
@@ -364,32 +324,22 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := []byte(
-						fmt.Sprintln(
-							_cliColorer.Error(
-								fmt.Sprintf(
-									"Error='%v' Id='%v' OpRef='%v' Timestamp='%v'\n",
-									providedEvent.CallEnded.Error.Message,
-									providedEvent.CallEnded.Call.ID,
-									providedEvent.CallEnded.Ref,
-									providedEvent.Timestamp.Format(time.RFC3339),
-								),
-							),
-						),
-					)
+					expectedWriteArg := "\x1b[2m[thisisac ref]\x1b[0m \x1b[91;1mmessage\x1b[0m\n"
 
 					fakeErrWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, err := New(
 						_cliColorer,
+						opFormatter,
 						fakeErrWriter,
 						new(fakeWriter),
 					)
+					Expect(err).To(BeNil())
 
 					/* act */
 					objectUnderTest.Event(providedEvent)
 
 					/* assert */
-					Expect(fakeErrWriter.WriteArgsForCall(0)).
+					Expect(string(fakeErrWriter.WriteArgsForCall(0))).
 						To(Equal(expectedWriteArg))
 				})
 			})
@@ -402,6 +352,7 @@ var _ = Context("output", func() {
 					providedEvent := &model.Event{
 						CallStarted: &model.CallStarted{
 							Call: model.Call{
+								ID: "thisisacallID",
 								Container: &model.ContainerCall{
 									Image: &model.ContainerCallImage{
 										Ref: &imageRef,
@@ -412,32 +363,22 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := []byte(
-						fmt.Sprintln(
-							_cliColorer.Info(
-								fmt.Sprintf(
-									"ContainerStarted Id='%v' OpRef='%v' ImageRef='%v' Timestamp='%v'\n",
-									providedEvent.CallStarted.Call.ID,
-									providedEvent.CallStarted.Ref,
-									imageRef,
-									providedEvent.Timestamp.Format(time.RFC3339),
-								),
-							),
-						),
-					)
+					expectedWriteArg := "[2m[thisisac ref][0m [96;1mstarted container[0m imageRef\n"
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, err := New(
 						_cliColorer,
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
+					Expect(err).To(BeNil())
 
 					/* act */
 					objectUnderTest.Event(providedEvent)
 
 					/* assert */
-					Expect(fakeStdWriter.WriteArgsForCall(0)).
+					Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 						To(Equal(expectedWriteArg))
 				})
 			})
@@ -447,7 +388,7 @@ var _ = Context("output", func() {
 					providedEvent := &model.Event{
 						CallStarted: &model.CallStarted{
 							Call: model.Call{
-								ID: "ID",
+								ID: "thisisacallID",
 								Op: &model.OpCall{
 									BaseCall: model.BaseCall{
 										OpPath: "opPath",
@@ -458,83 +399,47 @@ var _ = Context("output", func() {
 						},
 						Timestamp: time.Now(),
 					}
-					expectedWriteArg := []byte(
-						fmt.Sprintln(
-							_cliColorer.Info(
-								fmt.Sprintf(
-									"OpStarted Id='%v' OpRef='%v' Timestamp='%v'\n",
-									providedEvent.CallStarted.Call.ID,
-									providedEvent.CallStarted.Call.Op.OpPath,
-									providedEvent.Timestamp.Format(time.RFC3339),
-								),
-							),
-						),
-					)
+					expectedWriteArg := "\x1b[2m[thisisac opPath]\x1b[0m \x1b[96;1mstarted op\x1b[0m\n"
 
 					fakeStdWriter := new(fakeWriter)
-					objectUnderTest := New(
+					objectUnderTest, err := New(
 						_cliColorer,
+						opFormatter,
 						new(fakeWriter),
 						fakeStdWriter,
 					)
+					Expect(err).To(BeNil())
 
 					/* act */
 					objectUnderTest.Event(providedEvent)
 
 					/* assert */
-					Expect(fakeStdWriter.WriteArgsForCall(0)).
+					Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 						To(Equal(expectedWriteArg))
 				})
 			})
-		})
-	})
-	Context("Info", func() {
-		providedFormat := "dummyFormat %v %v"
-		It("should call stdWriter w/ expected args", func() {
-			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Info(providedFormat),
-				),
-			)
-
-			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
-				_cliColorer,
-				new(fakeWriter),
-				fakeStdWriter,
-			)
-
-			/* act */
-			objectUnderTest.Info(providedFormat)
-
-			/* assert */
-			Expect(fakeStdWriter.WriteArgsForCall(0)).
-				To(Equal(expectedWriteArg))
 		})
 	})
 	Context("Success", func() {
 		providedFormat := "dummyFormat %v %v"
 		It("should call stdWriter w/ expected args", func() {
 			/* arrange */
-			expectedWriteArg := []byte(
-				fmt.Sprintln(
-					_cliColorer.Success(providedFormat),
-				),
-			)
+			expectedWriteArg := fmt.Sprintln(_cliColorer.Success(providedFormat))
 
 			fakeStdWriter := new(fakeWriter)
-			objectUnderTest := New(
+			objectUnderTest, err := New(
 				_cliColorer,
+				opFormatter,
 				new(fakeWriter),
 				fakeStdWriter,
 			)
+			Expect(err).To(BeNil())
 
 			/* act */
 			objectUnderTest.Success(providedFormat)
 
 			/* assert */
-			Expect(fakeStdWriter.WriteArgsForCall(0)).
+			Expect(string(fakeStdWriter.WriteArgsForCall(0))).
 				To(Equal(expectedWriteArg))
 		})
 	})
@@ -543,11 +448,13 @@ var _ = Context("output", func() {
 			/* arrange */
 			fakeCliColorer := new(clicolorerFakes.FakeCliColorer)
 
-			objectUnderTest := New(
+			objectUnderTest, err := New(
 				fakeCliColorer,
+				opFormatter,
 				new(fakeWriter),
 				new(fakeWriter),
 			)
+			Expect(err).To(BeNil())
 
 			/* act */
 			objectUnderTest.DisableColor()

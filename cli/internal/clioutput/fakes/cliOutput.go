@@ -28,11 +28,6 @@ type FakeCliOutput struct {
 	eventArgsForCall []struct {
 		arg1 *model.Event
 	}
-	InfoStub        func(string)
-	infoMutex       sync.RWMutex
-	infoArgsForCall []struct {
-		arg1 string
-	}
 	SuccessStub        func(string)
 	successMutex       sync.RWMutex
 	successArgsForCall []struct {
@@ -163,37 +158,6 @@ func (fake *FakeCliOutput) EventArgsForCall(i int) *model.Event {
 	return argsForCall.arg1
 }
 
-func (fake *FakeCliOutput) Info(arg1 string) {
-	fake.infoMutex.Lock()
-	fake.infoArgsForCall = append(fake.infoArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("Info", []interface{}{arg1})
-	fake.infoMutex.Unlock()
-	if fake.InfoStub != nil {
-		fake.InfoStub(arg1)
-	}
-}
-
-func (fake *FakeCliOutput) InfoCallCount() int {
-	fake.infoMutex.RLock()
-	defer fake.infoMutex.RUnlock()
-	return len(fake.infoArgsForCall)
-}
-
-func (fake *FakeCliOutput) InfoCalls(stub func(string)) {
-	fake.infoMutex.Lock()
-	defer fake.infoMutex.Unlock()
-	fake.InfoStub = stub
-}
-
-func (fake *FakeCliOutput) InfoArgsForCall(i int) string {
-	fake.infoMutex.RLock()
-	defer fake.infoMutex.RUnlock()
-	argsForCall := fake.infoArgsForCall[i]
-	return argsForCall.arg1
-}
-
 func (fake *FakeCliOutput) Success(arg1 string) {
 	fake.successMutex.Lock()
 	fake.successArgsForCall = append(fake.successArgsForCall, struct {
@@ -267,8 +231,6 @@ func (fake *FakeCliOutput) Invocations() map[string][][]interface{} {
 	defer fake.errorMutex.RUnlock()
 	fake.eventMutex.RLock()
 	defer fake.eventMutex.RUnlock()
-	fake.infoMutex.RLock()
-	defer fake.infoMutex.RUnlock()
 	fake.successMutex.RLock()
 	defer fake.successMutex.RUnlock()
 	fake.warningMutex.RLock()

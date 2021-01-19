@@ -1,3 +1,23 @@
+### Branch notes
+
+Goals:
+- Allow understanding where output is coming from
+- Clean up output to be more consistent with other CLI tools
+- Clean up output to be more easily parsable with other CLI tools
+
+I want op references to be human readable, because they can be very long. This
+means I need to pass some runtime context into the things printing them.
+For this reason, the existing cliOutput structure doesn't work great, since it's
+shared with other places that don't need that context, and the plumbing gets
+large.
+
+New structure
+- Color - semantic coloring utilities
+- CliOutput - links writers to semantic coloring utilities
+- OpOutputter - intercepts event stream and outputs events to writers
+
+---
+
 [![Build](https://github.com/opctl/opctl/workflows/Build/badge.svg?branch=main)](https://github.com/opctl/opctl/actions?query=workflow%3ABuild+branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/opctl/opctl)](https://goreportcard.com/report/github.com/opctl/opctl)
 [![Coverage](https://codecov.io/gh/opctl/opctl/branch/master/graph/badge.svg)](https://codecov.io/gh/opctl/opctl)
