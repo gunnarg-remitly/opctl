@@ -11,7 +11,6 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 	containerRuntimeFakes "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("parallelLoopCaller", func() {
@@ -63,7 +62,6 @@ var _ = Context("parallelLoopCaller", func() {
 				if nil != err {
 					panic(err)
 				}
-				pubSub := pubsub.New(db)
 
 				providedCtx := context.Background()
 				providedScope := map[string]*model.Value{}
@@ -71,20 +69,16 @@ var _ = Context("parallelLoopCaller", func() {
 				caller := newCaller(
 					newContainerCaller(
 						new(containerRuntimeFakes.FakeContainerRuntime),
-						pubSub,
 						newStateStore(
 							providedCtx,
 							db,
-							pubSub,
 						),
 					),
 					dbDir,
-					pubSub,
 				)
 
 				objectUnderTest := _parallelLoopCaller{
 					caller: caller,
-					pubSub: pubSub,
 				}
 
 				/* act */
@@ -124,7 +118,6 @@ var _ = Context("parallelLoopCaller", func() {
 			if nil != err {
 				panic(err)
 			}
-			pubSub := pubsub.New(db)
 
 			providedOpRef := "providedOpRef"
 			providedParentID := "providedParentID"
@@ -138,7 +131,6 @@ var _ = Context("parallelLoopCaller", func() {
 				ctx context.Context,
 				req *model.ContainerCall,
 				rootCallID string,
-				eventPublisher pubsub.EventPublisher,
 				stdOut io.WriteCloser,
 				stdErr io.WriteCloser,
 			) (*int64, error) {
@@ -149,29 +141,17 @@ var _ = Context("parallelLoopCaller", func() {
 				return nil, nil
 			}
 
-			eventChannel, err := pubSub.Subscribe(
-				ctx,
-				model.EventFilter{},
-			)
-			if nil != err {
-				panic(err)
-			}
-
 			objectUnderTest := _parallelLoopCaller{
 				caller: newCaller(
 					newContainerCaller(
 						fakeContainerRuntime,
-						pubSub,
 						newStateStore(
 							ctx,
 							db,
-							pubSub,
 						),
 					),
 					dbDir,
-					pubSub,
 				),
-				pubSub: pubSub,
 			}
 
 			/* act */

@@ -2,14 +2,14 @@ package core
 
 import (
 	"context"
-	"github.com/dgraph-io/badger/v2"
 	"io/ioutil"
 	"time"
+
+	"github.com/dgraph-io/badger/v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("stateStore", func() {
@@ -33,15 +33,6 @@ var _ = Context("stateStore", func() {
 
 				db, err := badger.Open(
 					badger.DefaultOptions(dbDir).WithLogger(nil),
-				)
-				if nil != err {
-					panic(err)
-				}
-
-				pubSub := pubsub.New(db)
-				eventChannel, err := pubSub.Subscribe(
-					context.Background(),
-					model.EventFilter{},
 				)
 				if nil != err {
 					panic(err)

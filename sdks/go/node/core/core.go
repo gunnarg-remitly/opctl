@@ -7,13 +7,11 @@ import (
 	"context"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 // New returns a new LocalCore initialized with the given options
@@ -35,12 +33,9 @@ func New(
 		panic(err)
 	}
 
-	pubSub := pubsub.New(db)
-
-	stateStore := newStateStore(
+	stateStore, err := newStateStore(
 		ctx,
 		db,
-		pubSub,
 	)
 	if err != nil {
 		return nil, err
@@ -53,37 +48,7 @@ func New(
 			stateStore,
 		),
 		dataDirPath,
-		pubSub,
 	)
-
-	go func() {
-		// process events in background
-		callKiller := newCallKiller(
-			stateStore,
-			containerRuntime,
-			pubSub,
-		)
-
-		since := time.Now().UTC()
-		eventChannel, _ := pubSub.Subscribe(
-			ctx,
-			model.EventFilter{
-				Since: &since,
-			},
-		)
-
-		for event := range eventChannel {
-			switch {
-			case nil != event.CallKillRequested:
-				req := event.CallKillRequested.Request
-				callKiller.Kill(
-					ctx,
-					req.OpID,
-					req.RootCallID,
-				)
-			}
-		}
-	}()
 
 	return core{
 		caller:           caller,
@@ -93,7 +58,6 @@ func New(
 			caller,
 			dataDirPath,
 		),
-		pubSub:     pubSub,
 		stateStore: stateStore,
 	}
 }
@@ -104,7 +68,6 @@ type core struct {
 	containerRuntime containerruntime.ContainerRuntime
 	dataCachePath    string
 	opCaller         opCaller
-	pubSub           pubsub.PubSub
 	stateStore       stateStore
 }
 

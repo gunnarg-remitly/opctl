@@ -50,17 +50,6 @@ type FakeNode struct {
 		result1 []*model.DirEntry
 		result2 error
 	}
-	LivenessStub        func(context.Context) error
-	livenessMutex       sync.RWMutex
-	livenessArgsForCall []struct {
-		arg1 context.Context
-	}
-	livenessReturns struct {
-		result1 error
-	}
-	livenessReturnsOnCall map[int]struct {
-		result1 error
-	}
 	StartOpStub        func(context.Context, model.StartOpReq) (string, error)
 	startOpMutex       sync.RWMutex
 	startOpArgsForCall []struct {
@@ -204,7 +193,7 @@ func (fake *FakeNode) GetDataReturnsOnCall(i int, result1 model.ReadSeekCloser, 
 	}{result1, result2}
 }
 
-func (fake *FakeOpNode) ListDescendants(arg1 context.Context, arg2 model.ListDescendantsReq) ([]*model.DirEntry, error) {
+func (fake *FakeNode) ListDescendants(arg1 context.Context, arg2 model.ListDescendantsReq) ([]*model.DirEntry, error) {
 	fake.listDescendantsMutex.Lock()
 	ret, specificReturn := fake.listDescendantsReturnsOnCall[len(fake.listDescendantsArgsForCall)]
 	fake.listDescendantsArgsForCall = append(fake.listDescendantsArgsForCall, struct {
@@ -266,66 +255,6 @@ func (fake *FakeNode) ListDescendantsReturnsOnCall(i int, result1 []*model.DirEn
 		result1 []*model.DirEntry
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeNode) Liveness(arg1 context.Context) error {
-	fake.livenessMutex.Lock()
-	ret, specificReturn := fake.livenessReturnsOnCall[len(fake.livenessArgsForCall)]
-	fake.livenessArgsForCall = append(fake.livenessArgsForCall, struct {
-		arg1 context.Context
-	}{arg1})
-	fake.recordInvocation("Liveness", []interface{}{arg1})
-	fake.livenessMutex.Unlock()
-	if fake.LivenessStub != nil {
-		return fake.LivenessStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.livenessReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeNode) LivenessCallCount() int {
-	fake.livenessMutex.RLock()
-	defer fake.livenessMutex.RUnlock()
-	return len(fake.livenessArgsForCall)
-}
-
-func (fake *FakeNode) LivenessCalls(stub func(context.Context) error) {
-	fake.livenessMutex.Lock()
-	defer fake.livenessMutex.Unlock()
-	fake.LivenessStub = stub
-}
-
-func (fake *FakeNode) LivenessArgsForCall(i int) context.Context {
-	fake.livenessMutex.RLock()
-	defer fake.livenessMutex.RUnlock()
-	argsForCall := fake.livenessArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeNode) LivenessReturns(result1 error) {
-	fake.livenessMutex.Lock()
-	defer fake.livenessMutex.Unlock()
-	fake.LivenessStub = nil
-	fake.livenessReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeNode) LivenessReturnsOnCall(i int, result1 error) {
-	fake.livenessMutex.Lock()
-	defer fake.livenessMutex.Unlock()
-	fake.LivenessStub = nil
-	if fake.livenessReturnsOnCall == nil {
-		fake.livenessReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.livenessReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeNode) StartOp(arg1 context.Context, arg2 model.StartOpReq) (string, error) {
@@ -401,8 +330,6 @@ func (fake *FakeNode) Invocations() map[string][][]interface{} {
 	defer fake.getDataMutex.RUnlock()
 	fake.listDescendantsMutex.RLock()
 	defer fake.listDescendantsMutex.RUnlock()
-	fake.livenessMutex.RLock()
-	defer fake.livenessMutex.RUnlock()
 	fake.startOpMutex.RLock()
 	defer fake.startOpMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

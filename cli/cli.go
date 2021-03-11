@@ -12,7 +12,6 @@ import (
 	"github.com/opctl/opctl/cli/internal/clioutput"
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
-	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/opspec"
 	"golang.org/x/term"
@@ -26,36 +25,12 @@ type cli interface {
 
 func newCli(
 	ctx context.Context,
-	newCorer newCorer,
 ) (cli, error) {
 	cli := mow.App(
 		"opctl",
 		"Opctl is a free and open source distributed operation control system.",
 	)
 	cli.Version("v version", version)
-
-	exitWith := func(successMessage string, err error) {
-		if err == nil {
-			if successMessage != "" {
-				cliOutput.Success(successMessage)
-			}
-			mow.Exit(0)
-		} else {
-			cliOutput.Error(err.Error())
-
-			// @TODO find a better way to support tests & remove this
-			// currently mow.Exit(non-zero) blows up test harness
-			if _, isTestMode := os.LookupEnv(testModeEnvVar); isTestMode {
-				os.Exit(0)
-			}
-
-			if re, ok := err.(*RunError); ok {
-				mow.Exit(re.ExitCode)
-			} else {
-				mow.Exit(1)
-			}
-		}
-	}
 
 	perUserAppDataPath, err := appdatapath.New().PerUser()
 	if nil != err {
@@ -78,6 +53,8 @@ func newCli(
 		return nil, err
 	}
 
+	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
+
 	containerRuntime := cli.String(
 		mow.StringOpt{
 			Desc:   "Runtime for opctl containers",
@@ -87,26 +64,13 @@ func newCli(
 		},
 	)
 
-	core, err := newCorer(
-		ctx,
-		cliOutput,
-		opFormatter,
-		local.NodeCreateOpts{
-			ContainerRuntime: *containerRuntime,
-			DataDir:          *datadirPath,
-		},
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	exitWith := func(successMessage string, err error) {
 		if err != nil {
 			msg := err.Error()
 			if msg != "" {
 				cliOutput.Error(msg)
 			}
-			if re, ok := err.(*corePkg.RunError); ok {
+			if re, ok := err.(*RunError); ok {
 				mow.Exit(re.ExitCode)
 			} else {
 				mow.Exit(1)
@@ -165,39 +129,11 @@ func newCli(
 		dirRef := lsCmd.StringArg(dirRefArgName, opspec.DotOpspecDirName, "Reference to dir ops will be listed from")
 
 		lsCmd.Action = func() {
-			exitWith("", ls(ctx, *dirRef))
+			exitWith("", ls(ctx, cliParamSatisfier, *dirRef))
 		}
 	})
 
 	cli.Command("op", "Manage ops", func(opCmd *mow.Cmd) {
-		opCmd.Command("create", "Create an op", func(createCmd *mow.Cmd) {
-			path := createCmd.StringOpt("path", opspec.DotOpspecDirName, "Path the op will be created at")
-			description := createCmd.StringOpt("d description", "", "Op description")
-			name := createCmd.StringArg("NAME", "", "Op name")
-
-			createCmd.Action = func() {
-				exitWith("", core.Op().Create(*path, *description, *name))
-			}
-		})
-
-		opCmd.Command("install", "Install an op", func(installCmd *mow.Cmd) {
-			path := installCmd.StringOpt("path", opspec.DotOpspecDirName, "Path the op will be installed at")
-			opRef := installCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
-			username := installCmd.StringOpt("u username", "", "Username used to auth w/ the pkg source")
-			password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
-
-			installCmd.Action = func() {
-				exitWith("", core.Op().Install(ctx, *path, *opRef, *username, *password))
-			}
-		})
-	})
-
-	cli.Command("op", "Manage ops", func(opCmd *mow.Cmd) {
-		node, err := nodeProvider.CreateNodeIfNotExists(ctx)
-		if err != nil {
-			exitWith("", err)
-		}
-
 		dataResolver := dataresolver.New(
 			cliParamSatisfier,
 			node,
@@ -285,11 +221,7 @@ func newCli(
 
 	cli.Command("self-update", "Update opctl", func(selfUpdateCmd *mow.Cmd) {
 		selfUpdateCmd.Action = func() {
-			exitWith(
-				selfUpdate(
-					nodeProvider,
-				),
-			)
+			exitWith(selfUpdate())
 		}
 	})
 

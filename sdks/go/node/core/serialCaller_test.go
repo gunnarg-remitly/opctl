@@ -18,7 +18,6 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 	containerRuntimeFakes "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("serialCaller", func() {
@@ -79,7 +78,6 @@ var _ = Context("serialCaller", func() {
 				if nil != err {
 					panic(err)
 				}
-				pubSub := pubsub.New(db)
 
 				expectedErr := errors.New("expectedErr")
 
@@ -90,17 +88,13 @@ var _ = Context("serialCaller", func() {
 					caller: newCaller(
 						newContainerCaller(
 							new(containerRuntimeFakes.FakeContainerRuntime),
-							pubSub,
 							newStateStore(
 								context.Background(),
 								db,
-								pubSub,
 							),
 						),
 						dbDir,
-						pubSub,
 					),
-					pubSub: pubSub,
 				}
 
 				/* act */
@@ -135,7 +129,6 @@ var _ = Context("serialCaller", func() {
 			if nil != err {
 				panic(err)
 			}
-			pubSub := pubsub.New(db)
 
 			wd, err := os.Getwd()
 			if nil != err {
@@ -158,7 +151,6 @@ var _ = Context("serialCaller", func() {
 				ctx context.Context,
 				req *model.ContainerCall,
 				rootCallID string,
-				eventPublisher pubsub.EventPublisher,
 				stdOut io.WriteCloser,
 				stdErr io.WriteCloser,
 			) (*int64, error) {
@@ -167,14 +159,6 @@ var _ = Context("serialCaller", func() {
 				stdOut.Close()
 
 				return nil, nil
-			}
-
-			eventChannel, err := pubSub.Subscribe(
-				ctx,
-				model.EventFilter{},
-			)
-			if nil != err {
-				panic(err)
 			}
 
 			input1Value := "input1Value"
@@ -188,17 +172,13 @@ var _ = Context("serialCaller", func() {
 				caller: newCaller(
 					newContainerCaller(
 						fakeContainerRuntime,
-						pubSub,
 						newStateStore(
 							ctx,
 							db,
-							pubSub,
 						),
 					),
 					dbDir,
-					pubSub,
 				),
-				pubSub: pubSub,
 			}
 
 			/* act */

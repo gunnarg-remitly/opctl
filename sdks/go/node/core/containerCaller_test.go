@@ -12,7 +12,6 @@ import (
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("containerCaller", func() {
@@ -83,7 +82,6 @@ var _ = Context("containerCaller", func() {
 					ctx context.Context,
 					req *model.ContainerCall,
 					rootCallID string,
-					eventPublisher pubsub.EventPublisher,
 					stdOut io.WriteCloser,
 					stdErr io.WriteCloser,
 				) (*int64, error) {
@@ -137,7 +135,6 @@ var _ = Context("containerCaller", func() {
 			ctx context.Context,
 			req *model.ContainerCall,
 			rootCallID string,
-			eventPublisher pubsub.EventPublisher,
 			stdOut io.WriteCloser,
 			stdErr io.WriteCloser,
 		) (*int64, error) {

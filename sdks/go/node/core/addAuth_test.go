@@ -2,14 +2,14 @@ package core
 
 import (
 	"context"
-	"github.com/dgraph-io/badger/v2"
 	"io/ioutil"
 	"time"
+
+	"github.com/dgraph-io/badger/v2"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("core", func() {
@@ -39,15 +39,6 @@ var _ = Context("core", func() {
 				panic(err)
 			}
 
-			pubSub := pubsub.New(db)
-			eventChannel, err := pubSub.Subscribe(
-				context.Background(),
-				model.EventFilter{},
-			)
-			if nil != err {
-				panic(err)
-			}
-
 			expectedEvent := model.Event{
 				AuthAdded: &model.AuthAdded{
 					Auth: model.Auth{
@@ -56,10 +47,6 @@ var _ = Context("core", func() {
 					},
 				},
 				Timestamp: time.Now().UTC(),
-			}
-
-			objectUnderTest := core{
-				pubSub: pubSub,
 			}
 
 			/* act */

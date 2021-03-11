@@ -9,7 +9,6 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	containerRuntimeFakes "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
-	"github.com/opctl/opctl/sdks/go/pubsub"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -103,7 +102,6 @@ var _ = Context("serialLoopCaller", func() {
 					if nil != err {
 						panic(err)
 					}
-					pubSub := pubsub.New(db)
 
 					providedCtx := context.Background()
 					providedScope := map[string]*model.Value{}
@@ -111,15 +109,12 @@ var _ = Context("serialLoopCaller", func() {
 					caller := newCaller(
 						newContainerCaller(
 							new(containerRuntimeFakes.FakeContainerRuntime),
-							pubSub,
 							newStateStore(
 								context.Background(),
 								db,
-								pubSub,
 							),
 						),
 						dbDir,
-						pubSub,
 					)
 
 					objectUnderTest := _serialLoopCaller{
@@ -163,7 +158,6 @@ var _ = Context("serialLoopCaller", func() {
 				if nil != err {
 					panic(err)
 				}
-				pubSub := pubsub.New(db)
 
 				providedOpRef := "providedOpRef"
 				providedParentID := "providedParentID"
@@ -177,7 +171,6 @@ var _ = Context("serialLoopCaller", func() {
 					ctx context.Context,
 					req *model.ContainerCall,
 					rootCallID string,
-					eventPublisher pubsub.EventPublisher,
 					stdOut io.WriteCloser,
 					stdErr io.WriteCloser,
 				) (*int64, error) {
@@ -188,27 +181,15 @@ var _ = Context("serialLoopCaller", func() {
 					return nil, nil
 				}
 
-				eventChannel, err := pubSub.Subscribe(
-					ctx,
-					model.EventFilter{},
-				)
-				if nil != err {
-					panic(err)
-				}
-
 				objectUnderTest := _serialLoopCaller{
 					caller: newCaller(
 						newContainerCaller(
 							fakeContainerRuntime,
-							pubSub,
 							newStateStore(
 								db,
-								pubSub,
 							),
 						),
-						pubSub,
 					),
-					pubSub: pubSub,
 				}
 
 				/* act */
