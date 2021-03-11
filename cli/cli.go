@@ -13,6 +13,10 @@ import (
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/node/core"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/docker"
+	"github.com/opctl/opctl/sdks/go/node/core/containerruntime/k8s"
 	"github.com/opctl/opctl/sdks/go/opspec"
 	"golang.org/x/term"
 )
@@ -97,6 +101,23 @@ func newCli(
 		cancel()
 	}
 
+	var cr containerruntime.ContainerRuntime
+	if "k8s" == *containerRuntime {
+		cr, err = k8s.New()
+	} else {
+		cr, err = docker.New(ctx)
+	}
+	if nil != err {
+		return nil, err
+	}
+
+	var eventChannel chan model.Event
+
+	opNode, err := core.New(ctx, cr, *datadirPath, eventChannel)
+	if err != nil {
+		return nil, err
+	}
+
 	cli.Command("auth", "Manage auth for OCI image registries", func(authCmd *mow.Cmd) {
 		authCmd.Command("add", "Add auth for an OCI image registry", func(addCmd *mow.Cmd) {
 			addCmd.Spec = "RESOURCES [ -u=<username> ] [ -p=<password> ]"
@@ -110,6 +131,7 @@ func newCli(
 					"",
 					auth(
 						ctx,
+						opNode,
 						model.AddAuthReq{
 							Resources: *resources,
 							Creds: model.Creds{
@@ -129,14 +151,14 @@ func newCli(
 		dirRef := lsCmd.StringArg(dirRefArgName, opspec.DotOpspecDirName, "Reference to dir ops will be listed from")
 
 		lsCmd.Action = func() {
-			exitWith("", ls(ctx, cliParamSatisfier, *dirRef))
+			exitWith("", ls(ctx, cliParamSatisfier, opNode, *dirRef))
 		}
 	})
 
 	cli.Command("op", "Manage ops", func(opCmd *mow.Cmd) {
 		dataResolver := dataresolver.New(
 			cliParamSatisfier,
-			node,
+			opNode,
 		)
 
 		opCmd.Command("create", "Create an op", func(createCmd *mow.Cmd) {
@@ -211,8 +233,13 @@ func newCli(
 				"",
 				run(
 					ctx,
+					cliOutput,
+					cliParamSatisfier,
+					eventChannel,
+					opNode,
+					opFormatter,
 					*opRef,
-					&corePkg.RunOpts{Args: *args, ArgFile: *argFile},
+					&RunOpts{Args: *args, ArgFile: *argFile},
 					*displayLiveGraph,
 				),
 			)

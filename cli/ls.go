@@ -10,6 +10,7 @@ import (
 
 	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
 	"github.com/opctl/opctl/cli/internal/dataresolver"
+	"github.com/opctl/opctl/sdks/go/node/core"
 	"github.com/opctl/opctl/sdks/go/opspec"
 )
 
@@ -17,10 +18,12 @@ import (
 func ls(
 	ctx context.Context,
 	cliParamSatisfier cliparamsatisfier.CLIParamSatisfier,
+	node core.Core,
 	dirRef string,
 ) error {
 	dataResolver := dataresolver.New(
 		cliParamSatisfier,
+		node,
 	)
 
 	_tabWriter := new(tabwriter.Writer)

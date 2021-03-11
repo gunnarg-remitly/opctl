@@ -6,9 +6,7 @@ package core
 import (
 	"context"
 	"path/filepath"
-	"runtime"
 
-	"github.com/dgraph-io/badger/v2"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
@@ -21,21 +19,9 @@ func New(
 	dataDirPath string,
 	eventChannel chan model.Event,
 ) (Core, error) {
-	// per badger README.MD#FAQ "maximizes throughput"
-	runtime.GOMAXPROCS(128)
-
-	db, err := badger.Open(
-		badger.DefaultOptions(
-			eventDbPath,
-		).WithLogger(nil),
-	)
-	if err != nil {
-		panic(err)
-	}
-
 	stateStore, err := newStateStore(
 		ctx,
-		db,
+		dataDirPath,
 	)
 	if err != nil {
 		return nil, err
@@ -48,6 +34,7 @@ func New(
 			stateStore,
 		),
 		dataDirPath,
+		eventChannel,
 	)
 
 	return core{
@@ -59,7 +46,7 @@ func New(
 			dataDirPath,
 		),
 		stateStore: stateStore,
-	}
+	}, nil
 }
 
 // core is an Node that supports running ops directly on the host
