@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
 	github.com/appdataspec/sdk-golang v0.0.0-20170917062448-0c0ade7a92f7
+	github.com/aws/aws-sdk-go v1.37.28 // indirect
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/containerd/containerd v1.2.7 // indirect
 	github.com/containers/image/v5 v5.0.0
@@ -41,10 +42,10 @@ require (
 	github.com/rakyll/statik v0.1.7-0.20191104211043-6b2f3ee522b6
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/satori/go.uuid v0.0.0-20181028125025-b2ce2384e17b
-	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/mod v0.3.0 // indirect
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	golang.org/x/tools v0.0.0-20200528171350-af9456bb6365 // indirect
