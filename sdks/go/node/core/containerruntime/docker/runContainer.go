@@ -84,7 +84,7 @@ func (cr _runContainer) RunContainer(
 		// ensure container always cleaned up
 		// Use a fresh context in case the current one is cancelled
 		cr.dockerClient.ContainerRemove(
-			context.Background(),
+			context.Background(), // always use a fresh context, to clean up after cancellation
 			containerName,
 			types.ContainerRemoveOptions{
 				RemoveVolumes: true,

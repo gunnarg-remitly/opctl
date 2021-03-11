@@ -31,14 +31,12 @@ type parallelLoopCaller interface {
 
 func newParallelLoopCaller(caller caller) parallelLoopCaller {
 	return _parallelLoopCaller{
-		caller:              caller,
-		uniqueStringFactory: uniquestring.NewUniqueStringFactory(),
+		caller: caller,
 	}
 }
 
 type _parallelLoopCaller struct {
-	caller              caller
-	uniqueStringFactory uniquestring.UniqueStringFactory
+	caller caller
 }
 
 func (plpr _parallelLoopCaller) Call(
@@ -72,7 +70,7 @@ func (plpr _parallelLoopCaller) Call(
 	defer wg.Wait()
 
 	for {
-		childCallID, err := plpr.uniqueStringFactory.Construct()
+		childCallID, err := uniquestring.Construct()
 		if nil != err {
 			// end run immediately on any error
 			return nil, err

@@ -10,11 +10,13 @@ func (this core) AddAuth(
 	ctx context.Context,
 	req model.AddAuthReq,
 ) error {
-	return this.stateStore.AddAuth(
-		model.AuthAdded{
-			Auth: model.Auth{
-				Creds:     req.Creds,
-				Resources: req.Resources,
+	this.pubSub.Publish(
+		model.Event{
+			AuthAdded: &model.AuthAdded{
+				Auth: model.Auth{
+					Creds:     req.Creds,
+					Resources: req.Resources,
+				},
 			},
 		},
 	)

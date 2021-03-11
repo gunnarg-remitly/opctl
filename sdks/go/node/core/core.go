@@ -7,11 +7,13 @@ import (
 	"context"
 	"path/filepath"
 	"runtime"
+	"time"
 
-	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 // New returns a new LocalCore initialized with the given options
@@ -24,11 +26,21 @@ func New(
 	// per badger README.MD#FAQ "maximizes throughput"
 	runtime.GOMAXPROCS(128)
 
-	uniqueStringFactory := uniquestring.NewUniqueStringFactory()
+	db, err := badger.Open(
+		badger.DefaultOptions(
+			eventDbPath,
+		).WithLogger(nil),
+	)
+	if err != nil {
+		panic(err)
+	}
 
-	stateStore, err := newStateStore(
+	pubSub := pubsub.New(db)
+
+	stateStore := newStateStore(
 		ctx,
-		dataDirPath,
+		db,
+		pubSub,
 	)
 	if err != nil {
 		return nil, err
@@ -41,30 +53,72 @@ func New(
 			stateStore,
 		),
 		dataDirPath,
-		eventChannel,
+		pubSub,
 	)
 
+	go func() {
+		// process events in background
+		callKiller := newCallKiller(
+			stateStore,
+			containerRuntime,
+			pubSub,
+		)
+
+		since := time.Now().UTC()
+		eventChannel, _ := pubSub.Subscribe(
+			ctx,
+			model.EventFilter{
+				Since: &since,
+			},
+		)
+
+		for event := range eventChannel {
+			switch {
+			case nil != event.CallKillRequested:
+				req := event.CallKillRequested.Request
+				callKiller.Kill(
+					ctx,
+					req.OpID,
+					req.RootCallID,
+				)
+			}
+		}
+	}()
+
 	return core{
-		caller:              caller,
-		dataCachePath:       filepath.Join(dataDirPath, "ops"),
-		stateStore:          stateStore,
-		uniqueStringFactory: uniqueStringFactory,
-	}, nil
+		caller:           caller,
+		containerRuntime: containerRuntime,
+		dataCachePath:    filepath.Join(dataDirPath, "ops"),
+		opCaller: newOpCaller(
+			caller,
+			dataDirPath,
+		),
+		pubSub:     pubSub,
+		stateStore: stateStore,
+	}
 }
 
-// core is an OpNode that supports running ops directly on the host
+// core is an Node that supports running ops directly on the host
 type core struct {
-	caller              caller
-	dataCachePath       string
-	stateStore          stateStore
-	uniqueStringFactory uniquestring.UniqueStringFactory
+	caller           caller
+	containerRuntime containerruntime.ContainerRuntime
+	dataCachePath    string
+	opCaller         opCaller
+	pubSub           pubsub.PubSub
+	stateStore       stateStore
+}
+
+func (c core) Liveness(
+	ctx context.Context,
+) error {
+	return nil
 }
 
 //counterfeiter:generate -o fakes/core.go . Core
 
-// Core is an OpNode that supports running ops directly on the current machine
+// Core is an Node that supports running ops directly on the current machine
 type Core interface {
-	node.OpNode
+	node.Node
 
 	// Resolve attempts to resolve data via local filesystem or git
 	// nil pullCreds will be ignored

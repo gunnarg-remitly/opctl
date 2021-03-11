@@ -87,17 +87,12 @@ var _ = Context("core", func() {
 						expectedOpCallSpec.Outputs[name] = ""
 					}
 
-					expectedID := "expectedID"
-					fakeUniqueStringFactory := new(uniquestringFakes.FakeUniqueStringFactory)
-					fakeUniqueStringFactory.ConstructReturns(expectedID, nil)
-
 					fakeCaller := new(FakeCaller)
 					dataCachePath := os.TempDir()
 
 					objectUnderTest := core{
-						caller:              fakeCaller,
-						dataCachePath:       dataCachePath,
-						uniqueStringFactory: fakeUniqueStringFactory,
+						caller:        fakeCaller,
+						dataCachePath: dataCachePath,
 					}
 
 					/* act */
@@ -117,13 +112,13 @@ var _ = Context("core", func() {
 						_,
 						actualRootID := fakeCaller.CallArgsForCall(0)
 
-					Expect(actualOpID).To(Equal(expectedID))
+					Expect(actualOpID).To(HaveLen(32))
 					Expect(actualScope).To(Equal(providedReq.Args))
 					Expect(*actualCallSpec).To(BeEquivalentTo(model.CallSpec{
 						Op: expectedOpCallSpec,
 					}))
 					Expect(actualOpPath).To(Equal(providedOpPath))
-					Expect(actualRootID).To(Equal(expectedID))
+					Expect(actualRootID).To(HaveLen(32))
 				})
 			})
 		})

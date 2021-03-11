@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
+	"path/filepath"
 )
 
 var _ = Context("opCaller", func() {

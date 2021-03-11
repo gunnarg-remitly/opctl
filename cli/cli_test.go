@@ -1,44 +1,35 @@
 package main
 
 import (
-	"context"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/opctl/opctl/cli/internal/clicolorer"
 	"github.com/opctl/opctl/cli/internal/clioutput"
-	corePkg "github.com/opctl/opctl/cli/internal/core"
-	authFakes "github.com/opctl/opctl/cli/internal/core/auth/fakes"
-	coreFakes "github.com/opctl/opctl/cli/internal/core/fakes"
-	opFakes "github.com/opctl/opctl/cli/internal/core/op/fakes"
-	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
 )
 
 var _ = Context("cli", func() {
 	Context("Run", func() {
+		// @TODO: the below is not really testing anything but the test scenarios are good.
+		// We need to move to remove testModeEnvVar and implement something like gexec (http://onsi.github.io/gomega/#gexec-testing-external-processes)
+		// to properly test the CLI otherwise CLI exit codes and stdin/stderr/stdout reads/writes interfere w/ the test harness
+		os.Setenv(testModeEnvVar, "")
+
+		cliOutput := clioutput.New(clicolorer.New(), os.Stderr, os.Stdout)
 
 		Context("--no-color", func() {
-			It("should set color.NoColor", func() {
-				Skip("")
+			It("should not err", func() {
 				/* arrange */
-				// var cliOutput clioutput.CliOutput
-
-				objectUnderTest, _ := newCli(
-					context.Background(),
-					func(
-						context.Context,
-						clioutput.CliOutput,
-						clioutput.OpFormatter,
-						local.NodeCreateOpts,
-					) (corePkg.Core, error) {
-						// cliOutput = _cliOutput
-						return new(coreFakes.FakeCore), nil
-					},
+				objectUnderTest := newCli(
+					cliOutput,
 				)
 
-				objectUnderTest.Run([]string{"opctl", "--no-color", "ls"})
+				/* act */
+				actualErr := objectUnderTest.Run([]string{"opctl", "--no-color", "ls"})
 
-				// No colors are applied
-				// Expect(cliOutput.DisableColorCallCount()).To(Equal(1))
+				/* assert */
+				Expect(actualErr).To(BeNil())
 			})
 		})
 
@@ -46,107 +37,110 @@ var _ = Context("cli", func() {
 
 			Context("add", func() {
 
-				It("should call authAddCmd.Invoke w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
 					providedResources := "resources"
 					providedUsername := "username"
 					providedPassword := "password"
 
-					fakeCore := new(coreFakes.FakeCore)
-
-					fakeAuth := new(authFakes.FakeAuth)
-					fakeCore.AuthReturns(fakeAuth)
-
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{"opctl", "auth", "add", providedResources, "-u", providedUsername, "-p", providedPassword})
+					actualErr := objectUnderTest.Run([]string{"opctl", "auth", "add", providedResources, "-u", providedUsername, "-p", providedPassword})
 
 					/* assert */
-					_,
-						actualResources,
-						actualUsername,
-						actualPassword := fakeAuth.AddArgsForCall(0)
-
-					Expect(actualResources).To(Equal(providedResources))
-					Expect(actualUsername).To(Equal(providedUsername))
-					Expect(actualPassword).To(Equal(providedPassword))
+					Expect(actualErr).To(BeNil())
 				})
 
 			})
 
 		})
 
+		Context("events", func() {
+			It("should not err", func() {
+				/* arrange */
+				objectUnderTest := newCli(
+					cliOutput,
+				)
+
+				/* act */
+				actualErr := objectUnderTest.Run([]string{"opctl", "events"})
+
+				/* assert */
+				Expect(actualErr).To(BeNil())
+			})
+		})
+
 		Context("ls", func() {
 			Context("w/ dirRef", func() {
 
-				It("should call coreFakes.Ls w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
 					expectedDirRef := "dummyPath"
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{"opctl", "ls", expectedDirRef})
+					actualErr := objectUnderTest.Run([]string{"opctl", "ls", expectedDirRef})
 
 					/* assert */
-					actualCtx,
-						actualDirRef := fakeCore.LsArgsForCall(0)
-
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualDirRef).To(Equal(expectedDirRef))
+					Expect(actualErr).To(BeNil())
 				})
 			})
 			Context("w/out dirRef", func() {
 
-				It("should call coreFakes.Ls w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
-					expectedDirRef := ".opspec"
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{"opctl", "ls"})
+					actualErr := objectUnderTest.Run([]string{"opctl", "ls"})
 
 					/* assert */
-					actualCtx,
-						actualDirRef := fakeCore.LsArgsForCall(0)
-
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualDirRef).To(Equal(expectedDirRef))
+					Expect(actualErr).To(BeNil())
 				})
+			})
+		})
+
+		Context("node", func() {
+
+			Context("create", func() {
+
+				It("should not err", func() {
+					/* arrange */
+					objectUnderTest := newCli(
+						cliOutput,
+					)
+
+					/* act */
+					actualErr := objectUnderTest.Run([]string{"opctl", "node", "create"})
+
+					/* assert */
+					Expect(actualErr).To(BeNil())
+				})
+
+			})
+
+			Context("kill", func() {
+
+				It("should not err", func() {
+					/* arrange */
+					objectUnderTest := newCli(
+						cliOutput,
+					)
+
+					/* act */
+					actualErr := objectUnderTest.Run([]string{"opctl", "node", "kill"})
+
+					/* assert */
+					Expect(actualErr).To(BeNil())
+				})
+
 			})
 		})
 
@@ -154,169 +148,89 @@ var _ = Context("cli", func() {
 
 			Context("create", func() {
 				Context("w/ path", func() {
-					It("should call coreFakes.Create w/ expected args", func() {
+					It("should not err", func() {
 						/* arrange */
-						fakeCore := new(coreFakes.FakeCore)
-
-						fakeOp := new(opFakes.FakeOp)
-						fakeCore.OpReturns(fakeOp)
-
 						expectedOpName := "dummyOpName"
 						expectedPath := "dummyPath"
 
-						objectUnderTest, _ := newCli(
-							context.Background(),
-							func(
-								context.Context,
-								clioutput.CliOutput,
-								clioutput.OpFormatter,
-								local.NodeCreateOpts,
-							) (corePkg.Core, error) {
-								return fakeCore, nil
-							},
+						objectUnderTest := newCli(
+							cliOutput,
 						)
 
 						/* act */
-						objectUnderTest.Run([]string{"opctl", "op", "create", "--path", expectedPath, expectedOpName})
+						actualErr := objectUnderTest.Run([]string{"opctl", "op", "create", "--path", expectedPath, expectedOpName})
 
 						/* assert */
-						actualPath, actualOpDescription, actualOpName := fakeOp.CreateArgsForCall(0)
-						Expect(actualOpName).To(Equal(expectedOpName))
-						Expect(actualOpDescription).To(BeEmpty())
-						Expect(actualPath).To(Equal(expectedPath))
+						Expect(actualErr).To(BeNil())
 					})
 				})
 
 				Context("w/out path", func() {
-					It("should call coreFakes.Create w/ expected args", func() {
+					It("should not err", func() {
 						/* arrange */
-						fakeCore := new(coreFakes.FakeCore)
-
-						fakeOp := new(opFakes.FakeOp)
-						fakeCore.OpReturns(fakeOp)
-
 						expectedOpName := "dummyOpName"
-						expectedPath := ".opspec"
 
-						objectUnderTest, _ := newCli(
-							context.Background(),
-							func(
-								context.Context,
-								clioutput.CliOutput,
-								clioutput.OpFormatter,
-								local.NodeCreateOpts,
-							) (corePkg.Core, error) {
-								return fakeCore, nil
-							},
+						objectUnderTest := newCli(
+							cliOutput,
 						)
 
 						/* act */
-						objectUnderTest.Run([]string{"opctl", "op", "create", expectedOpName})
+						actualErr := objectUnderTest.Run([]string{"opctl", "op", "create", expectedOpName})
 
 						/* assert */
-						actualPath, actualOpDescription, actualOpName := fakeOp.CreateArgsForCall(0)
-						Expect(actualOpName).To(Equal(expectedOpName))
-						Expect(actualOpDescription).To(BeEmpty())
-						Expect(actualPath).To(Equal(expectedPath))
+						Expect(actualErr).To(BeNil())
 					})
 				})
 				Context("w/ description", func() {
-					It("should call coreFakes.Create w/ expected args", func() {
+					It("should not err", func() {
 						/* arrange */
-						fakeCore := new(coreFakes.FakeCore)
-
-						fakeOp := new(opFakes.FakeOp)
-						fakeCore.OpReturns(fakeOp)
-
 						expectedOpName := "dummyOpName"
 						expectedOpDescription := "dummyOpDescription"
-						expectedPath := ".opspec"
 
-						objectUnderTest, _ := newCli(
-							context.Background(),
-							func(
-								context.Context,
-								clioutput.CliOutput,
-								clioutput.OpFormatter,
-								local.NodeCreateOpts,
-							) (corePkg.Core, error) {
-								return fakeCore, nil
-							},
+						objectUnderTest := newCli(
+							cliOutput,
 						)
 
 						/* act */
-						objectUnderTest.Run([]string{"opctl", "op", "create", "-d", expectedOpDescription, expectedOpName})
+						actualErr := objectUnderTest.Run([]string{"opctl", "op", "create", "-d", expectedOpDescription, expectedOpName})
 
 						/* assert */
-						actualPath, actualOpDescription, actualOpName := fakeOp.CreateArgsForCall(0)
-						Expect(actualOpName).To(Equal(expectedOpName))
-						Expect(actualOpDescription).To(Equal(expectedOpDescription))
-						Expect(actualPath).To(Equal(expectedPath))
+						Expect(actualErr).To(BeNil())
 					})
 				})
 
 				Context("w/out description", func() {
-					It("should call coreFakes.Create w/ expected args", func() {
+					It("should not err", func() {
 						/* arrange */
-						fakeCore := new(coreFakes.FakeCore)
-
-						fakeOp := new(opFakes.FakeOp)
-						fakeCore.OpReturns(fakeOp)
-
 						expectedName := "dummyOpName"
-						expectedPath := ".opspec"
 
-						objectUnderTest, _ := newCli(
-							context.Background(),
-							func(
-								context.Context,
-								clioutput.CliOutput,
-								clioutput.OpFormatter,
-								local.NodeCreateOpts,
-							) (corePkg.Core, error) {
-								return fakeCore, nil
-							},
+						objectUnderTest := newCli(
+							cliOutput,
 						)
 
 						/* act */
-						objectUnderTest.Run([]string{"opctl", "op", "create", expectedName})
+						actualErr := objectUnderTest.Run([]string{"opctl", "op", "create", expectedName})
 
 						/* assert */
-						actualPath, actualOpDescription, actualOpName := fakeOp.CreateArgsForCall(0)
-						Expect(actualOpName).To(Equal(expectedName))
-						Expect(actualOpDescription).To(BeEmpty())
-						Expect(actualPath).To(Equal(expectedPath))
+						Expect(actualErr).To(BeNil())
 					})
 				})
 			})
 
 			Context("install", func() {
-				It("should call coreFakes.Install w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
-					fakeOp := new(opFakes.FakeOp)
-					fakeCore.OpReturns(fakeOp)
-
 					expectedPath := "dummyPath"
 					expectedOpRef := "dummyOpRef"
 					expectedUsername := "dummyUsername"
 					expectedPassword := "dummyPassword"
 
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{
+					actualErr := objectUnderTest.Run([]string{
 						"opctl",
 						"op",
 						"install",
@@ -330,52 +244,42 @@ var _ = Context("cli", func() {
 					})
 
 					/* assert */
-					actualCtx,
-						actualPath,
-						actualOpRef,
-						actualUsername,
-						actualPassword := fakeOp.InstallArgsForCall(0)
+					Expect(actualErr).To(BeNil())
+				})
+			})
 
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualPath).To(Equal(expectedPath))
-					Expect(actualOpRef).To(Equal(expectedOpRef))
-					Expect(actualUsername).To(Equal(expectedUsername))
-					Expect(actualPassword).To(Equal(expectedPassword))
+			Context("kill", func() {
+				It("should not err", func() {
+					/* arrange */
+					expectedOpID := "dummyOpID"
+
+					objectUnderTest := newCli(
+						cliOutput,
+					)
+
+					/* act */
+					actualErr := objectUnderTest.Run([]string{"opctl", "op", "kill", expectedOpID})
+
+					/* assert */
+					Expect(actualErr).To(BeNil())
 				})
 			})
 
 			Context("validate", func() {
 
-				It("should call coreFakes.OpValidate w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
-					fakeOp := new(opFakes.FakeOp)
-					fakeCore.OpReturns(fakeOp)
-
 					opRef := ".opspec/dummyOpName"
 
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{"opctl", "op", "validate", opRef})
+					actualErr := objectUnderTest.Run([]string{"opctl", "op", "validate", opRef})
 
 					/* assert */
-					actualCtx,
-						actualOpRef := fakeOp.ValidateArgsForCall(0)
-
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualOpRef).To(Equal(opRef))
+					Expect(actualErr).To(BeNil())
 				})
 
 			})
@@ -384,148 +288,102 @@ var _ = Context("cli", func() {
 
 		Context("run", func() {
 			Context("with two op run args & an arg-file", func() {
-				It("should call coreFakes.Run w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
-					expectedRunOpts := &corePkg.RunOpts{
-						Args:    []string{"arg1Name=arg1Value", "arg2Name=arg2Value"},
-						ArgFile: "dummyArgFile",
-					}
+					providedArgs := []string{"arg1Name=arg1Value", "arg2Name=arg2Value"}
+					providedArgFile := "dummyArgFile"
 					expectedOpRef := ".opspec/dummyOpName"
 
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{
+					actualErr := objectUnderTest.Run([]string{
 						"opctl",
 						"run",
 						"-a",
-						expectedRunOpts.Args[0],
+						providedArgs[0],
 						"-a",
-						expectedRunOpts.Args[1],
+						providedArgs[1],
 						"--arg-file",
-						expectedRunOpts.ArgFile,
+						providedArgFile,
 						expectedOpRef,
 					})
 
 					/* assert */
-					actualCtx,
-						actualOpUrl,
-						actualRunOpts, _ := fakeCore.RunArgsForCall(0)
-
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualOpUrl).To(Equal(expectedOpRef))
-					Expect(actualRunOpts).To(Equal(expectedRunOpts))
+					Expect(actualErr).To(BeNil())
 				})
 			})
 
 			Context("with zero op run args", func() {
-				It("should call coreFakes.Run w/ expected args", func() {
+				It("should not err", func() {
 					/* arrange */
-					fakeCore := new(coreFakes.FakeCore)
-
 					expectedOpRef := ".opspec/dummyOpName"
 
-					objectUnderTest, _ := newCli(
-						context.Background(),
-						func(
-							context.Context,
-							clioutput.CliOutput,
-							clioutput.OpFormatter,
-							local.NodeCreateOpts,
-						) (corePkg.Core, error) {
-							return fakeCore, nil
-						},
+					objectUnderTest := newCli(
+						cliOutput,
 					)
 
 					/* act */
-					objectUnderTest.Run([]string{"opctl", "run", expectedOpRef})
+					actualErr := objectUnderTest.Run([]string{"opctl", "run", expectedOpRef})
 
 					/* assert */
-					actualCtx,
-						actualOpRef,
-						actualRunOpts, _ := fakeCore.RunArgsForCall(0)
-
-					Expect(actualCtx).To(Equal(context.TODO()))
-					Expect(actualOpRef).To(Equal(expectedOpRef))
-					Expect(actualRunOpts.Args).To(BeEmpty())
+					Expect(actualErr).To(BeNil())
 				})
 			})
 		})
-	})
 
-	Context("self-update", func() {
+		Context("self-update", func() {
 
-		Context("with channel flag", func() {
-
-			It("should call coreFakes.SelfUpdate with expected releaseChannel", func() {
+			It("should not err", func() {
 				/* arrange */
-				expectedChannel := "beta"
-
-				fakeCore := new(coreFakes.FakeCore)
-
-				objectUnderTest, _ := newCli(
-					context.Background(),
-					func(
-						context.Context,
-						clioutput.CliOutput,
-						clioutput.OpFormatter,
-						local.NodeCreateOpts,
-					) (corePkg.Core, error) {
-						return fakeCore, nil
-					},
+				objectUnderTest := newCli(
+					cliOutput,
 				)
 
 				/* act */
-				objectUnderTest.Run([]string{"opctl", "self-update", "-c", expectedChannel})
+				actualErr := objectUnderTest.Run([]string{"opctl", "self-update"})
 
 				/* assert */
-				actualChannel := fakeCore.SelfUpdateArgsForCall(0)
-				Expect(actualChannel).To(Equal(expectedChannel))
+				Expect(actualErr).To(BeNil())
 			})
 
 		})
 
-		Context("without channel flag", func() {
+		Context("ui", func() {
+			Context("w/ mountRef", func() {
 
-			It("should call coreFakes.SelfUpdate with expected releaseChannel", func() {
-				/* arrange */
-				expectedChannel := "stable"
+				It("should not err", func() {
+					/* arrange */
+					expectedDirRef := "./dummyPath"
+					objectUnderTest := newCli(
+						cliOutput,
+					)
 
-				fakeCore := new(coreFakes.FakeCore)
+					/* act */
+					actualErr := objectUnderTest.Run([]string{"opctl", "ui", expectedDirRef})
 
-				objectUnderTest, _ := newCli(
-					context.Background(),
-					func(
-						context.Context,
-						clioutput.CliOutput,
-						clioutput.OpFormatter,
-						local.NodeCreateOpts,
-					) (corePkg.Core, error) {
-						return fakeCore, nil
-					},
-				)
+					/* assert */
+					Expect(actualErr).To(BeNil())
+				})
+			})
+			Context("w/out mountRef", func() {
 
-				/* act */
-				objectUnderTest.Run([]string{"opctl", "self-update"})
+				It("should not err", func() {
+					/* arrange */
+					objectUnderTest := newCli(
+						cliOutput,
+					)
 
-				/* assert */
-				actualChannel := fakeCore.SelfUpdateArgsForCall(0)
-				Expect(actualChannel).To(Equal(expectedChannel))
+					/* act */
+					actualErr := objectUnderTest.Run([]string{"opctl", "ui"})
+
+					/* assert */
+					Expect(actualErr).To(BeNil())
+				})
 			})
 		})
-
 	})
 
 })

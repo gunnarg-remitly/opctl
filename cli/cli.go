@@ -1,7 +1,5 @@
 package main
 
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
-
 import (
 	"context"
 	"fmt"
@@ -12,24 +10,19 @@ import (
 	mow "github.com/jawher/mow.cli"
 	"github.com/opctl/opctl/cli/internal/clicolorer"
 	"github.com/opctl/opctl/cli/internal/clioutput"
-	corePkg "github.com/opctl/opctl/cli/internal/core"
+	"github.com/opctl/opctl/cli/internal/cliparamsatisfier"
+	"github.com/opctl/opctl/cli/internal/dataresolver"
 	"github.com/opctl/opctl/cli/internal/nodeprovider/local"
+	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/opspec"
 	"golang.org/x/term"
 )
 
-//counterfeiter:generate -o internal/fakes/cli.go . cli
+var testModeEnvVar = "OPCTL_TEST_MODE"
+
 type cli interface {
 	Run(args []string) error
 }
-
-// newCorer allows swapping out corePkg.New for unit tests
-type newCorer func(
-	context.Context,
-	clioutput.CliOutput,
-	clioutput.OpFormatter,
-	local.NodeCreateOpts,
-) (corePkg.Core, error)
 
 func newCli(
 	ctx context.Context,
@@ -40,6 +33,29 @@ func newCli(
 		"Opctl is a free and open source distributed operation control system.",
 	)
 	cli.Version("v version", version)
+
+	exitWith := func(successMessage string, err error) {
+		if err == nil {
+			if successMessage != "" {
+				cliOutput.Success(successMessage)
+			}
+			mow.Exit(0)
+		} else {
+			cliOutput.Error(err.Error())
+
+			// @TODO find a better way to support tests & remove this
+			// currently mow.Exit(non-zero) blows up test harness
+			if _, isTestMode := os.LookupEnv(testModeEnvVar); isTestMode {
+				os.Exit(0)
+			}
+
+			if re, ok := err.(*RunError); ok {
+				mow.Exit(re.ExitCode)
+			} else {
+				mow.Exit(1)
+			}
+		}
+	}
 
 	perUserAppDataPath, err := appdatapath.New().PerUser()
 	if nil != err {
@@ -111,27 +127,45 @@ func newCli(
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+
+	cli.After = func() {
+		cancel()
+	}
+
 	cli.Command("auth", "Manage auth for OCI image registries", func(authCmd *mow.Cmd) {
 		authCmd.Command("add", "Add auth for an OCI image registry", func(addCmd *mow.Cmd) {
 			addCmd.Spec = "RESOURCES [ -u=<username> ] [ -p=<password> ]"
 
-			resources := addCmd.StringArg("RESOURCES", "", "Resources this auth applies to in the form of a host or host/path.")
+			resources := addCmd.StringArg("RESOURCES", "", "Resources this auth applies to in the form of a host or host/path (e.g. docker.io)")
 			username := addCmd.StringOpt("u username", "", "Username")
 			password := addCmd.StringOpt("p password", "", "Password")
 
 			addCmd.Action = func() {
-				exitWith("", core.Auth().Add(ctx, *resources, *username, *password))
+				exitWith(
+					"",
+					auth(
+						ctx,
+						model.AddAuthReq{
+							Resources: *resources,
+							Creds: model.Creds{
+								Username: *username,
+								Password: *password,
+							},
+						},
+					),
+				)
 			}
 		})
 	})
 
-	cli.Command("ls", "List operations (only valid ops will be listed)", func(lsCmd *mow.Cmd) {
+	cli.Command("ls", "List operations", func(lsCmd *mow.Cmd) {
 		const dirRefArgName = "DIR_REF"
 		lsCmd.Spec = fmt.Sprintf("[%v]", dirRefArgName)
 		dirRef := lsCmd.StringArg(dirRefArgName, opspec.DotOpspecDirName, "Reference to dir ops will be listed from")
 
 		lsCmd.Action = func() {
-			exitWith("", core.Ls(ctx, *dirRef))
+			exitWith("", ls(ctx, *dirRef))
 		}
 	})
 
@@ -159,13 +193,30 @@ func newCli(
 	})
 
 	cli.Command("op", "Manage ops", func(opCmd *mow.Cmd) {
+		node, err := nodeProvider.CreateNodeIfNotExists(ctx)
+		if err != nil {
+			exitWith("", err)
+		}
+
+		dataResolver := dataresolver.New(
+			cliParamSatisfier,
+			node,
+		)
+
 		opCmd.Command("create", "Create an op", func(createCmd *mow.Cmd) {
 			path := createCmd.StringOpt("path", opspec.DotOpspecDirName, "Path the op will be created at")
 			description := createCmd.StringOpt("d description", "", "Op description")
 			name := createCmd.StringArg("NAME", "", "Op name")
 
 			createCmd.Action = func() {
-				exitWith("", core.Op().Create(*path, *description, *name))
+				exitWith(
+					"",
+					opspec.Create(
+						filepath.Join(*path, *name),
+						*name,
+						*description,
+					),
+				)
 			}
 		})
 
@@ -176,7 +227,19 @@ func newCli(
 			password := installCmd.StringOpt("p password", "", "Password used to auth w/ the pkg source")
 
 			installCmd.Action = func() {
-				exitWith("", core.Op().Install(context.TODO(), *path, *opRef, *username, *password))
+				exitWith(
+					"",
+					opInstall(
+						ctx,
+						dataResolver,
+						*opRef,
+						*path,
+						&model.Creds{
+							Username: *username,
+							Password: *password,
+						},
+					),
+				)
 			}
 		})
 
@@ -184,7 +247,14 @@ func newCli(
 			opRef := validateCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 			validateCmd.Action = func() {
-				exitWith(core.Op().Validate(ctx, *opRef))
+				exitWith(
+					fmt.Sprintf("%v is valid", *opRef),
+					opValidate(
+						ctx,
+						dataResolver,
+						*opRef,
+					),
+				)
 			}
 		})
 	})
@@ -203,7 +273,7 @@ func newCli(
 		runCmd.Action = func() {
 			exitWith(
 				"",
-				core.Run(
+				run(
 					ctx,
 					*opRef,
 					&corePkg.RunOpts{Args: *args, ArgFile: *argFile},
@@ -214,9 +284,12 @@ func newCli(
 	})
 
 	cli.Command("self-update", "Update opctl", func(selfUpdateCmd *mow.Cmd) {
-		channel := selfUpdateCmd.StringOpt("c channel", "stable", "Release channel to update from (either `stable`, `alpha`, or `beta`)")
 		selfUpdateCmd.Action = func() {
-			exitWith(core.SelfUpdate(*channel))
+			exitWith(
+				selfUpdate(
+					nodeProvider,
+				),
+			)
 		}
 	})
 

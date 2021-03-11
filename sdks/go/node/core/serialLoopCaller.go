@@ -32,14 +32,12 @@ func newSerialLoopCaller(
 	caller caller,
 ) serialLoopCaller {
 	return _serialLoopCaller{
-		caller:              caller,
-		uniqueStringFactory: uniquestring.NewUniqueStringFactory(),
+		caller: caller,
 	}
 }
 
 type _serialLoopCaller struct {
-	caller              caller
-	uniqueStringFactory uniquestring.UniqueStringFactory
+	caller caller
 }
 
 func (lpr _serialLoopCaller) Call(
@@ -76,7 +74,7 @@ func (lpr _serialLoopCaller) Call(
 
 	for !serialloop.IsIterationComplete(index, callSerialLoop) {
 		var callID string
-		callID, err = lpr.uniqueStringFactory.Construct()
+		callID, err = uniquestring.Construct()
 		if nil != err {
 			return nil, err
 		}

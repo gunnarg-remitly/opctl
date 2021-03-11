@@ -13,17 +13,17 @@ import (
 // A node now represents a local installation of opctl, where pkgs can be
 // installed into opctl's data directory.
 func New(
-	opNode node.OpNode,
+	node node.Node,
 	pullCreds *model.Creds,
 ) model.DataProvider {
 	return _node{
-		opNode:    opNode,
+		node:      node,
 		pullCreds: pullCreds,
 	}
 }
 
 type _node struct {
-	opNode    node.OpNode
+	node      node.Node
 	pullCreds *model.Creds
 }
 
@@ -37,7 +37,7 @@ func (np _node) TryResolve(
 ) (model.DataHandle, error) {
 
 	// ensure resolvable by listing contents w/out err
-	if _, err := np.opNode.ListDescendants(
+	if _, err := np.node.ListDescendants(
 		ctx,
 		model.ListDescendantsReq{
 			PkgRef:    dataRef,
@@ -47,5 +47,5 @@ func (np _node) TryResolve(
 		return nil, err
 	}
 
-	return newHandle(np.opNode, dataRef, np.pullCreds), nil
+	return newHandle(np.node, dataRef, np.pullCreds), nil
 }

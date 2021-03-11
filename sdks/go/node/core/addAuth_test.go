@@ -2,11 +2,14 @@ package core
 
 import (
 	"context"
+	"github.com/dgraph-io/badger/v2"
+	"io/ioutil"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
-	fakes "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
+	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("core", func() {
@@ -24,6 +27,41 @@ var _ = Context("core", func() {
 				Resources: "resources",
 			}
 
+			dbDir, err := ioutil.TempDir("", "")
+			if nil != err {
+				panic(err)
+			}
+
+			db, err := badger.Open(
+				badger.DefaultOptions(dbDir).WithLogger(nil),
+			)
+			if nil != err {
+				panic(err)
+			}
+
+			pubSub := pubsub.New(db)
+			eventChannel, err := pubSub.Subscribe(
+				context.Background(),
+				model.EventFilter{},
+			)
+			if nil != err {
+				panic(err)
+			}
+
+			expectedEvent := model.Event{
+				AuthAdded: &model.AuthAdded{
+					Auth: model.Auth{
+						Creds:     providedReq.Creds,
+						Resources: providedReq.Resources,
+					},
+				},
+				Timestamp: time.Now().UTC(),
+			}
+
+			objectUnderTest := core{
+				pubSub: pubSub,
+			}
+
 			/* act */
 			result := objectUnderTest.AddAuth(
 				context.Background(),
@@ -31,13 +69,22 @@ var _ = Context("core", func() {
 			)
 
 			/* assert */
-			Expect(result).To(BeNil())
-			Expect(fakeStore.AddAuthArgsForCall(0)).To(Equal(model.AuthAdded{
-				Auth: model.Auth{
-					Resources: providedReq.Resources,
-					Creds:     providedReq.Creds,
-				},
-			}))
+			var actualEvent model.Event
+			go func() {
+				for event := range eventChannel {
+					if nil != event.AuthAdded {
+						// ignore timestamp from assertion
+						event.Timestamp = expectedEvent.Timestamp
+						actualEvent = event
+					}
+				}
+			}()
+
+			Eventually(
+				func() model.Event { return actualEvent },
+			).Should(
+				Equal(expectedEvent),
+			)
 		})
 	})
 })

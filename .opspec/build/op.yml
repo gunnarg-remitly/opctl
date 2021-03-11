@@ -11,15 +11,20 @@ inputs:
       default: 0.0.0
       constraints:
         format: semver
+  HOME:
+    dir:
+      description: Home directory of caller; used to access go modules
 run:
   serial:
     - op:
         ref: ../../cli/.opspec/compile
         inputs:
+          HOME:
           version:
     - op:
-        ref: ./test
+        ref: ../test
         inputs:
-          gitBranch:
-          version:
           compile: false
+          gitBranch:
+          HOME:
+          version:

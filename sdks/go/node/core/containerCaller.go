@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-interfaces/iio"
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
 )
@@ -37,7 +36,6 @@ func newContainerCaller(
 		containerRuntime: containerRuntime,
 		eventChannel:     eventChannel,
 		stateStore:       stateStore,
-		io:               iio.New(),
 	}
 
 }
@@ -46,7 +44,6 @@ type _containerCaller struct {
 	containerRuntime containerruntime.ContainerRuntime
 	eventChannel     chan model.Event
 	stateStore       stateStore
-	io               iio.IIO
 }
 
 func (cc _containerCaller) Call(
@@ -68,8 +65,8 @@ func (cc _containerCaller) Call(
 		}
 	}
 
-	logStdOutPR, logStdOutPW := cc.io.Pipe()
-	logStdErrPR, logStdErrPW := cc.io.Pipe()
+	logStdOutPR, logStdOutPW := io.Pipe()
+	logStdErrPR, logStdErrPW := io.Pipe()
 
 	// interpret logs
 	logChan := make(chan error, 1)

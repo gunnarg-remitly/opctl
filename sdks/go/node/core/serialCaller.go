@@ -25,14 +25,12 @@ type serialCaller interface {
 
 func newSerialCaller(caller caller) serialCaller {
 	return _serialCaller{
-		caller:              caller,
-		uniqueStringFactory: uniquestring.NewUniqueStringFactory(),
+		caller: caller,
 	}
 }
 
 type _serialCaller struct {
-	caller              caller
-	uniqueStringFactory uniquestring.UniqueStringFactory
+	caller caller
 }
 
 func (sc _serialCaller) Call(
@@ -50,7 +48,7 @@ func (sc _serialCaller) Call(
 
 	for _, callSpecCall := range callSpecSerialCall {
 		var childCallID string
-		childCallID, err := sc.uniqueStringFactory.Construct()
+		childCallID, err := uniquestring.Construct()
 		if nil != err {
 			// end run immediately on any error
 			return nil, err

@@ -27,8 +27,7 @@ type parallelCaller interface {
 
 func newParallelCaller(caller caller) parallelCaller {
 	return _parallelCaller{
-		caller:              caller,
-		uniqueStringFactory: uniquestring.NewUniqueStringFactory(),
+		caller: caller,
 	}
 }
 
@@ -37,8 +36,7 @@ func refToName(ref string) string {
 }
 
 type _parallelCaller struct {
-	caller              caller
-	uniqueStringFactory uniquestring.UniqueStringFactory
+	caller caller
 }
 
 func (pc _parallelCaller) Call(
@@ -82,7 +80,7 @@ func (pc _parallelCaller) Call(
 
 	// perform calls in parallel w/ cancellation
 	for childCallIndex, childCall := range callSpecParallelCall {
-		childCallID, err := pc.uniqueStringFactory.Construct()
+		childCallID, err := uniquestring.Construct()
 		if nil != err {
 			// end run immediately on any error
 			return nil, err

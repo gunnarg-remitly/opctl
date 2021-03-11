@@ -4,19 +4,29 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
 
-	"github.com/golang-interfaces/iio"
+	"github.com/dgraph-io/badger/v2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opctl/opctl/sdks/go/model"
 	. "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
+	"github.com/opctl/opctl/sdks/go/pubsub"
 )
 
 var _ = Context("containerCaller", func() {
-	closedPipeReader, closedPipeWriter := io.Pipe()
-	closedPipeReader.Close()
-	closedPipeWriter.Close()
+	dbDir, err := ioutil.TempDir("", "")
+	if nil != err {
+		panic(err)
+	}
+
+	db, err := badger.Open(
+		badger.DefaultOptions(dbDir).WithLogger(nil),
+	)
+	if nil != err {
+		panic(err)
+	}
 
 	Context("newContainerCaller", func() {
 		It("should return containerCaller", func() {
@@ -39,13 +49,8 @@ var _ = Context("containerCaller", func() {
 			providedRootCallID := "providedRootCallID"
 			fakeContainerRuntime := new(FakeContainerRuntime)
 
-			fakeIIO := new(iio.Fake)
-			fakeIIO.PipeReturns(closedPipeReader, closedPipeWriter)
-
 			objectUnderTest := _containerCaller{
 				containerRuntime: fakeContainerRuntime,
-				stateStore:       new(FakeStateStore),
-				io:               fakeIIO,
 			}
 
 			/* act */
@@ -73,15 +78,24 @@ var _ = Context("containerCaller", func() {
 				expectedErrorMessage := "expectedErrorMessage"
 
 				fakeContainerRuntime := new(FakeContainerRuntime)
-				fakeContainerRuntime.RunContainerReturns(nil, errors.New(expectedErrorMessage))
 
-				fakeIIO := new(iio.Fake)
-				fakeIIO.PipeReturns(closedPipeReader, closedPipeWriter)
+				fakeContainerRuntime.RunContainerStub = func(
+					ctx context.Context,
+					req *model.ContainerCall,
+					rootCallID string,
+					eventPublisher pubsub.EventPublisher,
+					stdOut io.WriteCloser,
+					stdErr io.WriteCloser,
+				) (*int64, error) {
+
+					stdErr.Close()
+					stdOut.Close()
+
+					return nil, errors.New(expectedErrorMessage)
+				}
 
 				objectUnderTest := _containerCaller{
 					containerRuntime: fakeContainerRuntime,
-					stateStore:       new(FakeStateStore),
-					io:               fakeIIO,
 				}
 
 				/* act */
@@ -116,13 +130,26 @@ var _ = Context("containerCaller", func() {
 		providedInboundScope := map[string]*model.Value{}
 		providedContainerCallSpec := &model.ContainerCallSpec{}
 
-		fakeIIO := new(iio.Fake)
-		fakeIIO.PipeReturns(closedPipeReader, closedPipeWriter)
+		fakeContainerRuntime := new(FakeContainerRuntime)
+
+		expectedErr := errors.New("io: read/write on closed pipe")
+		fakeContainerRuntime.RunContainerStub = func(
+			ctx context.Context,
+			req *model.ContainerCall,
+			rootCallID string,
+			eventPublisher pubsub.EventPublisher,
+			stdOut io.WriteCloser,
+			stdErr io.WriteCloser,
+		) (*int64, error) {
+
+			stdErr.Close()
+			stdOut.Close()
+
+			return nil, expectedErr
+		}
 
 		objectUnderTest := _containerCaller{
 			containerRuntime: new(FakeContainerRuntime),
-			stateStore:       new(FakeStateStore),
-			io:               fakeIIO,
 		}
 
 		/* act */
@@ -136,6 +163,6 @@ var _ = Context("containerCaller", func() {
 
 		/* assert */
 		Expect(actualOutputs).To(Equal(map[string]*model.Value{}))
-		Expect(actualErr).To(Equal(errors.New("io: read/write on closed pipe")))
+		Expect(actualErr).To(Equal(expectedErr))
 	})
 })
