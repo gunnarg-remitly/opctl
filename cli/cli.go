@@ -57,17 +57,6 @@ func newCli(
 		return nil, err
 	}
 
-	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
-
-	containerRuntime := cli.String(
-		mow.StringOpt{
-			Desc:   "Runtime for opctl containers",
-			EnvVar: "OPCTL_CONTAINER_RUNTIME",
-			Name:   "container-runtime",
-			Value:  "docker",
-		},
-	)
-
 	exitWith := func(successMessage string, err error) {
 		if err != nil {
 			msg := err.Error()
@@ -86,6 +75,17 @@ func newCli(
 		}
 		// Don't exit here with .Exit to allow container cleanup to happen
 	}
+
+	cliParamSatisfier := cliparamsatisfier.New(cliOutput)
+
+	containerRuntime := cli.String(
+		mow.StringOpt{
+			Desc:   "Runtime for opctl containers",
+			EnvVar: "OPCTL_CONTAINER_RUNTIME",
+			Name:   "container-runtime",
+			Value:  "docker",
+		},
+	)
 
 	noColor := cli.BoolOpt("nc no-color", false, "Disable output coloring")
 
@@ -111,7 +111,7 @@ func newCli(
 		return nil, err
 	}
 
-	var eventChannel chan model.Event
+	eventChannel := make(chan model.Event)
 
 	opNode, err := core.New(ctx, cr, *datadirPath, eventChannel)
 	if err != nil {

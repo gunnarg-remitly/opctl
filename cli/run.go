@@ -210,8 +210,7 @@ func run(
 				return errors.New("Event channel closed unexpectedly")
 			}
 
-			err := state.HandleEvent(&event)
-			if err != nil {
+			if err := state.HandleEvent(&event); err != nil {
 				cliOutput.Error(fmt.Sprintf("%v", err))
 			}
 
