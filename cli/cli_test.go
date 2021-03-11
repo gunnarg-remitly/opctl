@@ -335,7 +335,6 @@ var _ = Context("cli", func() {
 		})
 
 		Context("self-update", func() {
-
 			It("should not err", func() {
 				/* arrange */
 				objectUnderTest := newCli(
@@ -348,7 +347,6 @@ var _ = Context("cli", func() {
 				/* assert */
 				Expect(actualErr).To(BeNil())
 			})
-
 		})
 
 		Context("ui", func() {

@@ -32,10 +32,6 @@ var _ = Context("parallelLoopCaller", func() {
 
 				objectUnderTest := _parallelLoopCaller{
 					caller: fakeCaller,
-				}
-
-				/* act */
-				objectUnderTest.Call(
 					context.Background(),
 					"id",
 					map[string]*model.Value{},

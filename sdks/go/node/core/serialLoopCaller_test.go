@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
-
 	"io"
 
 	"github.com/dgraph-io/badger/v2"
@@ -203,12 +202,10 @@ var _ = Context("serialLoopCaller", func() {
 							fakeContainerRuntime,
 							pubSub,
 							newStateStore(
-								ctx,
 								db,
 								pubSub,
 							),
 						),
-						dbDir,
 						pubSub,
 					),
 					pubSub: pubSub,
@@ -220,15 +217,11 @@ var _ = Context("serialLoopCaller", func() {
 					"",
 					map[string]*model.Value{},
 					model.SerialLoopCallSpec{
-						Range: model.Value{
-							Array: &[]interface{}{0, 1},
 						},
 						Run: model.CallSpec{
 							Container: &model.ContainerCallSpec{
 								Image: &model.ContainerCallImageSpec{
 									Ref: imageRef,
-								},
-							},
 						},
 					},
 					providedOpRef,

@@ -14,6 +14,7 @@ import (
 	"github.com/dgraph-io/badger/v2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	uniquestringFakes "github.com/opctl/opctl/sdks/go/internal/uniquestring/fakes"
 	"github.com/opctl/opctl/sdks/go/model"
 	containerRuntimeFakes "github.com/opctl/opctl/sdks/go/node/core/containerruntime/fakes"
 	. "github.com/opctl/opctl/sdks/go/node/core/internal/fakes"
@@ -33,7 +34,6 @@ var _ = Context("serialCaller", func() {
 		It("should call caller for every serialCall w/ expected args", func() {
 			/* arrange */
 			providedCtx := context.Background()
-			providedCallID := "providedCallID"
 			providedInboundScope := map[string]*model.Value{}
 			providedRootCallID := "providedRootCallID"
 			providedOpPath := "providedOpPath"
@@ -68,11 +68,7 @@ var _ = Context("serialCaller", func() {
 				uniqueStringFactory: fakeUniqueStringFactory,
 			}
 
-
-		Context("caller errors", func() {
-			It("should return expected results", func() {
-				/* arrange */
-				dbDir, err := ioutil.TempDir("", "")
+			Context("caller errors", func() {
 				if nil != err {
 					panic(err)
 				}

@@ -11,6 +11,8 @@ inputs:
       description: git branch the coverage should be associated with
       default: main
   HOME:
+    dir:
+      description: Home directory of caller; used to access go modules
   version:
     string:
       default: 0.0.0

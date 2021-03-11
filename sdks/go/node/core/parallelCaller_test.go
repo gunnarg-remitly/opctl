@@ -207,6 +207,28 @@ var _ = Context("parallelCaller", func() {
 				expectedChildCallIDs = append(expectedChildCallIDs, childCallID)
 				return childCallID, nil
 			}
+			providedOpRef := "providedOpRef"
+			providedParentID := "providedParentID"
+			providedRootID := "providedRootID"
+			childOpRef := filepath.Join(wd, "testdata/parallelCaller")
+			input1Key := "input1"
+			childOp1Path := filepath.Join(childOpRef, "op1")
+			childOp2Path := filepath.Join(childOpRef, "op2")
+
+			ctx := context.Background()
+
+			fakeContainerRuntime := new(containerRuntimeFakes.FakeContainerRuntime)
+			fakeContainerRuntime.RunContainerStub = func(
+				ctx context.Context,
+				req *model.ContainerCall,
+				rootCallID string,
+				eventPublisher pubsub.EventPublisher,
+				stdOut io.WriteCloser,
+				stdErr io.WriteCloser,
+			) (*int64, error) {
+
+				stdErr.Close()
+				stdOut.Close()
 
 			objectUnderTest := _parallelCaller{
 				caller:              fakeCaller,
@@ -222,6 +244,9 @@ var _ = Context("parallelCaller", func() {
 				providedOpPath,
 				providedCallSpecParallelCalls,
 			)
+			if nil != err {
+				panic(err)
+			}
 
 			/* assert */
 			Expect(actualOutputs).To(BeNil())
