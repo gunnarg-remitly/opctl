@@ -41,27 +41,24 @@ func (gp _git) TryResolve(
 	ctx context.Context,
 	dataRef string,
 ) (model.DataHandle, error) {
-
 	// attempt to resolve within singleFlight.Group to ensure concurrent resolves don't race
 	handle, err, _ := resolveSingleFlightGroup.Do(
 		dataRef,
 		func() (interface{}, error) {
 			// attempt to resolve from cache
-			handle, err := gp.localFSProvider.TryResolve(ctx, dataRef)
+			handle, _ := gp.localFSProvider.TryResolve(ctx, dataRef)
 			// ignore errors from local resolution
-			if nil != handle {
+			if handle != nil {
 				return handle, nil
 			}
 
 			// attempt pull if cache miss
-			err = Pull(ctx, gp.basePath, dataRef, gp.pullCreds)
-			if nil != err {
+			if err := Pull(ctx, gp.basePath, dataRef, gp.pullCreds); err != nil {
 				return nil, err
 			}
 			return newHandle(filepath.Join(gp.basePath, dataRef), dataRef), nil
 		},
 	)
-
 	if nil != err {
 		return nil, err
 	}

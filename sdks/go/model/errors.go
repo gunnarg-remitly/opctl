@@ -4,12 +4,12 @@ package model
 type ErrDataProviderAuthentication struct{}
 
 func (ear ErrDataProviderAuthentication) Error() string {
-	return "Data pull failed due to invalid/lack of authentication"
+	return "unauthenticated"
 }
 
 // ErrDataProviderAuthorization conveys data pull failed due to authorization
 type ErrDataProviderAuthorization struct{}
 
 func (ear ErrDataProviderAuthorization) Error() string {
-	return "Data pull failed due to insufficient/lack of authorization"
+	return "unauthorized"
 }
