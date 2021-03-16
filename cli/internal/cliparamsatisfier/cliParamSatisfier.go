@@ -59,7 +59,7 @@ func (cps _CLIParamSatisfier) Satisfy(
 
 			rawArg, ok := inputSourcer.Source(paramName)
 			if !ok {
-				return nil, fmt.Errorf(`failed to get input "%s"`, paramName)
+				return nil, fmt.Errorf("failed to get input '%s'", paramName)
 			}
 
 			switch {

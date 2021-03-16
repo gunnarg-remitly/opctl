@@ -1,9 +1,8 @@
 package file
 
 import (
-	"errors"
 	"fmt"
-	"os"
+	"io/ioutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,15 +24,18 @@ var _ = Context("Interpret", func() {
 
 				/* assert */
 				Expect(actualValue).To(BeNil())
-				Expect(actualErr).To(Equal(errors.New("unable to interpret $() to file; error was unable to interpret '' as reference; '' not in scope")))
+				Expect(actualErr).To(MatchError("unable to interpret $() to file: unable to interpret '' as reference: '' not in scope"))
 			})
 		})
 		Context("reference.Interpret doesn't error", func() {
 			It("should return expected result", func() {
 				/* arrange */
 				identifier := "identifier"
-
 				expectedValue := model.Value{File: new(string)}
+				scratchDir, err := ioutil.TempDir("", "")
+				if err != nil {
+					panic(err)
+				}
 
 				/* act */
 				actualResultValue, actualErr := Interpret(
@@ -41,7 +43,7 @@ var _ = Context("Interpret", func() {
 						identifier: &expectedValue,
 					},
 					fmt.Sprintf("$(%s)", identifier),
-					os.TempDir(),
+					scratchDir,
 					false,
 				)
 
@@ -54,28 +56,37 @@ var _ = Context("Interpret", func() {
 	Context("value.Interpret errs", func() {
 		It("should return expected result", func() {
 			/* arrange */
+			scratchDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				panic(err)
+			}
+
 			/* act */
 			_, actualErr := Interpret(
 				map[string]*model.Value{},
 				nil,
-				os.TempDir(),
+				scratchDir,
 				false,
 			)
 
 			/* assert */
-			Expect(actualErr).To(Equal(errors.New("unable to interpret <nil> to file; error was unable to interpret <nil> as value; unsupported type")))
+			Expect(actualErr).To(MatchError("unable to interpret <nil> to file: unable to interpret <nil> as value: unsupported type"))
 		})
 	})
 	Context("value.Interpret doesn't err", func() {
 		It("should return expected result", func() {
 			/* arrange */
 			providedExpression := model.Value{File: new(string)}
+			scratchDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				panic(err)
+			}
 
 			/* act */
 			actualResultValue, actualErr := Interpret(
 				map[string]*model.Value{},
 				providedExpression,
-				os.TempDir(),
+				scratchDir,
 				false,
 			)
 

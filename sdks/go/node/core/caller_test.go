@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -30,12 +31,16 @@ var _ = Context("caller", func() {
 			It("should not throw", func() {
 				/* arrange */
 				fakeContainerCaller := new(FakeContainerCaller)
+				dataDir, err := ioutil.TempDir("", "")
+				if err != nil {
+					panic(err)
+				}
 
 				/* act */
 				objectUnderTest := _caller{
 					eventChannel:    make(chan model.Event, 1000),
 					containerCaller: fakeContainerCaller,
-					dataDirPath:     os.TempDir(),
+					dataDirPath:     dataDir,
 				}
 
 				/* assert */
@@ -89,7 +94,7 @@ var _ = Context("caller", func() {
 				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					containerCaller: new(FakeContainerCaller),
-					dataDirPath:     os.TempDir(),
+					dataDirPath:     dataDir,
 					serialCaller:    fakeSerialCaller,
 					eventChannel:    eventChannel,
 				}
@@ -157,7 +162,7 @@ var _ = Context("caller", func() {
 				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
 					containerCaller: fakeContainerCaller,
-					dataDirPath:     os.TempDir(),
+					dataDirPath:     dataDir,
 					eventChannel:    eventChannel,
 				}
 
@@ -220,7 +225,7 @@ var _ = Context("caller", func() {
 
 				eventChannel := make(chan model.Event, 2)
 				objectUnderTest := _caller{
-					dataDirPath:  os.TempDir(),
+					dataDirPath:  dataDir,
 					opCaller:     fakeOpCaller,
 					eventChannel: eventChannel,
 				}

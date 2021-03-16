@@ -74,7 +74,7 @@ var _ = Context("imagePuller", func() {
 				)
 
 				/* assert */
-				Expect(actualError).To(Equal(expectedError))
+				Expect(actualError).To(MatchError(expectedError))
 			})
 		})
 	})

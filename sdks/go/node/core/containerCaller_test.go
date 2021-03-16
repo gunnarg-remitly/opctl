@@ -110,7 +110,7 @@ var _ = Context("containerCaller", func() {
 
 				/* assert */
 				Expect(actualOutputs).To(Equal(map[string]*model.Value{}))
-				Expect(actualErr).To(Equal(errors.New(expectedErrorMessage)))
+				Expect(actualErr).To(MatchError(expectedErrorMessage))
 			})
 		})
 	})

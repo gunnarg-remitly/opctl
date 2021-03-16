@@ -99,7 +99,7 @@ func (dtr _dataResolver) Resolve(
 			return opDirHandle, nil
 		}
 
-		if err, ok := err.(data.ErrDataResolution); ok && err.IsAuthError() && !reattemptedAuth {
+		if model.IsAuthError(err) && !reattemptedAuth {
 			// auth errors can be fixed by supplying correct creds so don't give up; prompt
 			cliPromptInputSrc := dtr.cliParamSatisfier.NewCliPromptInputSrc(credsPromptInputs)
 

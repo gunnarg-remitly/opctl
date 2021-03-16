@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-
-	"io/ioutil"
-
 	"io"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/dgraph-io/badger/v2"
@@ -113,7 +111,7 @@ var _ = Context("serialCaller", func() {
 				)
 
 				/* assert */
-				Expect(actualErr).To(Equal(errors.New("image required")))
+				Expect(actualErr).To(MatchError("image required"))
 			})
 		})
 		It("should start each child as expected", func() {

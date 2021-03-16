@@ -3,7 +3,7 @@ package git
 import (
 	"context"
 	"fmt"
-	"os"
+	"io/ioutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,8 +22,10 @@ var _ = Context("Pull", func() {
 				nil,
 			)
 
+			fmt.Print(actualError.Error())
+
 			/* assert */
-			Expect(actualError).To(MatchError(`parse \"\\\\///%%&\": invalid URL escape \"%%&\"`))
+			Expect(actualError).To(MatchError(`invalid git ref: parse "\\///%%&": invalid URL escape "%%&"`))
 		})
 	})
 	Context("parseRef doesn't err", func() {
@@ -32,7 +34,10 @@ var _ = Context("Pull", func() {
 				It("shouldn't error", func() {
 
 					/* arrange */
-					providedPath := os.TempDir()
+					providedPath, err := ioutil.TempDir("", "")
+					if err != nil {
+						panic(err)
+					}
 					// some small public repo
 					providedRef := "github.com/opspec-pkgs/_.op.create#3.2.0"
 
@@ -62,7 +67,10 @@ var _ = Context("Pull", func() {
 				It("should return expected error", func() {
 
 					/* arrange */
-					providedPath := os.TempDir()
+					providedPath, err := ioutil.TempDir("", "")
+					if err != nil {
+						panic(err)
+					}
 
 					// some small private repo
 					providedRef := "github.com/Remitly/infra-ops#9.1.6"
@@ -78,14 +86,17 @@ var _ = Context("Pull", func() {
 					)
 
 					/* assert */
-					Expect(actualError).To(Equal(expectedError))
+					Expect(actualError).To(MatchError(expectedError))
 				})
 			})
 			Context("err.Error() returns transport.ErrAuthorizationFailed error", func() {
 				It("should return expected error", func() {
 
 					/* arrange */
-					providedPath := os.TempDir()
+					providedPath, err := ioutil.TempDir("", "")
+					if err != nil {
+						panic(err)
+					}
 
 					// gitlab cuz github returns 404 not 403
 					providedRef := "gitlab.com/joetesterperson1/private#0.0.0"
@@ -104,18 +115,21 @@ var _ = Context("Pull", func() {
 					)
 
 					/* assert */
-					Expect(actualError).To(Equal(expectedError))
+					Expect(actualError).To(MatchError(expectedError))
 				})
 			})
 			Context("err.Error() returns other error", func() {
 				It("should return error", func() {
-
 					/* arrange */
-					providedPath := os.TempDir()
+					providedPath, err := ioutil.TempDir("", "")
+					if err != nil {
+						panic(err)
+					}
+
 					// non existent
 					providedRef := "dummyDataRef#0.0.0"
 
-					expectedMsg := fmt.Sprint(`Get "https://dummyDataRef/info/refs?service=git-upload-pack": dial tcp: lookup dummyDataRef on 127.0.0.11:53: no such host`)
+					expectedMsg := `Get "https://dummyDataRef/info/refs?service=git-upload-pack": dial tcp: lookup dummyDataRef on 127.0.0.11:53: no such host`
 
 					/* act */
 					actualError := Pull(

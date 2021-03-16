@@ -209,7 +209,7 @@ func (clr _caller) Call(
 			rootCallID,
 		)
 	default:
-		err = fmt.Errorf("invalid call graph %+v", callSpec)
+		err = fmt.Errorf("invalid call graph '%+v'", callSpec)
 	}
 
 	return outputs, err

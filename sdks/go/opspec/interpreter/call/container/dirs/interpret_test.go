@@ -1,10 +1,8 @@
 package dirs
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
@@ -17,22 +15,27 @@ var _ = Context("Interpret", func() {
 		It("should return expected error", func() {
 			/* arrange */
 			identifier := "identifier"
+			dataDir, err := ioutil.TempDir("", "")
+			if err != nil {
+				panic(err)
+			}
+
 			/* act */
 			_, actualErr := Interpret(
 				map[string]*model.Value{
-					identifier: &model.Value{
+					identifier: {
 						Socket: new(string),
 					},
 				},
 				map[string]interface{}{
 					"/something": fmt.Sprintf("$(%s)", identifier),
 				},
-				os.TempDir(),
+				dataDir,
 				"dataDirPath",
 			)
 
 			/* assert */
-			Expect(actualErr).To(Equal(errors.New("unable to bind /something to $(identifier); error was unable to interpret $(identifier) to dir; error was unable to coerce socket to dir; incompatible types")))
+			Expect(actualErr).To(MatchError("unable to bind /something to $(identifier): unable to interpret $(identifier) to dir: unable to coerce socket to dir: incompatible types"))
 		})
 	})
 	Context("dir.Interpret doesn't err", func() {
@@ -41,25 +44,29 @@ var _ = Context("Interpret", func() {
 				/* arrange */
 				identifier := "identifier"
 
+				dataDir, err := ioutil.TempDir("", "")
+				if nil != err {
+					panic(err)
+				}
 				dirPath, err := ioutil.TempDir("", "")
 				if nil != err {
 					panic(err)
 				}
 
 				expectedDirs := map[string]string{
-					"/something": filepath.Join(os.TempDir(), "/something"),
+					"/something": filepath.Join(dataDir, "/something"),
 				}
 
 				/* act */
 				actualContainerCallDirs, actualErr := Interpret(
 					map[string]*model.Value{
-						identifier: &model.Value{Dir: &dirPath},
+						identifier: {Dir: &dirPath},
 					},
 					map[string]interface{}{
 						// implicitly bound
 						"/something": fmt.Sprintf("$(%s)", identifier),
 					},
-					os.TempDir(),
+					dataDir,
 					filepath.Dir(dirPath),
 				)
 
@@ -92,7 +99,7 @@ var _ = Context("Interpret", func() {
 					/* act */
 					actualResult, actualErr := Interpret(
 						map[string]*model.Value{
-							identifier: &model.Value{Dir: &dirValue},
+							identifier: {Dir: &dirValue},
 						},
 						map[string]interface{}{
 							// implicitly bound

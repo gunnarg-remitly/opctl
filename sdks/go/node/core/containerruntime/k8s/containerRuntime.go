@@ -7,6 +7,7 @@ import (
 
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/pkg/errors"
 	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -41,13 +42,12 @@ func (cr _containerRuntime) DeleteContainerIfExists(
 	ctx context.Context,
 	containerID string,
 ) error {
-	err := cr.k8sClient.CoreV1().Pods("opctl").Delete(
+	if err := cr.k8sClient.CoreV1().Pods("opctl").Delete(
 		ctx,
 		constructPodName(containerID),
 		metaV1.DeleteOptions{},
-	)
-	if nil != err {
-		return fmt.Errorf("unable to delete container. Response from k8s was: %v", err.Error())
+	); err != nil {
+		return errors.Wrap(err, "unable to delete k8s container")
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func (cr _containerRuntime) RunContainer(
 			)
 			logSrc, err := logsResult.Stream(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("running, LogStreamError %s", err)
+				return nil, errors.Wrap(err, "running LogStreamError")
 			}
 			defer logSrc.Close()
 
@@ -130,7 +130,7 @@ func (cr _containerRuntime) RunContainer(
 			)
 			logSrc, err := logsResult.Stream(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("running, LogStreamError %s", err)
+				return nil, errors.Wrap(err, "failed, LogStreamError")
 			}
 			defer logSrc.Close()
 			_, err = io.Copy(stdout, logSrc)

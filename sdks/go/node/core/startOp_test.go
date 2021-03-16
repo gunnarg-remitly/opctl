@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -17,7 +18,6 @@ var _ = Context("core", func() {
 	Context("StartOp", func() {
 		Context("data.Resolve errs", func() {
 			It("should return expected result", func() {
-
 				/* arrange */
 				providedCtx := context.Background()
 				providedStartOpReq := model.StartOpReq{
@@ -37,7 +37,7 @@ var _ = Context("core", func() {
 				)
 
 				/* assert */
-				Expect(actualErr.Error()).To(Equal(`Get "https://dummyOpRef/info/refs?service=git-upload-pack": dial tcp: lookup dummyOpRef: no such host`))
+				Expect(actualErr).NotTo(BeNil())
 			})
 		})
 		Context("data.Resolve doesn't err", func() {
@@ -88,7 +88,10 @@ var _ = Context("core", func() {
 					}
 
 					fakeCaller := new(FakeCaller)
-					dataCachePath := os.TempDir()
+					dataCachePath, err := ioutil.TempDir("", "")
+					if err != nil {
+						panic(err)
+					}
 
 					objectUnderTest := core{
 						caller:        fakeCaller,

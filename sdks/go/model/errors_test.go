@@ -9,7 +9,7 @@ var _ = Context("ErrDataProviderAuthentication", func() {
 	Context("Error", func() {
 		It("should return expected result", func() {
 			/* arrange */
-			expectedResult := "Data pull failed due to invalid/lack of authentication"
+			expectedResult := "unauthenticated"
 			objectUnderTest := ErrDataProviderAuthentication{}
 
 			/* act */
@@ -26,7 +26,7 @@ var _ = Context("ErrDataProviderAuthorization", func() {
 	Context("Error", func() {
 		It("should return expected result", func() {
 			/* arrange */
-			expectedResult := "Data pull failed due to insufficient/lack of authorization"
+			expectedResult := "unauthorized"
 			objectUnderTest := ErrDataProviderAuthorization{}
 
 			/* act */

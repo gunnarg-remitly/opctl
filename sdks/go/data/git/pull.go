@@ -54,19 +54,20 @@ func Pull(
 		cloneOptions,
 	); nil != err {
 		if _, ok := err.(git.NoMatchingRefSpecError); ok {
-			return fmt.Errorf("version \"%s\" not found", parsedPkgRef.Version)
+			return fmt.Errorf("version '%s' not found", parsedPkgRef.Version)
 		}
-		switch err.Error() {
-		case transport.ErrAuthenticationRequired.Error():
+		if errors.Is(err, transport.ErrAuthenticationRequired) {
 			return model.ErrDataProviderAuthentication{}
-		case transport.ErrAuthorizationFailed.Error():
-			return model.ErrDataProviderAuthorization{}
-		case git.ErrRepositoryAlreadyExists.Error():
-			return nil
-			// NoOp on repo already exists
-		default:
-			return err
 		}
+		if errors.Is(err, transport.ErrAuthorizationFailed) {
+			return model.ErrDataProviderAuthorization{}
+		}
+		if errors.Is(err, git.ErrRepositoryAlreadyExists) {
+			// if the repository already exists, it's already been cloned and we can
+			// procede. Maybe a concurrent puller got it?
+			return nil
+		}
+		return err
 	}
 
 	// remove pkg '.git' sub dir

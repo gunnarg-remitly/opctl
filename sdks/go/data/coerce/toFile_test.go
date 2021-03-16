@@ -1,8 +1,7 @@
 package coerce
 
 import (
-	"fmt"
-	"os"
+	"io/ioutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,7 +9,11 @@ import (
 )
 
 var _ = Context("ToFile", func() {
-	tmpDir := os.TempDir()
+	tmpDir, err := ioutil.TempDir("", "")
+	if err != nil {
+		panic(err)
+	}
+
 	Context("Value is nil", func() {
 		Context("ioutil.WriteFile doesn't err", func() {
 			It("should return expected result", func() {
@@ -86,7 +89,7 @@ var _ = Context("ToFile", func() {
 
 			/* assert */
 			Expect(actualValue).To(BeNil())
-			Expect(actualErr).To(Equal(fmt.Errorf("unable to coerce dir '%v' to file; incompatible types", providedDir)))
+			Expect(actualErr).To(MatchError("unable to coerce dir 'dummyValue' to file: incompatible types"))
 		})
 	})
 	Context("Value.File isn't nil", func() {

@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"github.com/docker/docker/api/types/network"
 	dockerClientPkg "github.com/docker/docker/client"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/pkg/errors"
 )
 
 type runContainer interface {
@@ -218,7 +218,7 @@ func (cr _runContainer) RunContainer(
 	case waitOk := <-waitOkChan:
 		exitCode = waitOk.StatusCode
 	case waitErr := <-waitErrChan:
-		err = fmt.Errorf("error encountered waiting on container; error was: %v", waitErr.Error())
+		err = errors.Wrap(waitErr, "error waiting on container")
 	}
 
 	// ensure stdout, and stderr all read before returning
