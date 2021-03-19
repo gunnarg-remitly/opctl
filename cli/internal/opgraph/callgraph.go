@@ -235,6 +235,9 @@ func (g *CallGraph) HandleEvent(event *model.Event) error {
 		}
 		return g.rootNode.insert(&event.CallStarted.Call, event.Timestamp, "")
 	} else if event.CallEnded != nil {
+		if g.rootNode == nil {
+			return nil
+		}
 		node := g.rootNode.find(&event.CallEnded.Call)
 		if node == nil {
 			return g.rootNode.insert(&event.CallEnded.Call, event.Timestamp, skippedState)
