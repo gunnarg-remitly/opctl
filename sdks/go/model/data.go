@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
+	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 )
 
@@ -133,4 +135,67 @@ func (value Value) Unbox() (interface{}, error) {
 		return *value.String, nil
 	}
 	return nil, fmt.Errorf("unable to unbox value '%+v'", value)
+}
+
+func (value Value) format() (interface{}, error) {
+	if nil != value.Array {
+		formattedArray := []interface{}{}
+		for itemKey, itemValue := range *value.Array {
+			switch typedItemValue := itemValue.(type) {
+			case Value:
+				formattedValue, err := typedItemValue.format()
+				if nil != err {
+					return "", errors.Wrap(err, fmt.Sprintf("unable to stringify item '%v' from array", itemKey))
+				}
+
+				formattedArray = append(formattedArray, formattedValue)
+			default:
+				formattedArray = append(formattedArray, itemValue)
+			}
+		}
+		return formattedArray, nil
+	} else if nil != value.Boolean {
+		return strconv.FormatBool(*value.Boolean), nil
+	} else if nil != value.Dir {
+		return *value.Dir, nil
+	} else if nil != value.File {
+		return *value.File, nil
+	} else if nil != value.Number {
+		return fmt.Sprintf("%f", *value.Number), nil
+	} else if nil != value.Object {
+		formattedMap := map[string]interface{}{}
+		for propKey, propValue := range *value.Object {
+			switch typedPropValue := propValue.(type) {
+			case Value:
+				var err error
+				if formattedMap[propKey], err = typedPropValue.format(); nil != err {
+					return "", errors.Wrap(err, fmt.Sprintf("unable to stringify property '%v' from object", propKey))
+				}
+			default:
+				formattedMap[propKey] = propValue
+			}
+		}
+		return formattedMap, nil
+	} else if nil != value.Socket {
+		return *value.Socket, nil
+	} else if nil != value.String {
+		return *value.String, nil
+	}
+	return "", fmt.Errorf("unable to stringify value '%+v'", value)
+}
+
+func FormatValueMap(valueMap map[string]*Value) (string, error) {
+	formattedValues := map[string]interface{}{}
+	for name, value := range valueMap {
+		description, err := value.format()
+		if err != nil {
+			return "", err
+		}
+		formattedValues[name] = description
+	}
+	bytes, err := yaml.Marshal(formattedValues)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
 }

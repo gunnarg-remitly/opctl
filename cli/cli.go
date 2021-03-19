@@ -229,20 +229,24 @@ func newCli(
 		opRef := runCmd.StringArg("OP_REF", "", "Op reference (either `relative/path`, `/absolute/path`, `host/path/repo#tag`, or `host/path/repo#tag/path`)")
 
 		runCmd.Action = func() {
-			exitWith(
-				"",
-				run(
-					ctx,
-					cliOutput,
-					cliParamSatisfier,
-					eventChannel,
-					opNode,
-					opFormatter,
-					*opRef,
-					&RunOpts{Args: *args, ArgFile: *argFile},
-					*displayLiveGraph,
-				),
+			outputs, err := run(
+				ctx,
+				cliOutput,
+				cliParamSatisfier,
+				eventChannel,
+				opNode,
+				opFormatter,
+				*opRef,
+				&RunOpts{Args: *args, ArgFile: *argFile},
+				*displayLiveGraph,
 			)
+			if err != nil {
+				exitWith("", err)
+			} else if len(outputs) > 0 {
+				exitWith(model.FormatValueMap(outputs))
+			} else {
+				exitWith("", nil)
+			}
 		}
 	})
 

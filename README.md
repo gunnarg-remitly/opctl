@@ -59,7 +59,8 @@ changes.
   - Ensure container cleanup won't happen with a cancelled context
 - Move `ListDescendants` and `GetData` implementation to sdk core, instead of the api client
 - Emit CallStarted events for skipped conditional branches [#859](https://github.com/opctl/opctl/pull/859)
-- Remove custom pubsub?
+- Remove custom pubsub in favor of plain channels
+- Display op outputs after running
 
 ## back to main
 

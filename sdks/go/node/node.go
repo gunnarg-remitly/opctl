@@ -23,7 +23,7 @@ type Node interface {
 		ctx context.Context,
 		req model.StartOpReq,
 	) (
-		rootCallID string,
+		outputs map[string]*model.Value,
 		err error,
 	)
 

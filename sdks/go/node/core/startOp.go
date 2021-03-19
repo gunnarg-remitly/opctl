@@ -14,7 +14,7 @@ import (
 func (this core) StartOp(
 	ctx context.Context,
 	req model.StartOpReq,
-) (string, error) {
+) (map[string]*model.Value, error) {
 	opHandle, err := data.Resolve(
 		ctx,
 		req.Op.Ref,
@@ -22,13 +22,13 @@ func (this core) StartOp(
 		git.New(this.dataCachePath, req.Op.PullCreds),
 	)
 	if nil != err {
-		return "", err
+		return nil, err
 	}
 
 	callID, err := uniquestring.Construct()
 	if nil != err {
 		// end run immediately on any error
-		return "", err
+		return nil, err
 	}
 
 	// construct opCallSpec
@@ -56,14 +56,14 @@ func (this core) StartOp(
 		*opHandle.Path(),
 	)
 	if nil != err {
-		return "", err
+		return nil, err
 	}
 	for name := range opFile.Outputs {
 		// implicitly bind
 		opCallSpec.Outputs[name] = ""
 	}
 
-	_, err = this.caller.Call(
+	return this.caller.Call(
 		ctx,
 		callID,
 		req.Args,
@@ -74,5 +74,4 @@ func (this core) StartOp(
 		nil,
 		callID,
 	)
-	return callID, err
 }

@@ -26,6 +26,11 @@ type RunOpts struct {
 	Args    []string
 }
 
+type runResults struct {
+	outputs map[string]*model.Value
+	err     error
+}
+
 func run(
 	ctx context.Context,
 	cliOutput clioutput.CliOutput,
@@ -36,7 +41,7 @@ func run(
 	opRef string,
 	opts *RunOpts,
 	displayLiveGraph bool,
-) error {
+) (map[string]*model.Value, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -51,7 +56,7 @@ func run(
 		nil,
 	)
 	if nil != err {
-		return err
+		return nil, err
 	}
 
 	opFileReader, err := opHandle.GetContent(
@@ -59,12 +64,12 @@ func run(
 		opfile.FileName,
 	)
 	if nil != err {
-		return err
+		return nil, err
 	}
 
 	opFileBytes, err := ioutil.ReadAll(opFileReader)
 	if nil != err {
-		return err
+		return nil, err
 	}
 
 	opFile, err := opfile.Unmarshal(
@@ -72,17 +77,17 @@ func run(
 		opFileBytes,
 	)
 	if nil != err {
-		return err
+		return nil, err
 	}
 
 	ymlFileInputSrc, err := cliParamSatisfier.NewYMLFileInputSrc(opts.ArgFile)
 	if nil != err {
-		return errors.Wrap(err, fmt.Sprintf("unable to load arg file at '%v'", opts.ArgFile))
+		return nil, errors.Wrap(err, fmt.Sprintf("unable to load arg file at '%v'", opts.ArgFile))
 	}
 
 	cliPromptInputSrc := cliParamSatisfier.NewCliPromptInputSrc(opFile.Inputs)
 	if nil != err {
-		return err
+		return nil, err
 	}
 	argsMap, err := cliParamSatisfier.Satisfy(
 		cliparamsatisfier.NewInputSourcer(
@@ -95,7 +100,7 @@ func run(
 		opFile.Inputs,
 	)
 	if nil != err {
-		return err
+		return nil, err
 	}
 
 	aSigIntWasReceivedAlready := false
@@ -121,9 +126,9 @@ func run(
 	)
 
 	// listen for op end on a channel
-	done := make(chan error, 1)
+	done := make(chan runResults, 1)
 	go func() {
-		_, err := node.StartOp(
+		outputs, err := node.StartOp(
 			ctx,
 			model.StartOpReq{
 				Args: argsMap,
@@ -132,7 +137,10 @@ func run(
 				},
 			},
 		)
-		done <- err
+		done <- runResults{
+			outputs: outputs,
+			err:     err,
+		}
 	}()
 
 	// "request animation frame" like loop to force refresh of display loading spinners
@@ -178,7 +186,7 @@ func run(
 				displayGraph()
 				cancel()
 			} else {
-				return &RunError{
+				return nil, &RunError{
 					ExitCode: 130,
 					message:  "Terminated by Control-C",
 				}
@@ -197,17 +205,17 @@ func run(
 			displayGraph()
 			cancel()
 
-		case err := <-done:
+		case results := <-done:
 			clearGraph()
-			if !errors.Is(err, context.Canceled) {
-				return err
+			if results.err != nil && !errors.Is(results.err, context.Canceled) {
+				return nil, results.err
 			}
-			return nil
+			return results.outputs, nil
 
 		case event, isEventChannelOpen := <-eventChannel:
 			clearGraph()
 			if !isEventChannelOpen {
-				return errors.New("Event channel closed unexpectedly")
+				return nil, errors.New("Event channel closed unexpectedly")
 			}
 
 			if err := state.HandleEvent(&event); err != nil {

@@ -39,6 +39,7 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/peterh/liner v1.1.0
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/common v0.6.0
 	github.com/rakyll/statik v0.1.7-0.20191104211043-6b2f3ee522b6
 	github.com/rhysd/go-github-selfupdate v1.2.3
 	github.com/satori/go.uuid v0.0.0-20181028125025-b2ce2384e17b
@@ -49,6 +50,7 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf
 	golang.org/x/tools v0.0.0-20200528171350-af9456bb6365 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/api v0.19.1
 	k8s.io/apimachinery v0.19.1
