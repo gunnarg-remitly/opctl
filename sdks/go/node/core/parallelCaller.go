@@ -2,11 +2,11 @@ package core
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"github.com/opctl/opctl/sdks/go/internal/uniquestring"
 	"github.com/opctl/opctl/sdks/go/model"
+	"github.com/opctl/opctl/sdks/go/opspec"
 )
 
 //counterfeiter:generate -o internal/fakes/parallelCaller.go . parallelCaller
@@ -29,10 +29,6 @@ func newParallelCaller(caller caller) parallelCaller {
 	return _parallelCaller{
 		caller: caller,
 	}
-}
-
-func refToName(ref string) string {
-	return strings.TrimSuffix(strings.TrimPrefix(ref, "$("), ")")
 }
 
 type _parallelCaller struct {
@@ -58,7 +54,7 @@ func (pc _parallelCaller) Call(
 	for _, childCall := range callSpecParallelCall {
 		// increment needed by counts for any needs
 		for _, neededCallRef := range childCall.Needs {
-			childCallNeededCountByName[refToName(neededCallRef)]++
+			childCallNeededCountByName[opspec.RefToName(neededCallRef)]++
 		}
 	}
 
@@ -140,7 +136,7 @@ func (pc _parallelCaller) Call(
 
 				// decrement needed by counts for any needs
 				for _, neededCallRef := range callSpecParallelCall[childCallIndex].Needs {
-					childCallNeededCountByName[refToName(neededCallRef)]--
+					childCallNeededCountByName[opspec.RefToName(neededCallRef)]--
 				}
 
 				for neededCallName, neededCount := range childCallNeededCountByName {

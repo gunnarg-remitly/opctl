@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/opctl/opctl/sdks/go/model"
 	"github.com/opctl/opctl/sdks/go/node/core/containerruntime"
+	"github.com/opctl/opctl/sdks/go/opspec"
 )
 
 //counterfeiter:generate -o internal/fakes/containerCaller.go . containerCaller
@@ -196,7 +196,7 @@ func (this _containerCaller) interpretOutputs(
 			if callSpecContainerFilePath == callContainerFilePath {
 				// copy callHostFilePath before taking address; range vars have same address for every iteration
 				value := callHostFilePath
-				outputs[strings.TrimSuffix(strings.TrimPrefix(mountSrcStr, "$("), ")")] = &model.Value{File: &value}
+				outputs[opspec.RefToName(mountSrcStr)] = &model.Value{File: &value}
 			}
 		}
 	}
@@ -216,7 +216,7 @@ func (this _containerCaller) interpretOutputs(
 			if callSpecContainerDirPath == callContainerDirPath {
 				// copy callHostDirPath before taking address; range vars have same address for every iteration
 				value := callHostDirPath
-				outputs[strings.TrimSuffix(strings.TrimPrefix(mountSrcStr, "$("), ")")] = &model.Value{Dir: &value}
+				outputs[opspec.RefToName(mountSrcStr)] = &model.Value{Dir: &value}
 			}
 		}
 	}
