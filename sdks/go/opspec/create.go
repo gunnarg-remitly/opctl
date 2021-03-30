@@ -27,7 +27,6 @@ func Create(
 
 	opFile := model.OpSpec{
 		Description: pkgDescription,
-		Name:        pkgName,
 	}
 
 	opFileBytes, err := yaml.Marshal(&opFile)

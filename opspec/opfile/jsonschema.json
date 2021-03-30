@@ -748,6 +748,7 @@
     },
     "properties": {
         "name": {
+            "deprecated": true,
             "description": "Name of the op",
             "type": "string"
         },
@@ -1081,6 +1082,7 @@
             }
         },
         "version": {
+            "deprecated": true,
             "description": "Version of the op",
             "$ref": "#/definitions/semVer"
         },
@@ -1089,8 +1091,5 @@
             "$ref": "#/definitions/semVer"
         }
     },
-    "required": [
-        "name"
-    ],
     "additionalProperties": false
 }

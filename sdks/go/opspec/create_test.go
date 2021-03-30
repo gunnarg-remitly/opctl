@@ -26,7 +26,6 @@ var _ = Context("Create", func() {
 
 		expectedOpFileBytes, err := yaml.Marshal(&model.OpSpec{
 			Description: providedPkgDescription,
-			Name:        providedPkgName,
 		})
 		if err != nil {
 			panic(err)
