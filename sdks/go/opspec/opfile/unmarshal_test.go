@@ -44,7 +44,6 @@ var _ = Context("Unmarshal", func() {
 			expectedOpFile := &model.OpSpec{
 				Description: "dummyDescription",
 				Inputs:      dummyParams,
-				Name:        "dummyName",
 				Outputs:     dummyParams,
 				Run: &model.CallSpec{
 					Op: &model.OpCallSpec{
