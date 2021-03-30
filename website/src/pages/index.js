@@ -19,7 +19,7 @@ const features = [
     imageUrl: 'img/fa_puzzle-piece.svg',
     description: (
       <>
-        Build ops out of other ops.
+        Build ops out of other local and remote ops.
       </>
     ),
   },
@@ -28,16 +28,16 @@ const features = [
     imageUrl: 'img/fa_square.svg',
     description: (
       <>
-        Say goodbye to operations-induced <a href="https://whatis.techtarget.com/definition/yak-shaving">yak shaving</a>.
+        Reproducible with minimal dependency management.
       </>
     ),
   },
   {
-    title: <>Distributable</>,
+    title: <>Strict data flow</>,
     imageUrl: 'img/fa_exchange.svg',
     description: (
       <>
-        Define once, use everywhere.
+        Strict, well defined semantics for data flow.
       </>
     ),
   },
@@ -76,7 +76,7 @@ function Feature({ imageUrl, title, description }) {
 function Home() {
   const context = useDocusaurusContext();
   const { siteConfig = {} } = context;
-  return ( 
+  return (
     <Layout
       title={siteConfig.title}
       description={siteConfig.tagline}>
