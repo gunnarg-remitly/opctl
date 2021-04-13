@@ -19,7 +19,7 @@ func Get(
 	filePath := filepath.Join(opPath, FileName)
 
 	opFileBytes, err := ioutil.ReadFile(filePath)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 

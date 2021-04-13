@@ -75,7 +75,7 @@ func (clr _caller) Call(
 	var call *model.Call
 	callStartTime := time.Now().UTC()
 
-	if nil != callCtx.Err() {
+	if callCtx.Err() != nil {
 		// if context done NOOP
 		return nil, nil
 	}
@@ -84,7 +84,7 @@ func (clr _caller) Call(
 	defer func() {
 		// defer must be defined before conditional return statements so it always runs
 
-		if nil == call {
+		if call == nil {
 			call = &model.Call{
 				ID:       id,
 				RootID:   rootCallID,
@@ -101,13 +101,13 @@ func (clr _caller) Call(
 			Timestamp: time.Now().UTC(),
 		}
 
-		if nil != ctx.Err() {
+		if ctx.Err() != nil {
 			// this call or parent call killed/cancelled
 			event.CallEnded.Outcome = model.OpOutcomeKilled
 			event.CallEnded.Error = &model.CallEndedError{
 				Message: ctx.Err().Error(),
 			}
-		} else if nil != err {
+		} else if err != nil {
 			event.CallEnded.Outcome = model.OpOutcomeFailed
 			event.CallEnded.Error = &model.CallEndedError{
 				Message: err.Error(),
@@ -119,7 +119,7 @@ func (clr _caller) Call(
 		clr.eventChannel <- event
 	}()
 
-	if nil == callSpec {
+	if callSpec == nil {
 		// NOOP
 		return outputs, err
 	}
@@ -134,11 +134,11 @@ func (clr _caller) Call(
 		rootCallID,
 		clr.dataDirPath,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
-	if nil != call.If && !*call.If {
+	if call.If != nil && !*call.If {
 		return outputs, err
 	}
 
@@ -153,7 +153,7 @@ func (clr _caller) Call(
 	}
 
 	switch {
-	case nil != callSpec.Container:
+	case callSpec.Container != nil:
 		outputs, err = clr.containerCaller.Call(
 			callCtx,
 			call.Container,
@@ -161,7 +161,7 @@ func (clr _caller) Call(
 			callSpec.Container,
 			rootCallID,
 		)
-	case nil != callSpec.Op:
+	case callSpec.Op != nil:
 		outputs, err = clr.opCaller.Call(
 			callCtx,
 			call.Op,
@@ -170,7 +170,7 @@ func (clr _caller) Call(
 			rootCallID,
 			callSpec.Op,
 		)
-	case nil != callSpec.Parallel:
+	case callSpec.Parallel != nil:
 		outputs, err = clr.parallelCaller.Call(
 			callCtx,
 			id,
@@ -179,7 +179,7 @@ func (clr _caller) Call(
 			opPath,
 			*callSpec.Parallel,
 		)
-	case nil != callSpec.ParallelLoop:
+	case callSpec.ParallelLoop != nil:
 		outputs, err = clr.parallelLoopCaller.Call(
 			callCtx,
 			id,
@@ -189,7 +189,7 @@ func (clr _caller) Call(
 			parentCallID,
 			rootCallID,
 		)
-	case nil != callSpec.Serial:
+	case callSpec.Serial != nil:
 		outputs, err = clr.serialCaller.Call(
 			callCtx,
 			id,
@@ -198,7 +198,7 @@ func (clr _caller) Call(
 			opPath,
 			*callSpec.Serial,
 		)
-	case nil != callSpec.SerialLoop:
+	case callSpec.SerialLoop != nil:
 		outputs, err = clr.serialLoopCaller.Call(
 			callCtx,
 			id,

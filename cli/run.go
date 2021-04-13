@@ -55,7 +55,7 @@ func run(
 		opRef,
 		nil,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -63,7 +63,7 @@ func run(
 		ctx,
 		opfile.FileName,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -76,17 +76,17 @@ func run(
 		filepath.Join(opHandle.Ref(), opfile.FileName),
 		opFileBytes,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
 	ymlFileInputSrc, err := cliParamSatisfier.NewYMLFileInputSrc(opts.ArgFile)
-	if nil != err {
+	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("unable to load arg file at '%v'", opts.ArgFile))
 	}
 
 	cliPromptInputSrc := cliParamSatisfier.NewCliPromptInputSrc(opFile.Inputs)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 	argsMap, err := cliParamSatisfier.Satisfy(
@@ -99,7 +99,7 @@ func run(
 		),
 		opFile.Inputs,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 

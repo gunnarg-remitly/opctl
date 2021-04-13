@@ -45,15 +45,15 @@ func (ip _imagePuller) Pull(
 ) error {
 
 	imagePullOptions := types.ImagePullOptions{}
-	if nil != imagePullCreds &&
-		"" != imagePullCreds.Username &&
-		"" != imagePullCreds.Password {
+	if imagePullCreds != nil &&
+		imagePullCreds.Username != "" &&
+		imagePullCreds.Password != "" {
 		var err error
 		imagePullOptions.RegistryAuth, err = constructRegistryAuth(
 			imagePullCreds.Username,
 			imagePullCreds.Password,
 		)
-		if nil != err {
+		if err != nil {
 			return err
 		}
 	}
@@ -63,7 +63,7 @@ func (ip _imagePuller) Pull(
 		imageRef,
 		imagePullOptions,
 	)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 	defer imagePullResp.Close()
@@ -74,7 +74,7 @@ func (ip _imagePuller) Pull(
 	dec := json.NewDecoder(imagePullResp)
 	for {
 		var jm jsonmessage.JSONMessage
-		if err = dec.Decode(&jm); nil != err {
+		if err = dec.Decode(&jm); err != nil {
 			if err == io.EOF {
 				err = nil
 			}

@@ -71,7 +71,7 @@ func (plpr _parallelLoopCaller) Call(
 
 	for {
 		childCallID, err := uniquestring.Construct()
-		if nil != err {
+		if err != nil {
 			// end run immediately on any error
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func (plpr _parallelLoopCaller) Call(
 			callSpecParallelLoop.Range,
 			callSpecParallelLoop.Vars,
 		)
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 
@@ -91,7 +91,7 @@ func (plpr _parallelLoopCaller) Call(
 			callSpecParallelLoop,
 			childCallScope,
 		)
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 

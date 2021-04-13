@@ -59,8 +59,8 @@ func (cc _containerCaller) Call(
 	outputs := map[string]*model.Value{}
 	var exitCode int64
 
-	if nil != containerCall.Image.Ref && nil == containerCall.Image.PullCreds {
-		if auth := cc.stateStore.TryGetAuth(*containerCall.Image.Ref); nil != auth {
+	if containerCall.Image.Ref != nil && containerCall.Image.PullCreds == nil {
+		if auth := cc.stateStore.TryGetAuth(*containerCall.Image.Ref); auth != nil {
 			containerCall.Image.PullCreds = &auth.Creds
 		}
 	}
@@ -94,7 +94,7 @@ func (cc _containerCaller) Call(
 	)
 
 	// @TODO: handle no exit code
-	if nil != rawExitCode {
+	if rawExitCode != nil {
 		exitCode = *rawExitCode
 	}
 
@@ -103,7 +103,7 @@ func (cc _containerCaller) Call(
 	}
 
 	// wait on logChan
-	if logChanErr := <-logChan; nil == err {
+	if logChanErr := <-logChan; err == nil {
 		// non-destructively set err
 		err = logChanErr
 	}
@@ -158,10 +158,10 @@ func (this _containerCaller) interpretLogs(
 	stdErrLogErr := <-stdErrLogChan
 
 	// return errs
-	if nil != stdOutLogErr {
+	if stdOutLogErr != nil {
 		return stdOutLogErr
 	}
-	if nil != stdErrLogErr {
+	if stdErrLogErr != nil {
 		return stdErrLogErr
 	}
 
@@ -186,7 +186,7 @@ func (this _containerCaller) interpretOutputs(
 			continue
 		}
 
-		if "" == mountSrcStr {
+		if mountSrcStr == "" {
 			// skip embedded files
 			continue
 		}
@@ -206,7 +206,7 @@ func (this _containerCaller) interpretOutputs(
 			continue
 		}
 
-		if "" == mountSrcStr {
+		if mountSrcStr == "" {
 			// skip embedded dirs
 			continue
 		}

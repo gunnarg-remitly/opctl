@@ -9,14 +9,20 @@ accordance with
 ### Added
 
 - Basic support for sending local files and directories to remote nodes when using the API client
+- [Allow defining description on call graph nodes](https://github.com/opctl/opctl/issues/900)
 
 ### Changed
 
 - Self-update now uses github releases instead of equinox.io
 - API now limits request body to 40Mb
-- Improved error output when op resolution fails. You'll now see a list of resolutions tried and why each failed. (https://github.com/opctl/opctl/pull/883)
-- More consistent error messaging formats (https://github.com/opctl/opctl/pull/885)
-- Detect invalid op output names (https://github.com/opctl/opctl/issues/798)
+- [Improved error output when op resolution fails. You'll now see a list of resolutions tried and why each failed.](https://github.com/opctl/opctl/pull/883)
+- [More consistent error messaging formats](https://github.com/opctl/opctl/pull/885)
+- [Detect invalid op output names](https://github.com/opctl/opctl/issues/798)
+- [Deprecated param.<datatype>.description; use param.description](https://github.com/opctl/opctl/issues/898)
+
+### Fixed
+
+- [vscode intellisense error](https://github.com/opctl/opctl/issues/615)
 
 ### Removed
 

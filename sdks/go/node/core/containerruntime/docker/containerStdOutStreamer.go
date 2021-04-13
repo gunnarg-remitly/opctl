@@ -34,7 +34,7 @@ func (ctp _containerStdOutStreamer) Stream(
 			ShowStdout: true,
 		},
 	)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 

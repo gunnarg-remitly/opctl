@@ -117,7 +117,7 @@ var _ = Context("RunContainer", func() {
 			}
 
 			portBindings, err := constructPortBindings(providedReq.Ports)
-			if nil != err {
+			if err != nil {
 				panic(err)
 			}
 
@@ -220,7 +220,7 @@ var _ = Context("RunContainer", func() {
 			}
 
 			expectedPortBindings, err := constructPortBindings(providedReq.Ports)
-			if nil != err {
+			if err != nil {
 				panic(err)
 			}
 

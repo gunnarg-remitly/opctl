@@ -82,7 +82,7 @@ func (oc _opCaller) Call(
 		&opCall.OpID,
 		rootCallID,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (oc _opCaller) Call(
 		ctx,
 		opCall.OpPath,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 	opOutputs, err = outputs.Interpret(
@@ -107,7 +107,7 @@ func (oc _opCaller) Call(
 	// filter op outboundScope to bound call outboundScope
 	for boundName, boundValue := range opCallSpec.Outputs {
 		// return bound outboundScope
-		if "" == boundValue {
+		if boundValue == "" {
 			// implicit value
 			boundValue = boundName
 		} else if !regexp.MustCompile("^\\$\\(.+\\)$").MatchString(boundValue) {

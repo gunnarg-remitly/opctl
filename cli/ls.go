@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -37,7 +38,7 @@ func ls(
 		dirRef,
 		nil,
 	)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
@@ -45,12 +46,12 @@ func ls(
 		ctx,
 		dirHandle,
 	)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
 	cwd, err := os.Getwd()
-	if nil != err {
+	if err != nil {
 		return err
 	}
 
@@ -59,14 +60,22 @@ func ls(
 		if filepath.IsAbs(opRef) {
 			// make absolute paths relative
 			relOpRef, err := filepath.Rel(cwd, opRef)
-			if nil != err {
+			if err != nil {
 				return err
 			}
 
 			opRef = strings.TrimPrefix(relOpRef, ".opspec/")
 		}
 
-		fmt.Fprintf(_tabWriter, "%v\t%v", opRef, op.Description)
+		scanner := bufio.NewScanner(strings.NewReader(op.Description))
+		if scanner.Scan() {
+			// first line of description, add the op ref
+			fmt.Fprintf(_tabWriter, "%v\t%v", opRef, scanner.Text())
+		}
+		for scanner.Scan() {
+			// subsequent lines, don't add the op ref but let the description span multiple lines
+			fmt.Fprintf(_tabWriter, "\n\t%v", scanner.Text())
+		}
 		fmt.Fprintln(_tabWriter)
 	}
 

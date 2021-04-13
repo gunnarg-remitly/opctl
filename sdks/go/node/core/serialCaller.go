@@ -49,7 +49,7 @@ func (sc _serialCaller) Call(
 	for _, callSpecCall := range callSpecSerialCall {
 		var childCallID string
 		childCallID, err := uniquestring.Construct()
-		if nil != err {
+		if err != nil {
 			// end run immediately on any error
 			return nil, err
 		}

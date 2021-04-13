@@ -18,7 +18,7 @@ var _ = Context("Create", func() {
 
 		/* arrange */
 		providedPath, err := ioutil.TempDir("", "")
-		if nil != err {
+		if err != nil {
 			panic(err)
 		}
 		providedPkgName := "dummyPkgName"
@@ -27,7 +27,7 @@ var _ = Context("Create", func() {
 		expectedOpFileBytes, err := yaml.Marshal(&model.OpSpec{
 			Description: providedPkgDescription,
 		})
-		if nil != err {
+		if err != nil {
 			panic(err)
 		}
 
@@ -40,7 +40,7 @@ var _ = Context("Create", func() {
 
 		/* assert */
 		actualOpFileBytes, err := ioutil.ReadFile(filepath.Join(providedPath, opfile.FileName))
-		if nil != err {
+		if err != nil {
 			panic(err)
 		}
 

@@ -31,14 +31,14 @@ var _ = Context("parallelCaller", func() {
 			It("should return expected results", func() {
 				/* arrange */
 				dbDir, err := ioutil.TempDir("", "")
-				if nil != err {
+				if err != nil {
 					panic(err)
 				}
 
 				db, err := badger.Open(
 					badger.DefaultOptions(dbDir).WithLogger(nil),
 				)
-				if nil != err {
+				if err != nil {
 					panic(err)
 				}
 				pubSub := pubsub.New(db)
@@ -84,7 +84,7 @@ var _ = Context("parallelCaller", func() {
 
 			/* arrange */
 			dbDir, err := ioutil.TempDir("", "")
-			if nil != err {
+			if err != nil {
 				panic(err)
 			}
 
@@ -131,7 +131,7 @@ var _ = Context("parallelCaller", func() {
 				ctx,
 				model.EventFilter{},
 			)
-			if nil != err {
+			if err != nil {
 				panic(err)
 			}
 

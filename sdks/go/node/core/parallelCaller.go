@@ -77,7 +77,7 @@ func (pc _parallelCaller) Call(
 	// perform calls in parallel w/ cancellation
 	for childCallIndex, childCall := range callSpecParallelCall {
 		childCallID, err := uniquestring.Construct()
-		if nil != err {
+		if err != nil {
 			// end run immediately on any error
 			return nil, err
 		}
@@ -85,7 +85,7 @@ func (pc _parallelCaller) Call(
 		childCallIndexByID[childCallID] = childCallIndex
 
 		var childCtx context.Context
-		if nil != childCall.Name {
+		if childCall.Name != nil {
 			childCallIndexByName[*childCall.Name] = childCallIndex
 			childCtx, childCallCancellationByIndex[childCallIndex] = context.WithCancel(parallelCtx)
 		} else {

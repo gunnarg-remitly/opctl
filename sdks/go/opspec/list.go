@@ -18,7 +18,7 @@ func List(
 ) (map[string]*model.OpSpec, error) {
 
 	contents, err := dirHandle.ListDescendants(ctx)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -27,13 +27,13 @@ func List(
 		if filepath.Base(content.Path) == opfile.FileName {
 
 			opFileReader, err := dirHandle.GetContent(ctx, content.Path)
-			if nil != err {
+			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("error opening %s%s", dirHandle.Ref(), content.Path))
 			}
 
 			opFileBytes, err := ioutil.ReadAll(opFileReader)
 			opFileReader.Close()
-			if nil != err {
+			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("error reading %s%s", dirHandle.Ref(), content.Path))
 			}
 
@@ -41,7 +41,7 @@ func List(
 				filepath.Join(dirHandle.Ref(), content.Path),
 				opFileBytes,
 			)
-			if nil != err {
+			if err != nil {
 				return nil, errors.Wrap(err, fmt.Sprintf("error unmarshalling %s%s", dirHandle.Ref(), content.Path))
 			}
 

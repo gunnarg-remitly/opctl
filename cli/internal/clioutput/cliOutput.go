@@ -85,12 +85,12 @@ func (this _cliOutput) Error(s string) {
 
 func (this _cliOutput) Event(event *model.Event) {
 	switch {
-	case nil != event.CallEnded &&
-		nil != event.CallEnded.Call.Container:
+	case event.CallEnded != nil &&
+		event.CallEnded.Call.Container != nil:
 		this.containerExited(event)
 
-	case nil != event.CallStarted &&
-		nil != event.CallStarted.Call.Container:
+	case event.CallStarted != nil &&
+		event.CallStarted.Call.Container != nil:
 		this.containerStarted(event)
 
 	case nil != event.ContainerStdErrWrittenTo:
@@ -99,8 +99,8 @@ func (this _cliOutput) Event(event *model.Event) {
 	case nil != event.ContainerStdOutWrittenTo:
 		this.containerStdOutWrittenTo(event.ContainerStdOutWrittenTo)
 
-	case nil != event.CallEnded &&
-		nil != event.CallEnded.Call.Op:
+	case event.CallEnded != nil &&
+		event.CallEnded.Call.Op != nil:
 		this.opEnded(event)
 
 	case nil != event.CallStarted &&
@@ -128,7 +128,7 @@ func (this _cliOutput) containerExited(event *model.Event) {
 		writer = this.errWriter
 	}
 
-	if nil != event.CallEnded.Call.Container.Image.Ref {
+	if event.CallEnded.Call.Container.Image.Ref != nil {
 		message = fmt.Sprintf("%s ", *event.CallEnded.Call.Container.Image.Ref) + message
 	} else {
 		message += "unknown container " + message
@@ -147,7 +147,7 @@ func (this _cliOutput) containerExited(event *model.Event) {
 
 func (this _cliOutput) containerStarted(event *model.Event) {
 	message := "started "
-	if nil != event.CallStarted.Call.Container.Image.Ref {
+	if event.CallStarted.Call.Container.Image.Ref != nil {
 		message += *event.CallStarted.Call.Container.Image.Ref
 	} else {
 		message += "unknown container"
@@ -214,7 +214,7 @@ func (this _cliOutput) opEnded(event *model.Event) {
 	}
 
 	message = color(fmt.Sprintf("op %s", message))
-	if nil != event.CallEnded.Error {
+	if event.CallEnded.Error != nil {
 		message += color(":") + " " + event.CallEnded.Error.Message
 	}
 

@@ -52,7 +52,7 @@ var _ = Context("Unmarshal", func() {
 				},
 			}
 			providedBytes, err := yaml.Marshal(expectedOpFile)
-			if nil != err {
+			if err != nil {
 				panic(err.Error())
 			}
 

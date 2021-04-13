@@ -62,7 +62,7 @@ func newStateStore(
 				WithReadOnly(true).
 				WithLogger(nil),
 		)
-		if nil != err {
+		if err != nil {
 			return err
 		}
 		defer db.Close()
@@ -93,7 +93,7 @@ func (ss *_stateStore) AddAuth(authAdded model.AuthAdded) error {
 		return db.Update(func(txn *badger.Txn) error {
 			auth := authAdded.Auth
 			encodedAuth, err := json.Marshal(auth)
-			if nil != err {
+			if err != nil {
 				return err
 			}
 

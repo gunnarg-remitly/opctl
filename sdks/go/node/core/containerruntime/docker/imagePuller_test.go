@@ -39,7 +39,7 @@ var _ = Context("imagePuller", func() {
 				"",
 				make(chan model.Event),
 			)
-			if nil != err {
+			if err != nil {
 				panic(err)
 			}
 

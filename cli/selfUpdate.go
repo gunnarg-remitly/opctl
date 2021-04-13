@@ -10,7 +10,7 @@ import (
 func selfUpdate() (string, error) {
 	v := semver.MustParse(version)
 	latest, err := selfupdate.UpdateSelf(v, "opctl/opctl")
-	if nil != err {
+	if err != nil {
 		return "", err
 	}
 

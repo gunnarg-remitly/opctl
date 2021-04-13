@@ -59,7 +59,7 @@ func (lpr _serialLoopCaller) Call(
 		callSpecSerialLoop.Range,
 		callSpecSerialLoop.Vars,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
@@ -68,14 +68,14 @@ func (lpr _serialLoopCaller) Call(
 		callSpecSerialLoop,
 		scope,
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
 	for !serialloop.IsIterationComplete(index, callSerialLoop) {
 		var callID string
 		callID, err = uniquestring.Construct()
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 
@@ -108,7 +108,7 @@ func (lpr _serialLoopCaller) Call(
 			callSpecSerialLoop.Range,
 			callSpecSerialLoop.Vars,
 		)
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 
@@ -117,7 +117,7 @@ func (lpr _serialLoopCaller) Call(
 			callSpecSerialLoop,
 			scope,
 		)
-		if nil != err {
+		if err != nil {
 			return nil, err
 		}
 	}

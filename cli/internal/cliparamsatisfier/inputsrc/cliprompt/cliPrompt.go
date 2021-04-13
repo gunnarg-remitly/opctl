@@ -28,7 +28,7 @@ type cliPromptInputSrc struct {
 func (this cliPromptInputSrc) ReadString(
 	inputName string,
 ) (*string, bool) {
-	if param := this.inputs[inputName]; nil != param {
+	if param := this.inputs[inputName]; param != nil {
 		var (
 			isSecret    bool
 			description string
@@ -36,39 +36,47 @@ func (this cliPromptInputSrc) ReadString(
 		)
 
 		switch {
-		case nil != param.Array:
+		case param.Array != nil:
 			isSecret = param.Array.IsSecret
+			// @TODO remove after deprecation period
 			description = param.Array.Description
 			prompt = "array"
-		case nil != param.Boolean:
+		case param.Boolean != nil:
 			description = param.Boolean.Description
 			prompt = "boolean"
-		case nil != param.Dir:
+		case param.Dir != nil:
 			isSecret = param.Dir.IsSecret
 			description = param.Dir.Description
 			prompt = "directory"
-		case nil != param.File:
+		case param.File != nil:
 			isSecret = param.File.IsSecret
 			description = param.File.Description
 			prompt = "file"
-		case nil != param.Number:
+		case param.Number != nil:
 			isSecret = param.Number.IsSecret
+			// @TODO remove after deprecation period
 			description = param.Number.Description
 			prompt = "number"
-		case nil != param.Object:
+		case param.Object != nil:
 			isSecret = param.Object.IsSecret
 			description = param.Object.Description
 			prompt = "object"
-		case nil != param.Socket:
+		case param.Socket != nil:
 			isSecret = param.Socket.IsSecret
 			description = param.Socket.Description
 			prompt = "socket"
-		case nil != param.String:
+		case param.String != nil:
 			isSecret = param.String.IsSecret
+			// @TODO remove after deprecation period
 			description = param.String.Description
 			prompt = "string"
 		}
 		prompt += ": "
+
+		if param.Description != "" {
+			// non-deprecated property takes precedence
+			description = param.Description
+		}
 
 		line := liner.NewLiner()
 		defer line.Close()
@@ -94,7 +102,7 @@ func (this cliPromptInputSrc) ReadString(
 		} else {
 			rawArg, err = line.Prompt(prompt)
 		}
-		if nil == err {
+		if err == nil {
 			return &rawArg, true
 		}
 	}

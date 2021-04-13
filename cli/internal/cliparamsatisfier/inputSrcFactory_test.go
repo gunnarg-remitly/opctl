@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("inputSrcFactory", func() {
 	wd, err := os.Getwd()
-	if nil != err {
+	if err != nil {
 		panic(err)
 	}
 	argsYmlTestDataPath := filepath.Join(wd, "inputsrc/ymlfile/testdata/args.yml")

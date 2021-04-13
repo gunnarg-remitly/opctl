@@ -21,12 +21,12 @@ func (this core) StartOp(
 		fs.New(),
 		git.New(this.dataCachePath, req.Op.PullCreds),
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 
 	callID, err := uniquestring.Construct()
-	if nil != err {
+	if err != nil {
 		// end run immediately on any error
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (this core) StartOp(
 	}
 
 	// pull Creds
-	if nil != req.Op.PullCreds {
+	if req.Op.PullCreds != nil {
 		opCallSpec.PullCreds = &model.CredsSpec{
 			Username: req.Op.PullCreds.Username,
 			Password: req.Op.PullCreds.Password,
@@ -55,7 +55,7 @@ func (this core) StartOp(
 		ctx,
 		*opHandle.Path(),
 	)
-	if nil != err {
+	if err != nil {
 		return nil, err
 	}
 	for name := range opFile.Outputs {
