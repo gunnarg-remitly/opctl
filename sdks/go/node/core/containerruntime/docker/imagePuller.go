@@ -3,7 +3,9 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	dockerClientPkg "github.com/docker/docker/client"
@@ -43,6 +45,20 @@ func (ip _imagePuller) Pull(
 	rootCallID string,
 	eventChannel chan model.Event,
 ) error {
+	_, _, err := ip.dockerClient.ImageInspectWithRaw(ctx, imageRef)
+	if err == nil {
+		eventChannel <- model.Event{
+			Timestamp: time.Now().UTC(),
+			ContainerStdOutWrittenTo: &model.ContainerStdOutWrittenTo{
+				Data:        []byte(fmt.Sprintf("Skipping image pull: %s\n", imageRef)),
+				OpRef:       containerCall.OpPath,
+				ContainerID: containerCall.ContainerID,
+				RootCallID:  rootCallID,
+			},
+		}
+
+		return nil
+	}
 
 	imagePullOptions := types.ImagePullOptions{}
 	if imagePullCreds != nil &&
