@@ -29,6 +29,13 @@ Opctl also uses a custom publisher/subscriber event bus internally, which
 becomes pretty unnecessary once the centralized API is gone. I've replaced this
 with a standard go channel that the events can be passed back through.
 
+### security
+
+Simplifying opctl in this way has major security advantages. The unauthenticated
+HTTP interface is gone. Streaming events with their associated data over a
+websocket connection is gone. Long term disk event storage is gone. Any internal
+state doesn't need to be written to disk.
+
 ### line count
 
 This project is _huge_ and can be difficult to work in. This ~removes checked-in
