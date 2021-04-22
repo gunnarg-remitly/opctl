@@ -15,3 +15,17 @@ An object defining a parameter of an operation; i.e. a value that is passed into
   - [object](object.md)
   - [socket](socket.md)
   - [string](string.md)
+
+## Example
+```yaml
+name: example
+description: an example op
+inputs:
+  example-input:
+    string:
+      default: "a default value"
+run:
+  container:
+    image: { ref: 'alpine' }
+    cmd: ['echo', $(example-input)]
+```
